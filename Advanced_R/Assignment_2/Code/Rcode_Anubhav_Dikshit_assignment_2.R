@@ -144,9 +144,80 @@ find_cumsum <- function(x, find_sum)
   return(temp)
     }
 
+# 1.3.2 while_mult_table()
 
+while_mult_table <- function(from, to){
+  
+  if(is.numeric(from) == TRUE & is.numeric(to) == TRUE) 
+  {
+    i = 1
+    j = 1
+    mat_row = seq(from=from, to = to, by = 1)
+    mat_col = mat_row
+    temp <- matrix(data = 0, nrow=length(mat_row), ncol=length(mat_col))
+    colnames(temp) <- as.list(mat_row)
+    rownames(temp) <- as.list(mat_col)  
+    while(i <= length(mat_row)){
+      while(j <= length(mat_col)){
+        temp[i,j] <- mat_row[i] * mat_col[j] 
+        j = j  + 1
+      }
+      i = i + 1
+      j= 1
+    }
+  } else {stop("error")}
+  return(temp)
+}
 
+#**********************************************************************************************************************************#
+#*                                                   ASSIGNMENT 1.4 (REPEAT AND LOOP CONTROL)                                                   *#
+#**********************************************************************************************************************************#
 
+# 1.4.1 repeat_find_cumsum
+
+repeat_find_cumsum <- function(x, find_sum)
+{
+  if(is.numeric(x) == TRUE & is.numeric(find_sum) == TRUE) {
+    i = 1
+    temp = 0
+    repeat{
+      temp <- temp + x[i]
+      i <- i+1
+      if(temp > find_sum){
+        break 
+        return(temp)}
+      if(i > length(x)){return(temp)}
+    }
+  }else{stop("error")
+  }
+  return(temp)
+}
+
+# 1.4.2 repeat_my_moving_median
+
+repeat_my_moving_median <- function(n, x, ...)
+{
+  if(is.numeric(x) == TRUE & is.numeric(n) == TRUE) 
+  {
+    i = 1
+    length_of_vector <- length(x)
+    position <- seq(from = 1, to = (length_of_vector-n), by=1)
+    temp <- vector(length = length(position))
+    repeat{
+      temp[i] <- median(x[position[i]:(position[i]+n)], ...)
+      i = i + 1
+      if(i > length(position)){
+        break
+        return(temp)
+      }
+    }
+  } else {stop("error")}
+  return(temp)
+}
+
+#**********************************************************************************************************************************#
+#*                                                   ASSIGNMENT 1.5  (REPEAT AND LOOP CONTROL)                                                   *#
+#**********************************************************************************************************************************#
 
 
 #**********************************************************************************************************************************#
@@ -159,6 +230,9 @@ sheldon_game("rock", "rock")
 my_moving_median(x = c(5,1,2,2,5,NA,8,9,9), n=2)
 for_mult_table(from = 10, to = 12)
 find_cumsum(x=1:10, find_sum=500)
+while_mult_table(from = 7, to = 12)
+repeat_find_cumsum(x=1:100, find_sum=500)
+repeat_my_moving_median(x = c(5,1,2,NA,2,5,6,8,9,9), n=2)
 
 
 mark_my_assignment()
