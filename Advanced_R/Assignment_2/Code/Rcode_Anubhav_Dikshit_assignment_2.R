@@ -1,5 +1,5 @@
 #**********************************************************************************************************************************#
-#*                                                        ASSIGNMENT 1                                                            *#
+#*                                                        ASSIGNMENT 2                                                            *#
 #*STUDENT NAME: ANUBHAV DIKSHIT                                                                                                   *#
 #*LIUID: anudi287                                                                                                                 *#
 #**********************************************************************************************************************************#
@@ -9,7 +9,7 @@ rm(list = ls()) # clear workspace
 gc() #Garbage collector
 name <- "Anubhav Dikshit"
 liuid <- "anudi287"
-lab_path <- (path = "https://raw.githubusercontent.com/STIMALiU/AdvRCourse/master/Labs/Tests/lab1.yml")
+lab_path <- (path = "https://raw.githubusercontent.com/STIMALiU/AdvRCourse/master/Labs/Tests/lab2.yml")
 
 #**********************************************************************************************************************************#
 #*                                            LOADING THE LIBRARY IF NOT FOUND INSTALL                                            *#
@@ -20,206 +20,145 @@ library(markmyassignment)
 set_assignment(lab_path)
 
 #**********************************************************************************************************************************#
-#*                                                   ASSIGNMENT 1.1 (vECTORS)                                                     *#
+#*                                                   ASSIGNMENT 1.1 (CONDITIONAL STATEMENTS)                                      *#
 #**********************************************************************************************************************************#
 
-# 1.1.1 my_num_vector
-my_num_vector <- function()
+# 1.1.1 Sheldon game
+
+sheldon_game <- function(player1, player2)
+{
+  if(is.numeric(player1) == TRUE & is.numeric(player2) == TRUE)
   {
-  A <- log10(11)
-  B <- cos(pi/5)
-  C <- exp(pi/3)
-  D <- (1173 %% 7)/19
-  final <- as.vector(c(A,B,C,D))
-return(final)
-  } 
+    stop("error")
+  }else{
+  if(player1 == player2) 
+  {
+    result = "Draw!"
+  }
+  
+  else if(player1 == "scissors")
+  {
+    result = ifelse(player2 == "paper", "Player 1 wins!",
+                    ifelse(player2 == "lizard", "Player 1 wins!",
+                           ifelse(player2 == "rock", "Player 2 wins!",
+                                  ifelse(player2 == "spock", "Player 2 wins!", "Draw!"))))
+  }
+  else if(player1 == "paper")
+  {
+    result = ifelse(player2 == "rock", "Player 1 wins!",
+                    ifelse(player2 == "spock", "Player 1 wins!",
+                           ifelse(player2 == "lizard", "Player 2 wins!",
+                                  ifelse(player2 == "scissors", "Player 2 wins!", "Draw!"))))
+  }
+  else if(player1 == "rock")
+  {
+    result = ifelse(player2 == "scissors", "Player 1 wins!",
+                    ifelse(player2 == "lizard", "Player 1 wins!",
+                           ifelse(player2 == "spock", "Player 2 wins!",
+                                  ifelse(player2 == "paper", "Player 2 wins!", "Draw!"))))
+  }
+  else if(player1 == "lizard")
+  {
+    result = ifelse(player2 == "paper", "Player 1 wins!",
+                    ifelse(player2 == "spock", "Player 1 wins!",
+                           ifelse(player2 == "scissors", "Player 2 wins!",
+                                  ifelse(player2 == "rock", "Player 2 wins!", "Draw!"))))
+  }
+  else if(player1 == "spock")
+  {
+    result = ifelse(player2 == "rock", "Player 1 wins!",
+                    ifelse(player2 == "scissors", "Player 1 wins!",
+                           ifelse(player2 == "lizard", "Player 2 wins!",
+                                  ifelse(player2 == "paper", "Player 2 wins!", "Draw!"))))
+  }
+  else{
+    result = "Draw!"    
+  }
+    }
 
-
-# 1.1.2 filter my vector
-filter_my_vector <- function(x,leq)
-{
-    x[x>=leq] <- NA
-    return(x)
+  return(result)
 }
 
-# 1.1.3 dot prod, refered to DK mathematics website
-dot_prod <- function(a,b)
+#**********************************************************************************************************************************#
+#*                                                   ASSIGNMENT 1.2 (FOR LOOPS)                                                   *#
+#**********************************************************************************************************************************#
+
+# 1.2.1 my moving median(), sourced from stackexchnage https://stats.stackexchange.com/questions/3051/mean-of-a-sliding-window-in-r
+
+my_moving_median <- function(n, x, ...)
 {
-  c = sum(a*b)
-  return(c)
+   if(is.numeric(x) == TRUE & is.numeric(n) == TRUE) 
+   {
+     length_of_vector <- length(x)
+     position <- seq(from = 1, to = (length_of_vector-n), by=1)
+     temp <- vector(length = length(position))
+     for(i in 1:length(position)){
+       temp[i] <- median(x[position[i]:(position[i]+n)], ...)
+     }
+   } else {stop("error")}
+  return(temp)
 }
 
-# 1.1.4 approx e(N)
-approx_e <- function(N)
+# 1.2.2 for mult table
+
+for_mult_table <- function(from, to)
 {
-  temp <- sum(1/factorial(0:N))
+
+  if(is.numeric(from) == TRUE & is.numeric(to) == TRUE) 
+  {
+    mat_row = seq(from=from, to = to, by = 1)
+    mat_col = mat_row
+    temp <- matrix(data = 0, nrow=length(mat_row), ncol=length(mat_col))
+colnames(temp) <- as.list(mat_row)
+rownames(temp) <- as.list(mat_col)  
+    for(i in 1:length(mat_row)){
+      for(j in 1:length(mat_col)){
+        temp[i,j] <- mat_row[i] * mat_col[j] 
+            }
+      }
+  } else {stop("error")}
   return(temp)
 }
 
 
-# test_value <- round(exp(1), 4) # rounding the exponent to 5 decimal point and storing it
-#  
-#  for(i in 1:100)
-#    {
-#    temp_in <- round(approx_e(i),4)
-#    if(temp_in == test_value) 
-#      {
-#      return(i) 
-#      break
-#      }
-# }
 
 #**********************************************************************************************************************************#
-#*                                                   ASSIGNMENT 1.2 (MATRICES)                                                    *#
+#*                                                   ASSIGNMENT 1.3 (WHILE LOOPS)                                                   *#
 #**********************************************************************************************************************************#
 
-# 1.2.1 my magic matrix()
-my_magic_matrix <- function()
+# 1.3.1 find_cumsum
+
+find_cumsum <- function(x, find_sum)
 {
-my_matrix = matrix(data = c(4,3,8,9,5,1,2,7,6), nrow = 3, ncol = 3, byrow = FALSE)
-return(my_matrix)
-}
-
-# 1.2.2 calculate elements(A)
-calculate_elements <- function(A)
-{
-  return(nrow(A) * ncol(A))
-}
-
-# 1.2.3 row to zero
-row_to_zero <- function(A,i)
-{
- A[i,] <- 0
- return(A)
-}
-
-# 1.2.4 add elements to matrix
-add_elements_to_matrix <- function(A, x, i, j)
-{
-  A[i,j] <- A[i,j] + x
-  return(A)
-}
-
-#**********************************************************************************************************************************#
-#*                                                   ASSIGNMENT 1.3 (LISTS)                                                       *#
-#**********************************************************************************************************************************#
-
-# 1.3.1 my_magic_list()
-my_magic_list <- function()
-{
-temp <- list(info = "my own list", c(1.04139, 0.80902, 2.84965, 0.21053), matrix(data = c(4,3,8,9,5,1,2,7,6), nrow = 3, ncol = 3, 
-                                                                                 byrow = FALSE))
-return(temp)
-}
-
-# 1.3.2 change_info()
-change_info <- function(list_name, text_to_replace)
-{
-  list_name$info <- text_to_replace
-  return(list_name)
-}
-
-# 1.3.3 add note()
-add_note <- function(list_name, new_element)
-{
-  list_name$note <- new_element
-  return(list_name)
-}
-
-# 1.3.4 sum numeric parts()
-sum_numeric_parts <- function(x)
-{
-  unlisted_list_name <- as.numeric(unlist(x, recursive = TRUE, use.names = FALSE))
-  unlisted_list_name[is.na(unlisted_list_name)] <- 0
-  unlisted_list_name_sum <- sum(unlisted_list_name)
-  return(unlisted_list_name_sum)
-}
-
-#**********************************************************************************************************************************#
-#*                                                   ASSIGNMENT 1.4 (DATA FRAMES)                                                       *#
-#**********************************************************************************************************************************#
-
-# 1.4.1 my data.frame()
-my_data.frame <- function(x)
-{
-df <- data.frame(id = c(1,2,3), name = c("John", "Lisa", "Azra"), income = c(7.30, 0.00, 15.21), rich = c(FALSE, FALSE, TRUE))
-  return(df)
-}
-
-# 1.4.2 sort head()
-sort_head <- function(df, var.name, n)
-{
-  df <- df[order(df[[var.name]], decreasing = TRUE),]
-  return(data.frame(head(df,n)))
-}
-
-# 1.4.3 add median variable(df, j)
-add_median_variable <- function(df, j)
-{
-  median_of_column <- median(df[[j]])
-  df$compared_to_median <- ifelse(df[[j]] > median_of_column, "Greater", ifelse(df[[j]] < median_of_column, "Smaller", "Median"))
-  return(data.frame(df))
-}
-
-# 1.4.4 add median variable(df, j)
-analyze_columns <- function(df, j)
-{
-#df = iris
-#j = 1:2
-mean_column = mean(df[[j[[1]]]])
-median_column = median(df[[j[[1]]]])
-sd_column = sd(df[[j[[1]]]])
-first_list = list(c(mean_column, median_column, sd_column))
-
-mean_column_2 = mean(df[[j[[2]]]])
-median_column_2 = median(df[[j[[2]]]])
-sd_column_2 = sd(df[[j[[2]]]])
-second_list = list(c(mean_column_2, median_column_2, sd_column_2))
+  if(is.numeric(x) == TRUE & is.numeric(find_sum) == TRUE) {
+    i = 1
+    temp = 0
+    while(temp < find_sum)
+      {
+      temp <- temp + x[i]
+      i <- i+1
+      if(i > length(x)){return(temp)}
+    }
+  }else{stop("error")
+    }
+  return(temp)
+    }
 
 
-df2 = df[, c(j[[1]],j[[2]])]
-df2 = as.data.frame(cor(df2))
-correlation_matrix_df = list(df2)
 
-final = c(first_list, 
-          second_list, 
-          correlation_matrix_df)
 
-names(final) <- c(eval(colnames(df2)[1]), eval(colnames(df2)[2]), "correlation_matrix")
-return(final)
-}
+
 
 #**********************************************************************************************************************************#
 #*                                                   RUNNING ALL ASSIGNMENTS                                                      *#
 #**********************************************************************************************************************************#
 
-# vectors
-my_num_vector()
-filter_my_vector(x = c(2, 9, 2, 4, 102), leq = 4)
-dot_prod(a = c(3,1,12,2,4), b = c(1,2,3,4,5))
-approx_e(7) # N equal to 7 is approximate equal to round(exp(1), 5), refer to line 60 onwards
 
-# matrix
-my_magic_matrix()
-mat <- my_magic_matrix()
-calculate_elements(cbind(mat,mat))
-row_to_zero(mat, i = 2)
-add_elements_to_matrix(A = mat, x = -2, i = 1:3, j = 2:3)
-
-# list
-my_magic_list()
-a_list <- my_magic_list()
-change_info(list_name = a_list, text_to_replace = "Some new info")
-add_note(list_name = a_list, new_element = "This is a magic list!")
-sum_numeric_parts(x = a_list[2])
-
-# dataframes
-my_data.frame()
-sort_head(df = iris, var.name = "Petal.Length", n = 5)
-head(add_median_variable(df = faithful, 1))
-tail(add_median_variable(df = faithful, 1))
-analyze_columns(df = faithful, 1:2)
-analyze_columns(df = iris, c(4,1))
+sheldon_game("lizard", "spock")
+sheldon_game("rock", "rock")
+my_moving_median(x = c(5,1,2,2,5,NA,8,9,9), n=2)
+for_mult_table(from = 10, to = 12)
+find_cumsum(x=1:10, find_sum=500)
 
 
 mark_my_assignment()
