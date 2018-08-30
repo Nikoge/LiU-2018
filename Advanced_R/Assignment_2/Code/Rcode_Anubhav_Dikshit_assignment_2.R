@@ -245,11 +245,16 @@ cov <- function(X){
 
 # 1.7.1 moment
 
-  moment <- function(x, i){
-  temp_x <- (x-mean(x))^i
-  temp <- (1/length(x)) * sum(temp_x)
-  return(temp)
+moment <- function(i){
+  if(is.numeric(i)){
+    function(x){
+    temp_x <- (x-mean(x))^i
+    temp <- (1/length(x)) * sum(temp_x)
+    return(temp)
+  } 
+  }else{stop("error")}
 }
+  
 
 
 #**********************************************************************************************************************************#
