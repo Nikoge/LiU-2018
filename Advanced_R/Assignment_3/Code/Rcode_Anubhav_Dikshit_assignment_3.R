@@ -27,7 +27,7 @@ set_assignment(lab_path)
 # 1.1.1 euclidean()
 
 euclidean <- function(a,b){
-if(a == 0 | b == 0 | is.na(a) | is.na(b)){stop("incorrect inputs")}
+if(a == 0 | b == 0 | is.na(a) | is.na(b) | !is.numeric(a) | !is.numeric(b)){stop("incorrect inputs")}
 if(a > b){
   temp <- b
   b <- a
@@ -35,7 +35,8 @@ if(a > b){
 }
     r <- b%%a
     return(ifelse(r, euclidean(a, r), a))
-  }  
+}
+
 
 
 # create this function and run the following
