@@ -103,16 +103,15 @@ ggplotly(p9)
 #*                                      PIPLING AND  PLOTLY                                                                       *#
 #**********************************************************************************************************************************#
 
+data = data_senic_numeric[quant_cal(data_senic_numeric$avg_risk), c("avg_risk")]
 
-# NEED TO COMPLETE FROM HERE
-# zooming and subseting
-ggplotly(p9)
-
-data_senic %>% select(ID, avg_risk) %>% plot_ly(x = ~avg_risk, type = "histogram") %>% add_markers(y = ~avg_risk, showlegend = FALSE)
+data_senic %>% select(avg_risk) %>% plot_ly(x = ~avg_risk, type = "histogram") %>% 
+  add_markers(x = data$avg_risk, y = 0, showlegend = FALSE, marker = list(color = "red", symbol = c('diamond')))
 
 #**********************************************************************************************************************************#
 #*                                      SHINY APP FOR PLOTS                                                                        *#
 #**********************************************************************************************************************************#
+# NEED TO COMPLETE FROM HERE
 
 # all plots, using a for loop would be easier, will think of writing this under a function
 p1 <- ggplot(data=data_senic_numeric, aes(x=length_of_stay)) + geom_density() + geom_point(data = data_senic_numeric[quant_cal(data_senic_numeric$length_of_stay), c("length_of_stay")], aes(y = 0, x = length_of_stay), shape=18, size=2) 

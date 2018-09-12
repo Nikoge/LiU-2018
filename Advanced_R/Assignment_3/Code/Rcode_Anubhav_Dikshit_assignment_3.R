@@ -38,9 +38,8 @@ if(a > b){
 }
 
 
-
 # create this function and run the following
-usethis::create_package("~/Rassignment3")
+usethis::create_package("~/Rassignmentlab3")
 devtools::load_all(".")
 usethis::use_readme_md()
 usethis::use_test()
