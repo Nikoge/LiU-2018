@@ -7,26 +7,26 @@ data <- data.frame(S=c(1,1,1,2,2,2,3,3,3,3,4,4,4,5,5,6,6,6),
              W=c(7,9,14,7,10,15,9,10,11,2,15,11,6,6,9,14,2,9))
 
 n <- length(unique(data[,1]))
-temp <- data
+result <- df
 
 for(i in 1:n-1){
-    data2 <-  left_join(x = temp, y = data, by = c("D" = "S"))
-    data2$W <- data2$W.x + data2$W.y
-    data2 <- data2[,c("S", "D.y", "W")]
-    colnames(data2)[colnames(data)=="D.y"] <- "D"
-    temp <- rbind(data2, data)
-    temp$W <- ifelse(temp$S == temp$D, 0, temp$W) # fixing the self reference distance as zero
-    temp <- temp[!duplicated(temp),]
-    rm(data2)
+    df2 <-  left_join(x = result, y = df, by = c("D" = "S"))
+    df2$W <- df2$W.x + df2$W.y
+    df2 <- df2[,c("S", "D.y", "W")]
+    colnames(df2)[colnames(df)=="D.y"] <- "D"
+    result <- rbind(df2, df)
+    result$W <- ifelse(result$S == result$D, 0, result$W) # fixing the self reference distance as zero
+    result <- result[!duplicated(result),]
+    rm(df2)
 }
 
 # sorting
-temp <- temp[with(temp, order(S, D, W)), ]
-temp$concat <- paste(temp$S, temp$D, sep = "")
-temp$lag_concat <- shift(temp$concat, n=1L, fill=0, type=c("lag"), give.names=FALSE)
-temp$change_flag <- ifelse(temp$concat == temp$lag_concat, 0, 1)
+result <- result[with(result, order(S, D, W)), ]
+result$concat <- paste(result$S, result$D, sep = "")
+result$lag_concat <- shift(result$concat, n=1L, fill=0, type=c("lag"), give.names=FALSE)
+result$change_flag <- ifelse(result$concat == result$lag_concat, 0, 1)
 
-temp <- temp[temp$change_flag == 1,]
-temp <- temp[, c("S", "D", "W")]
+result <- result[result$change_flag == 1,]
+result <- result[, c("S", "D", "W")]
 
-temp_wide <- dcast(temp, S ~ D, value.var = "W", fill = NA)
+temp_wide <- dcast(result, S ~ D, value.var = "W", fill = NA)
