@@ -23,8 +23,7 @@ pacman::p_load(ggplot2, readr, gridExtra, data.table, plotly, shiny)
 
 # Assignment 2.1
 
-data_senic <- read_table2("Input/SENIC.txt", 
-                          col_names = FALSE)
+data_senic <- read_table2("Input/SENIC.txt", col_names = FALSE)
 
 # Fixing the column names
 
