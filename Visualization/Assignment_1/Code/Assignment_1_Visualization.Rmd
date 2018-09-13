@@ -57,6 +57,8 @@ quant_cal <- function(x){
 ggplot(data=data_senic, aes(x=avg_risk)) + geom_density() + geom_point(data = data_senic[quant_cal(data_senic$avg_risk), c("avg_risk")], aes(y = 0, x = avg_risk), shape=18, size=2) 
 ```
 
+Analysis: We see that the number of outliers are fairly small, however this visualization is not very insightful
+
 ### 4. Plotting for all numeric columns
 ```{r}
 data_senic_numeric <- data_senic[,c("ID", "length_of_stay", "avg_age", "avg_risk", "culturing_ratio", "chest_xray_ratio",
@@ -77,15 +79,25 @@ grid.arrange(p1, p2, p3, p4, p5, p6, p7, p9) # facility_per does not contain any
 
 ```
 
+Analysis: Most parameters are skewed towards right, while only age and risk are close to normally distributed
+
+
 ### 5. Plot of infection risk vs. number of beds
 ```{r}
 ggplot(data = data_senic, aes(x = avg_nurses, y = avg_risk)) + geom_point(aes(color = avg_beds))
 ```
 
+Analysis: We see trend between number of nurses and risk, as the number of nurses increases risk decrease but this only happens when the average nurse >200, this may be due to the fact that medical facilities with higher risks are higher in number than low risk hospital.
+The risk of this colour profile is its hard to distinguish between the levels of beds.
+
+
 ### 6. Converting from ggplot2 to plotly
 ```{r}
 ggplotly(p9)
 ```
+
+Analysis: The ability to pan and zoom are now present.
+
 
 ### 7. Pipelining the plotly function
 
