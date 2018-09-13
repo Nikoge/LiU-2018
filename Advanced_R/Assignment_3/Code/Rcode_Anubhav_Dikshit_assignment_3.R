@@ -121,7 +121,8 @@ dijkstra_int <- function(df, row) {
     result <- result[, c("S", "D", "W")]
     
     temp_wide <- reshape2::dcast(result, S ~ D, value.var = "W", fill = 0)
-    return(temp_wide[row,])
+    rownames(temp_wide) <- NULL
+    return(as.vector(temp_wide[,row+1]))
   }
   else{stop("Input must be a dataframe")}}
 
