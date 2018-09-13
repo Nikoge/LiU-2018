@@ -26,6 +26,15 @@ library(reshape2)
 
 # 1.1.1 euclidean()
 
+#' Title euclidean() returns the gcd
+#'
+#' @param a first parameter
+#' @param b second parameter
+#'
+#' @return the gcd
+#' @export
+#'
+#' @examples euclidean(100,1000)
 euclidean <- function(a,b){
 if(a == 0 | b == 0 | is.na(a) | is.na(b) | !is.numeric(a) | !is.numeric(b)){stop("incorrect inputs")}
 if(a > b){
@@ -55,7 +64,6 @@ dijkstra_ext <- function(graph, init_node) {
     z <- reshape2::dcast(graph, graph[,1] ~ graph[,2], value.var = "w")
     z[is.na(z)] <- 0
     pl2 <- igraph::graph.adjacency(z, weighted = TRUE)
-    plot(pl2)
     
     result <- igraph::shortest.paths(pl2, algorithm = "dijkstra")
     result <- as.data.frame(result)
@@ -80,7 +88,7 @@ dijkstra_ext <- function(graph, init_node) {
 #' @examples dijkstra_int(wiki_graph, 1)
 dijkstra_int <- function(df, row) {
   if(is.data.frame(df) & is.numeric(row)){
-    n <- length(unique(data[,1]))
+    n <- length(unique(df[,1]))
     result <- df
     
     for(i in 1:n-1){
@@ -156,7 +164,7 @@ usethis::use_roxygen_md()
 # dplyr (>= 0.7.6)
 
 
-use_package("igraph", type = "Imports")
+#use_package("igraph", type = "Imports")
 use_package("reshape2", type = "Imports")
 use_package("dplyr", type = "Imports")
 
