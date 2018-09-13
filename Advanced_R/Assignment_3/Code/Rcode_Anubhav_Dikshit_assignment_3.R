@@ -15,10 +15,11 @@ setwd("C:/Users/anubh/OneDrive/Documents/GitHub/LiU/LiU-2018/Advanced_R/Assignme
 #*                                            LOADING THE LIBRARY IF NOT FOUND INSTALL                                            *#
 #**********************************************************************************************************************************#
 
-if(!require(igraph)){install.packages(igraph)} 
+if(!require(data.table)){install.packages(data.table)} 
 if(!require(reshape2)){install.packages(reshape2)} 
-library(igraph)
+library(data.table)
 library(reshape2)
+library(dplyr)
 
 #**********************************************************************************************************************************#
 #*                                                   ASSIGNMENT 1.1.1 (euclidean)                                                        *#
@@ -84,6 +85,8 @@ dijkstra_ext <- function(graph, init_node) {
 #'
 #' @return returns a vector with distance to all other nodes
 #' @export
+#' @import dplyr left_join bind_rows
+#' @import data.table shift
 #'
 #' @examples wiki_graph <- data.frame(v1=c(1,1,1,2,2,2,3,3,3,3,4,4,4,5,5,6,6,6),
 #'  v2=c(2,3,6,1,3,4,1,2,4,6,2,3,5,4,6,1,3,5),
@@ -92,7 +95,7 @@ dijkstra_ext <- function(graph, init_node) {
 
 dijkstra_int <- function(df, row) {
   if(is.data.frame(df) & is.numeric(row)){
-    n <- length(unique(df[,1]))
+    n <- length(unique(df2[,1]))
     colnames(df) <- c("S", "D", "W")
     result <- df
     
@@ -101,8 +104,8 @@ dijkstra_int <- function(df, row) {
       df2 <-  dplyr::left_join(x = result, y = df, by = c("D" = "S"))
       df2$W <- df2$W.x + df2$W.y
       df2 <- df2[,c("S", "D.y", "W")]
-      colnames(df2)[colnames(df)=="D.y"] <- "D"
-      result <- dplyr:bind_rows(df2, df)
+      colnames(df2)[colnames(df2)=="D.y"] <- "D"
+      result <- dplyr::bind_rows(df2, df)
       result$W <- ifelse(result$S == result$D, 0, result$W) # fixing the self reference distance as zero
       result <- result[!duplicated(result),]
       rm(df2)
@@ -117,7 +120,7 @@ dijkstra_int <- function(df, row) {
     result <- result[result$change_flag == 1,]
     result <- result[, c("S", "D", "W")]
     
-    temp_wide <- reshape2::dcast(result, S ~ D, value.var = "W", fill = NA)
+    temp_wide <- reshape2::dcast(result, S ~ D, value.var = "W", fill = 0)
     return(temp_wide[row,])
   }
   else{stop("Input must be a dataframe")}}
