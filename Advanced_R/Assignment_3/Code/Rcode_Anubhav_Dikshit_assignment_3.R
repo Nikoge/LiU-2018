@@ -89,7 +89,9 @@ dijkstra_ext <- function(graph, init_node) {
 dijkstra_int <- function(df, row) {
   if(is.data.frame(df) & is.numeric(row)){
     n <- length(unique(df[,1]))
+    colnames(df) <- c("S", "D", "W")
     result <- df
+    
     
     for(i in 1:n-1){
       df2 <-  dplyr::left_join(x = result, y = df, by = c("D" = "S"))
@@ -153,18 +155,16 @@ usethis::use_roxygen_md()
 # )
 # License: MIT + file LICENSE
 # Encoding: UTF-8
-# Depends: R (>= 3.5.1)
+# Depends: R (>= 3.5.0)
 # LazyData: true
 # ByteCompile: true
 # Roxygen: list(markdown = TRUE)
 # RoxygenNote: 6.1.0
 # Imports: 
-#   igraph (>= 1.2.2),
 # reshape2 (>= 1.4.3),
 # dplyr (>= 0.7.6)
 
 
-#use_package("igraph", type = "Imports")
 use_package("reshape2", type = "Imports")
 use_package("dplyr", type = "Imports")
 
