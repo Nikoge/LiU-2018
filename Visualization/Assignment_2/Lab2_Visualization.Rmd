@@ -1,0 +1,43 @@
+---
+title: "Lab2_Visualization"
+author: "Anubhav Dikshit and Yusur Almutair"
+date: "13 September 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Lab 2 loading library
+
+```{r}
+library(data.table)
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+library(plotly)
+```
+
+### Reading input 
+```{r}
+setwd("C:/Users/anubh/OneDrive/Documents/GitHub/LiU/LiU-2018/Visualization/Assignment_2/")
+
+olive_data <- read.csv("Input/olive.csv")
+olive_data <- olive_data[,-1]
+```
+
+### 1. Scatter plot dependence of Palmitic on Oleic, linoleic not classed and classfed
+```{r}
+ggplot(data = olive_data, aes(x = oleic, y = palmitic), colour = linoleic) + geom_point(aes(colour = linoleic))
+ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point(aes(colour = cut_interval(linoleic, n = 4)))
+```
+Analysis: The second graph is easier to analysis than compared to first one, the perception
+problem highlighted here is the difference in the channel capacity of human preception. Where capacity of distingushing hue > intensity 
+
+### 2. Scatter plot dependence of Palmitic on Oleic, linoleic split by different attributes
+```{r}
+ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point(aes(colour = cut_interval(linoleic, n = 4)))
+ggplot(data = olive_data, aes(x = oleic, y = palmitic), colour = linoleic) + geom_point(aes(size = cut_interval(linoleic, n = 4)))
+ggplot(data = olive_data, aes(x = oleic, y = palmitic), colour = linoleic) + geom_point() +  geom_spoke(aes(angle = as.numeric(cut_interval(linoleic, n = 4))), radius = 1.0)
+```
