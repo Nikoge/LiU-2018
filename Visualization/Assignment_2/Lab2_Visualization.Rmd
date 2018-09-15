@@ -21,23 +21,74 @@ library(plotly)
 
 ### Reading input 
 ```{r}
-setwd("C:/Users/anubh/OneDrive/Documents/GitHub/LiU/LiU-2018/Visualization/Assignment_2/")
 
-olive_data <- read.csv("Input/olive.csv")
+olive_data <- read.csv("olive.csv")
 olive_data <- olive_data[,-1]
+
+olive_data$Region <- factor(olive_data$Region, levels = c(1,2,3))
+
 ```
 
-### 1. Scatter plot dependence of Palmitic on Oleic, linoleic not classed and classfed
+### 1. Scatter plot dependence of Palmitic on Oleic, linolenic not classed and classed
 ```{r}
-ggplot(data = olive_data, aes(x = oleic, y = palmitic), colour = linoleic) + geom_point(aes(colour = linoleic))
+ggplot(data = olive_data, aes(x = oleic, y = palmitic), colour = linolenic) + geom_point(aes(colour = linoleic))
 ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point(aes(colour = cut_interval(linoleic, n = 4)))
 ```
+
 Analysis: The second graph is easier to analysis than compared to first one, the perception
 problem highlighted here is the difference in the channel capacity of human preception. Where capacity of distingushing hue > intensity 
 
-### 2. Scatter plot dependence of Palmitic on Oleic, linoleic split by different attributes
+### 2. Scatter plot dependence of Palmitic on Oleic, linolenic split by different attributes
 ```{r}
-ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point(aes(colour = cut_interval(linoleic, n = 4)))
-ggplot(data = olive_data, aes(x = oleic, y = palmitic), colour = linoleic) + geom_point(aes(size = cut_interval(linoleic, n = 4)))
-ggplot(data = olive_data, aes(x = oleic, y = palmitic), colour = linoleic) + geom_point() +  geom_spoke(aes(angle = as.numeric(cut_interval(linoleic, n = 4))), radius = 1.0)
+ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point(aes(colour = cut_interval(linolenic, n = 4)))
+
+ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point(aes(size = cut_interval(linolenic, n = 4)))
+
+ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point() +  geom_spoke(aes(angle = as.numeric(cut_interval(linolenic, n = 4))*10), radius = 50)
 ```
+
+Analysis: The discretized Linolenic with color was the easiest to detect boundary. This is becuase the channel capacity of detection is in the order of color>direction>size
+
+### 3. Scatter plot dependence of Oleic on Eicosenoic, Region split by different attributes
+```{r}
+ggplot(data = olive_data, aes(x = oleic, y = eicosenoic)) + geom_point(aes(colour = as.numeric(Region)))
+
+ggplot(data = olive_data, aes(x = oleic, y = eicosenoic)) + geom_point(aes(colour = Region))                                                                       
+```
+
+Analysis: Using a factor simply as number assumes that the difference between region is an increment of one, eg: Cat->Dog->Human the difference is one unit among the three, while treating them as factor does not assuming any step increment assumption. The Preattentive pattern emerged here due to distinct colour.
+
+### 4. Scatter plot dependence of Oleic on Eicosenoic, linoleic not classed and classed and 27 objects 
+```{r}
+ggplot(data = olive_data, aes(x = oleic, y = eicosenoic)) + geom_point(aes(colour = cut_interval(linoleic, n = 3), shape = cut_interval(palmitic, n = 3), size = cut_interval(palmitoleic, n = 3)))
+```
+
+Analysis: Its very hard to distinguish between 27 types of combination due to no clear boundary between the regions, the perception problem demostrated here is the attentive mechanism and no individual feature of the chart (shape, color, size) helps in distinguish the boundary
+
+### 5. Scatter plot dependence of Oleic on Eicosenoic, linoleic not classed and classed and 27 objects
+```{r}
+ggplot(data = olive_data, aes(x = oleic, y = eicosenoic)) + geom_point(aes(colour = Region, shape = cut_interval(palmitic, n = 3), size = cut_interval(palmitoleic, n = 3)))
+```
+
+Analysis: Due to establishment of viusally clear boundary between the regions, the attentive mechanism has no problems scanning through the individual feature of the chart (shape, color, size) which inturns helps in distinguish the boundary
+
+### 6. piechart of oils vs. region
+
+```{r}
+p <- (olive_data) %>% group_by(Region) %>% summarize(total_oils = sum(palmitic, palmitoleic, stearic, oleic, linoleic, linolenic, arachidic, eicosenoic)) %>% plot_ly(values = ~total_oils, type = 'pie', showlegend = FALSE) %>% layout(title = 'Total oils by region',
+         xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+         yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+p
+```
+
+Analysis: The plot does not conform to the practices under good visualization, it is generally not advised to use piechart because angles are harder to detect than size. Not having clear lables/legend simply adds to more overhead to process the information
+
+### 7. 2D density contour plot
+
+```{r}
+ggplot(olive_data, aes(x = linoleic, y = eicosenoic)) + geom_point(aes(colour = Region)) + geom_density_2d()
+
+ggplot(olive_data, aes(x = linoleic, y = eicosenoic)) + geom_point(aes(colour = Region))
+```
+
+Analysis: As evident from the two plots the density plot suggests a clusters being formed while the simple scatter plots coloured by region suggests a simpler cluster
