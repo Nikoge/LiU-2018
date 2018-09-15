@@ -39,46 +39,48 @@ data_senic$region <- factor(data_senic$region, levels = c(1, 2, 3, 4),labels = c
 
 ### 2. Function to calculate the oultiers
 ```{r}
-quant_cal <- function(x){
-  #x <-  mtcars$hp
-  q1 <- as.numeric(quantile(x, probs = c(0.25)))
-  q3 <- as.numeric(quantile(x, probs = c(0.75)))
-  iqr <- q3-q1
-  upper_value <- q3+(1.5*iqr)
-  lower_value <- q1-(1.5*iqr)
-  outliers_index <- which(x < lower_value | x > upper_value)
-  #which(x %in% boxplot(x)$out) # must be equal to above
-  return(outliers_index)
+quant_cal <- function(df, col.name) {
+
+  Q1 <- quantile(df[[col.name]], .25)
+  Q3 <- quantile(df[[col.name]], .75)
+  
+  outlier.end <- which(df[[col.name]] > Q3+1.5*(Q3-Q1))
+  outlier.start <- which(df[[col.name]] < Q1-1.5*(Q3-Q1))
+  return (c(outlier.end, outlier.start))
 }
+
 ```
 
 ### 3. Plotting infection risk vs. outlier
 ```{r}
-ggplot(data=data_senic, aes(x=avg_risk)) + geom_density() + geom_point(data = data_senic[quant_cal(data_senic$avg_risk), c("avg_risk")], aes(y = 0, x = avg_risk), shape=18, size=2) 
+
+data_senic_numeric <- data_senic[,c("ID", "length_of_stay", "avg_age", "avg_risk", "culturing_ratio", "chest_xray_ratio", "avg_beds", "avg_daily_census", "avg_nurses", "facility_per")]
+
+ploting_helper <-  function(variable, bw){
+  data_filtered = as.data.frame(data_senic_numeric[[variable]])
+  colnames(data_filtered) <- eval(variable)
+  outlier_data <- as.data.frame(data_filtered[quant_cal(data_senic_numeric, eval(variable)),])
+  colnames(outlier_data) <- eval(variable) 
+  x <- ggplot(data=data_filtered, aes_string(x=eval(variable))) + geom_density(bw=bw) + 
+    geom_point(data = outlier_data, aes(y = 0, x = outlier_data[,1]), shape=18, size=2)
+  return(x)}
+
+ploting_helper("avg_age", 0.5)
 ```
 
 Analysis: We see that the number of outliers are fairly small, however this visualization is not very insightful
 
 ### 4. Plotting for all numeric columns
 ```{r}
-data_senic_numeric <- data_senic[,c("ID", "length_of_stay", "avg_age", "avg_risk", "culturing_ratio", "chest_xray_ratio", "avg_beds", "avg_daily_census", "avg_nurses", "facility_per")]
 
-ploting_helper <-  function(variable, bw){
-  variable = "length_of_stay"
-  bw = 0.5
-  data_filtered = as.data.frame(data_senic_numeric[[variable]])
-  colnames(data_filtered) <- eval(variable)
- x <- ggplot(data=data_senic_numeric, aes(x=variable)) + geom_density(bw=bw) + geom_point(data = as.data.frame(quant_cal(data_filtered[,1])), aes(y = 0, x = variable), shape=18, size=2)
-  return(x)}
-
-p1 <- ploting_helper(length_of_stay, 0.5)  
-p2 <- ploting_helper(avg_age, 0.5)  
-p3 <- ploting_helper(avg_risk, 0.5)  
-p4 <- ploting_helper(culturing_ratio, 0.5)  
-p5 <- ploting_helper(chest_xray_ratio, 0.5)  
-p6 <- ploting_helper(avg_beds, 0.5)  
-p7 <- ploting_helper(avg_daily_census, 0.5)  
-p8 <- ploting_helper(avg_nurses, 0.5)  
+p1 <- ploting_helper("length_of_stay", 0.5)  
+p2 <- ploting_helper("avg_age", 0.5)  
+p3 <- ploting_helper("avg_risk", 0.5)  
+p4 <- ploting_helper("culturing_ratio", 0.5)  
+p5 <- ploting_helper("chest_xray_ratio", 0.5)  
+p6 <- ploting_helper("avg_beds", 0.5)  
+p7 <- ploting_helper("avg_daily_census", 0.5)  
+p8 <- ploting_helper("avg_nurses", 0.5)  
  
 
 p9 <- ggplot(data=data_senic_numeric, aes(x=facility_per)) + geom_density() # contains no outliers
@@ -102,7 +104,7 @@ The risk of this colour profile is its hard to distinguish between the levels of
 
 ### 6. Converting from ggplot2 to plotly
 ```{r}
-ggplotly(p9)
+ggplotly(ploting_helper("avg_risk", 0.5))
 ```
 
 Analysis: The ability to pan and zoom are now present.
@@ -111,43 +113,17 @@ Analysis: The ability to pan and zoom are now present.
 ### 7. Pipelining the plotly function
 
 ```{r}
-data = data_senic_numeric[quant_cal(data_senic_numeric$avg_risk), c("avg_risk")]
+
+outlier_data <- data_senic_numeric[quant_cal(data_senic_numeric, "avg_risk"),]
+  
 
 data_senic %>% select(avg_risk) %>% plot_ly(x = ~avg_risk, type = "histogram") %>% 
-  add_markers(x = data$avg_risk, y = 0, showlegend = FALSE, marker = list(color = "red", symbol = c('diamond')))
+  add_markers(x = outlier_data$avg_risk, y = 0, showlegend = FALSE, marker = list(color = "red", symbol = c('diamond')))
 
 ```
 
 ### 8. Shiny app
 ```{r}
 
-library(shiny)
 
-ui <- fluidPage(
-
-    # Application title
-    titlePanel("Select the variable to plot"),
-    sidebarPanel(
-            column(3,checkboxGroupInput(label = "variable", "Select Column to Plot",
-                                        choices = c("length_of_stay", "avg_age", "avg_risk", "culturing_ratio",                                                          "chest_xray_ratio", "avg_beds", "avg_daily_census", "avg_nurses", "facility_per"),
-                                        selected = "length_of_stay"))),
-    
-    sidebarPanel(
-      column(4, sliderInput("bw_adjust", label = "Bandwidth adjustment:", min = 0.2, max = 2, value = 1, step = 0.2)), width = 10),
-            
-             
-             mainPanel(plotOutput("plot")))
-
-
-server <- shinyServer(function(input, output) {
-
-    output$plot <- renderPlot({
-      input$newplots
-      grid.arrange(p1)
-
-    })
-  }
-)
-
-shinyApp(ui, server)
 ```
