@@ -122,8 +122,115 @@ data_senic %>% select(avg_risk) %>% plot_ly(x = ~avg_risk, type = "histogram") %
 
 ```
 
-### 8. Shiny app
+### 8. Shiny app uses previous funtions
 ```{r}
+library(shiny)
+library(ggplot2)
+library(gridExtra)
 
+SENIC <- read.table("SENIC.txt")
+colnames(SENIC) = c("ID","Length_of_stay","Age","Infection_risk"
+                    ,"Culturing_ratio","Chest_Xrey_ratio","Number_of_Beds",
+                    "Medical_school_affiliation","Region","Average_daily_census",
+                    "Number_of_nurses","Facilities_and_services")
+
+data_senic <- read_table2("SENIC.txt", col_names = FALSE)
+
+setnames(data_senic, old = c("X1", "X2", "X3", "X4", "X5", "X6", "X7", "X8", "X9", "X10", "X11", "X12"), 
+                     new = c("ID", "length_of_stay", "avg_age", "avg_risk", "culturing_ratio", "chest_xray_ratio",
+                           "avg_beds", "school_affil", "region", "avg_daily_census", "avg_nurses", "facility_per"))
+
+# Fixing the datatypes
+
+data_senic$school_affil <- factor(data_senic$school_affil, levels = c(1, 2),labels = c("Yes", "No"))
+data_senic$region <- factor(data_senic$region, levels = c(1, 2, 3, 4),labels = c("NE", "NC", "S", "W"))
+
+#function to find data in the range
+Q1Q3 <- function(x,col){
+  Q1 <- quantile(x[,col])[2]
+  Q3 <- quantile(x[,col])[4]
+  output <- x[which((x[,col] <=(Q3 + 1.5*(Q3-Q1)) )&(x[,col] >= (Q1 - 1.5*(Q3-Q1)) )),col]
+  output
+}
+#function to find out of range data
+outliers <- function(x,col){
+  Q1 <- quantile(x[,col])[2]
+  Q3 <- quantile(x[,col])[4]
+  output <- x[which((x[,col] > (Q3 + 1.5*(Q3-Q1)) )|(x[,col] < (Q1 - 1.5*(Q3-Q1)) )),col]
+  output
+}
+
+#start of ui and sever part
+ui <- fluidPage(
+  titlePanel(div("Density function dashboard for senic data",
+                 style="background-color:aliceblue;text-align:center;
+                 font-family:Calibri;height:35px;border-radius:6px;")),
+  sidebarLayout(
+    sidebarPanel(sliderInput(inputId = "si"
+                             ,label = "choose the number of bins for density function"
+                             ,min = 0.01
+                             ,max = 10
+                             ,value = 1
+                             )
+                ,br()
+                ,checkboxGroupInput(inputId = "cb"
+                                    ,label = "Choose_the_variable"
+                                    ,choices = c("Length_of_stay","Age","Infection_risk"
+                                               ,"Culturing_ratio","Chest_Xrey_ratio","Number_of_Beds",
+                                               "Average_daily_census",
+                                               "Number_of_nurses","Facilities_and_services")
+                                    ,selected = c("Length_of_stay","Age","Infection_risk")
+                                    
+                                    )
+                )
+    
+    ,mainPanel(plotOutput("outplot"))
+    
+  )
+)
+
+server <- function(input,output){
+  
+  output$outplot <- renderPlot(
+    {
+    
+      #start of function to create plot-----------
+      FUN <- function(col){
+        if(sum(outliers(SENIC,col))==0)
+        {
+          df <- data.frame(Q1Q3(SENIC,col))
+          colnames(df) = col
+          ggplot(data = df)+
+            stat_density(data = df,mapping = aes_string(x = colnames(df)), adjust = input$si,color="tan2",fill="tan2",alpha=0.5)
+          
+        } else {
+          df <- data.frame(Q1Q3(SENIC,col))
+          colnames(df) = col
+          of <- data.frame(outliers(SENIC,col))
+          colnames(of) = col 
+          ggplot(data = df)+
+            stat_density(data = df,mapping = aes_string(x = colnames(df))
+                         ,adjust = input$si,color="tan2"
+                         ,fill="tan2",alpha=0.5) +
+            geom_point(data = of,mapping = aes_string(x = colnames(of),y = numeric(length =length(of)))
+                       , color = "blue",shape="diamond")
+          
+        }
+      }
+      #-----------------------------end of function
+      
+      
+      #create output grid
+      grid.arrange(grobs = lapply(X = input$cb,FUN = FUN),ncol = 3)
+      
+    }
+    
+  )
+  
+}
+
+shinyApp(ui = ui,server = server)
 
 ```
+The bandwidth of 0.4 seems to be optimal size
+
