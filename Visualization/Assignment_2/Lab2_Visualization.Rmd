@@ -17,6 +17,7 @@ library(ggplot2)
 library(dplyr)
 library(gridExtra)
 library(plotly)
+library(xlsx)
 ```
 
 ### Reading input 
@@ -92,3 +93,11 @@ ggplot(olive_data, aes(x = linoleic, y = eicosenoic)) + geom_point(aes(colour = 
 ```
 
 Analysis: As evident from the two plots the density plot suggests a clusters being formed while the simple scatter plots coloured by region suggests a simpler cluster
+
+## Assignment 2
+
+```{r}
+baseball <- read.xlsx("baseball-2016.xlsx", sheetName = "Sheet1")
+```
+
+
