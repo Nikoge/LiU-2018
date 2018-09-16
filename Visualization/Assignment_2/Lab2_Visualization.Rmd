@@ -12,10 +12,9 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Lab 2 loading library
 
 ```{r}
-library(data.table)
 library(ggplot2)
 library(dplyr)
-library(gridExtra)
+library(MASS)
 library(plotly)
 library(xlsx)
 ```
@@ -96,8 +95,27 @@ Analysis: As evident from the two plots the density plot suggests a clusters bei
 
 ## Assignment 2
 
+### 1. Loading the input xlxs file
 ```{r}
 baseball <- read.xlsx("baseball-2016.xlsx", sheetName = "Sheet1")
 ```
 
+Analysis: Yes its reasonable to scale the data (perform dimensionality reduction) since more than visualizing more than 4 feaures is not advised.
 
+### 2. Non mertic MDS
+```{r}
+distance <- dist(baseball[, !names(baseball) %in% c("Team", "League")] , method = "minkowski")
+fit <- isoMDS(distance, k = 2)
+
+baseball$fit_x <- fit$points[,1]
+baseball$fit_y <- fit$points[,2]
+
+# plotly plot
+baseball %>% plot_ly(type = "scatter", 
+                     mode = "markers", 
+                     colors = "Set1",
+                     showlegend = T) %>% add_trace(x = ~fit_x, y = ~fit_y,
+                                                   color = ~League, text = ~Team) %>% layout(title = "Non Metric MDS plot")
+```
+
+Analysis: None of the axis make a clear boundary between the two Leagues. The outlier teams are as follows: Milwaukee Brewers, Boston Red Sox, Los Angeles Angels, Philadelphia Philies, San Diego Padres.
