@@ -6,12 +6,12 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
 ## Lab 2 loading library
 
-```{r}
+```{r, include=FALSE, message=FALSE}
 library(ggplot2)
 library(dplyr)
 library(MASS)
@@ -31,8 +31,9 @@ olive_data$Region <- factor(olive_data$Region, levels = c(1,2,3))
 
 ### 1. Scatter plot dependence of Palmitic on Oleic, linolenic not classed and classed
 ```{r}
-ggplot(data = olive_data, aes(x = oleic, y = palmitic), colour = linolenic) + geom_point(aes(colour = linoleic))
-ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point(aes(colour = cut_interval(linoleic, n = 4)))
+
+ggplot(data = olive_data, aes(x = oleic, y = palmitic), colour = linolenic) + geom_point(aes(colour = linoleic)) + ggtitle("Scatter plot of palmitic vs. oleic coloured by linolenic")
+ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point(aes(colour = cut_interval(linoleic, n = 4))) + ggtitle("Scatter plot of palmitic vs. oleic coloured by 4 intervals of linolenic")
 ```
 
 Analysis: The second graph is easier to analysis than compared to first one, the perception
@@ -40,26 +41,30 @@ problem highlighted here is the difference in the channel capacity of human prec
 
 ### 2. Scatter plot dependence of Palmitic on Oleic, linolenic split by different attributes
 ```{r}
-ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point(aes(colour = cut_interval(linolenic, n = 4)))
 
-ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point(aes(size = cut_interval(linolenic, n = 4)))
+ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point(aes(colour = cut_interval(linolenic, n = 4))) + ggtitle("Scatter plot of palmitic vs. oleic coloured by 4 intervals of linolenic")
 
-ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point() +  geom_spoke(aes(angle = as.numeric(cut_interval(linolenic, n = 4))*10), radius = 50)
+
+ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point(aes(size = cut_interval(linolenic, n = 4))) + ggtitle("Scatter plot of palmitic vs. oleic sized by 4 intervals of linolenic")
+
+ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point() +  geom_spoke(aes(angle = as.numeric(cut_interval(linolenic, n = 4))*10), radius = 50) + ggtitle("Scatter plot of palmitic vs. oleic spoke angles by 4 intervals of linolenic")
 ```
 
 Analysis: The discretized Linolenic with color was the easiest to detect boundary. This is becuase the channel capacity of detection is in the order of color>direction>size
 
 ### 3. Scatter plot dependence of Oleic on Eicosenoic, Region split by different attributes
 ```{r}
-ggplot(data = olive_data, aes(x = oleic, y = eicosenoic)) + geom_point(aes(colour = as.numeric(Region)))
 
-ggplot(data = olive_data, aes(x = oleic, y = eicosenoic)) + geom_point(aes(colour = Region))                                                                       
+ggplot(data = olive_data, aes(x = oleic, y = eicosenoic)) + geom_point(aes(colour = as.numeric(Region))) + ggtitle("Scatter plot of palmitic vs. oleic, coloured by region as number")
+
+ggplot(data = olive_data, aes(x = oleic, y = eicosenoic)) + geom_point(aes(colour = Region)) + ggtitle("Scatter plot of palmitic vs. oleic, coloured by region as factors")                                                                       
 ```
 
-Analysis: Using a factor simply as number assumes that the difference between region is an increment of one, eg: Cat->Dog->Human the difference is one unit among the three, while treating them as factor does not assuming any step increment assumption. The Preattentive pattern emerged here due to distinct colour.
+Analysis: Using a factor simply as number assumes that the difference between region is an increment of one, eg: Cat->Dog->Human the difference is one unit among the three, while treating them as factor does not assuming any step increment. The Preattentive pattern emerged here due to distinct colour.
 
 ### 4. Scatter plot dependence of Oleic on Eicosenoic, linoleic not classed and classed and 27 objects 
 ```{r}
+
 ggplot(data = olive_data, aes(x = oleic, y = eicosenoic)) + geom_point(aes(colour = cut_interval(linoleic, n = 3), shape = cut_interval(palmitic, n = 3), size = cut_interval(palmitoleic, n = 3)))
 ```
 
@@ -75,6 +80,7 @@ Analysis: Due to establishment of viusally clear boundary between the regions, t
 ### 6. piechart of oils vs. region
 
 ```{r}
+
 p <- (olive_data) %>% group_by(Region) %>% summarize(total_oils = sum(palmitic, palmitoleic, stearic, oleic, linoleic, linolenic, arachidic, eicosenoic)) %>% plot_ly(values = ~total_oils, type = 'pie', showlegend = FALSE) %>% layout(title = 'Total oils by region',
          xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
          yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
@@ -106,6 +112,7 @@ Analysis: Yes its reasonable to scale the data (perform dimensionality reduction
 ```{r}
 distance <- dist(baseball[, !names(baseball) %in% c("Team", "League")] , method = "minkowski")
 fit <- isoMDS(distance, k = 2)
+rownames(fit) <- baseball$Team
 
 baseball$fit_x <- fit$points[,1]
 baseball$fit_y <- fit$points[,2]
@@ -116,6 +123,23 @@ baseball %>% plot_ly(type = "scatter",
                      colors = "Set1",
                      showlegend = T) %>% add_trace(x = ~fit_x, y = ~fit_y,
                                                    color = ~League, text = ~Team) %>% layout(title = "Non Metric MDS plot")
+
+
 ```
 
 Analysis: None of the axis make a clear boundary between the two Leagues. The outlier teams are as follows: Milwaukee Brewers, Boston Red Sox, Los Angeles Angels, Philadelphia Philies, San Diego Padres.
+
+### 3. Shepard plot of MDS
+```{r}
+
+# calculating distance between the 2 compoments
+distance_mds <- dist(baseball[, names(baseball) %in% c("fit_x", "fit_y")] , method = "minkowski")
+
+distance_data <- data.frame()
+distance_data$distance_mds <- distance_mds
+distance_data$distance <- distance
+
+plot_ly(data= distance_data, type = "scatter", mode = "markers") %>% add_trace(x=~distance_mds, y=~distance) %>% layout(title = "Shepard Plot of the NMDS")
+```
+
+### Appendix
