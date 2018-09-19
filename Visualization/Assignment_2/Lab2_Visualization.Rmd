@@ -1,7 +1,7 @@
 ---
 title: "Lab2_Visualization"
 author: "Anubhav Dikshit and Yusur Almutair"
-date: "13 September 2018"
+date: "19 September 2018"
 output: html_document
 ---
 
@@ -111,7 +111,7 @@ Analysis: Yes its reasonable to scale the data (perform dimensionality reduction
 ### 2. Non mertic MDS
 ```{r}
 distance <- dist(baseball[, !names(baseball) %in% c("Team", "League")] , method = "minkowski")
-fit <- isoMDS(distance, k = 2)
+fit <- isoMDS(distance, k = 2, maxit = 100)
 
 baseball$MDS1 <- fit$points[,1]
 baseball$MDS2 <- fit$points[,2]
@@ -156,115 +156,256 @@ Analysis: The datapoints away from the 45degree line(orange) are the the pairs o
 ### 4. Plotting MDS axis with variables of baseball dataset
 ```{r}
 
-# Plotting MDS1 on all numeric columns
+MDS_plotter <- function(MDS_axis, Col){
+  df <- cbind(baseball[[MDS_axis]], baseball[[Col]], baseball$League, baseball$Team)
+  df <- as.data.frame(df)
+  names(df) <- c(eval(MDS_axis),eval(Col), "League", "Team")
+  df$League <- as.character(df$League)
+  
+    # plotly plot
+  y_title <- list(title = Col)
+  x_title <- list(title = MDS_axis)
+   
+  plot_return <- df %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% 
+    add_trace(x = df[,1], y = df[,2], color = ~League, text = ~Team) %>% 
+    layout(title = "Plot of MDS axis vs. variable", yaxis =y_title, xaxis=x_title)
+  return(plot_return)
+}
 
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~Won, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
+# Plotting MDS on all numeric columns
+# MDS axis 1
+# MDS_plotter("MDS1", "Won")
+# MDS_plotter("MDS1", "Lost")
+# MDS_plotter("MDS1", "Runs.per.game")
+# MDS_plotter("MDS1", "HR.per.game")
+# MDS_plotter("MDS1", "AB")
+# MDS_plotter("MDS1", "Runs")
+# MDS_plotter("MDS1", "Hits")
+# MDS_plotter("MDS1", "X2B")
+# MDS_plotter("MDS1", "X3B")
+# MDS_plotter("MDS1", "HR")
+# MDS_plotter("MDS1", "RBI")
+# MDS_plotter("MDS1", "StolenB")
+# MDS_plotter("MDS1", "CaughtS")
+# MDS_plotter("MDS1", "BB")
+# MDS_plotter("MDS1", "SO")
+# MDS_plotter("MDS1", "BAvg")
+# MDS_plotter("MDS1", "OBP")
+# MDS_plotter("MDS1", "SLG")
+# MDS_plotter("MDS1", "OPS")
+# MDS_plotter("MDS1", "TB")
+# MDS_plotter("MDS1", "GDP")
+# MDS_plotter("MDS1", "HBP")
+# MDS_plotter("MDS1", "SH")
+# MDS_plotter("MDS1", "SF")
+# MDS_plotter("MDS1", "IBB")
+# MDS_plotter("MDS1", "LOB")
+# 
+# # MDS axis 2
+# MDS_plotter("MDS2", "Won")
+# MDS_plotter("MDS2", "Lost")
+# MDS_plotter("MDS2", "Runs.per.game")
+# MDS_plotter("MDS2", "HR.per.game")
+# MDS_plotter("MDS2", "AB")
+# MDS_plotter("MDS2", "Runs")
+# MDS_plotter("MDS2", "Hits")
+# MDS_plotter("MDS2", "X2B")
+# MDS_plotter("MDS2", "X3B")
+# MDS_plotter("MDS2", "HR")
+# MDS_plotter("MDS2", "RBI")
+# MDS_plotter("MDS2", "StolenB")
+# MDS_plotter("MDS2", "CaughtS")
+# MDS_plotter("MDS2", "BB")
+# MDS_plotter("MDS2", "SO")
+# MDS_plotter("MDS2", "BAvg")
+# MDS_plotter("MDS2", "OBP")
+# MDS_plotter("MDS2", "SLG")
+# MDS_plotter("MDS2", "OPS")
+# MDS_plotter("MDS2", "TB")
+# MDS_plotter("MDS2", "GDP")
+# MDS_plotter("MDS2", "HBP")
+# MDS_plotter("MDS2", "SH")
+# MDS_plotter("MDS2", "SF")
+# MDS_plotter("MDS2", "IBB")
+# MDS_plotter("MDS2", "LOB")
 
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~Lost, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~Runs.per.game, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~HR.per.game, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~AB, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~Runs, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~Hits, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~X2B, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~X3B, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~HR, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~RBI, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~StolenB, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~CaughtS, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~BB, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~SO, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~BAvg, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~OBP, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~SLG, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~OPS, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~TB, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~GDP, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~HBP, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~SH, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~SF, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-# Best plot for MDS1
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~IBB, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS1, y = ~LOB, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS1 vs. variable")
-
-# Plotting MDS2 on all numeric columns
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~Won, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~Lost, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~Runs.per.game, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~HR.per.game, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~AB, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~Runs, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~Hits, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~X2B, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~X3B, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~HR, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~RBI, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~StolenB, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~CaughtS, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~BB, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~SO, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~BAvg, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~OBP, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~SLG, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~OPS, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~TB, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~GDP, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~HBP, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~SH, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~SF, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~IBB, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
-
-baseball %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% add_trace(x = ~MDS2, y = ~LOB, color = ~League, text = ~Team) %>% layout(title = "Plot of MDS2 vs. variable")
+# Best plots are with MDS-2 with variables HR.per.game and HR
+MDS_plotter("MDS2", "HR.per.game")
+MDS_plotter("MDS2", "HR")
 
 ```
+Analysis:  For batter, the three metric "Batting average", "Runs batted in (RBI)" and "Home Runs (HR)" determine the ranking. For the pitchers its "Stike Outs(SO)" and "Wins". Thus MDS1 axis of our MDS helps to seperate leagues on the batting performance. One thing to note is unlike PCA, there is no way of stating how much % of varies is explained by MDS axis
 
 ### Appendix
+
+```{r, echo=TRUE, eval= FALSE}
+
+## Lab 2 loading library
+
+library(ggplot2)
+library(dplyr)
+library(MASS)
+library(plotly)
+library(xlsx)
+
+### Reading input 
+
+olive_data <- read.csv("olive.csv")
+olive_data <- olive_data[,-1]
+olive_data$Region <- factor(olive_data$Region, levels = c(1,2,3))
+
+### 1. Scatter plot dependence of Palmitic on Oleic, linolenic not classed and classed
+
+ggplot(data = olive_data, aes(x = oleic, y = palmitic), colour = linolenic) + geom_point(aes(colour = linoleic)) + ggtitle("Scatter plot of palmitic vs. oleic coloured by linolenic")
+ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point(aes(colour = cut_interval(linoleic, n = 4))) + ggtitle("Scatter plot of palmitic vs. oleic coloured by 4 intervals of linolenic")
+
+### 2. Scatter plot dependence of Palmitic on Oleic, linolenic split by different attributes
+
+ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point(aes(colour = cut_interval(linolenic, n = 4))) + ggtitle("Scatter plot of palmitic vs. oleic coloured by 4 intervals of linolenic")
+ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point(aes(size = cut_interval(linolenic, n = 4))) + ggtitle("Scatter plot of palmitic vs. oleic sized by 4 intervals of linolenic")
+ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point() +  geom_spoke(aes(angle = as.numeric(cut_interval(linolenic, n = 4))*10), radius = 50) + ggtitle("Scatter plot of palmitic vs. oleic spoke angles by 4 intervals of linolenic")
+
+### 3. Scatter plot dependence of Oleic on Eicosenoic, Region split by different attributes
+
+ggplot(data = olive_data, aes(x = oleic, y = eicosenoic)) + geom_point(aes(colour = as.numeric(Region))) + ggtitle("Scatter plot of palmitic vs. oleic, coloured by region as number")
+ggplot(data = olive_data, aes(x = oleic, y = eicosenoic)) + geom_point(aes(colour = Region)) + ggtitle("Scatter plot of palmitic vs. oleic, coloured by region as factors")                                                                       
+
+### 4. Scatter plot dependence of Oleic on Eicosenoic, linoleic not classed and classed and 27 objects 
+
+ggplot(data = olive_data, aes(x = oleic, y = eicosenoic)) + geom_point(aes(colour = cut_interval(linoleic, n = 3), shape = cut_interval(palmitic, n = 3), size = cut_interval(palmitoleic, n = 3)))
+
+### 5. Scatter plot dependence of Oleic on Eicosenoic, linoleic not classed and classed and 27 objects
+
+ggplot(data = olive_data, aes(x = oleic, y = eicosenoic)) + geom_point(aes(colour = Region, shape = cut_interval(palmitic, n = 3), size = cut_interval(palmitoleic, n = 3)))
+
+### 6. piechart of oils vs. region
+
+(olive_data) %>% group_by(Region) %>% summarize(total_oils = sum(palmitic, palmitoleic, stearic, oleic, linoleic, linolenic, arachidic, eicosenoic)) %>% plot_ly(values = ~total_oils, type = 'pie', showlegend = FALSE) %>% layout(title = 'Total oils by region',
+         xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+         yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+
+### 7. 2D density contour plot
+
+ggplot(olive_data, aes(x = linoleic, y = eicosenoic)) + geom_point(aes(colour = Region)) + geom_density_2d()
+ggplot(olive_data, aes(x = linoleic, y = eicosenoic)) + geom_point(aes(colour = Region))
+
+## Assignment 2
+
+### 1. Loading the input xlxs file
+baseball <- read.xlsx("baseball-2016.xlsx", sheetName = "Sheet1")
+
+### 2. Non mertic MDS
+
+distance <- dist(baseball[, !names(baseball) %in% c("Team", "League")] , method = "minkowski")
+fit <- isoMDS(distance, k = 2, maxit = 100)
+
+baseball$MDS1 <- fit$points[,1]
+baseball$MDS2 <- fit$points[,2]
+
+# plotly plot
+baseball %>% plot_ly(type = "scatter", 
+                     mode = "markers", 
+                     colors = "Set1",
+                     showlegend = T) %>% add_trace(x = ~MDS1, y = ~MDS2, color = ~League, text = ~Team) %>% layout(title = "Non Metric MDS plot")
+
+### 3. Shepard plot of MDS
+
+sh <- Shepard(distance, fit$points)
+Original_Dist <-as.numeric(distance)
+MDS_Dist <- as.numeric(dist(fit$points))
+
+rownames(baseball) <- baseball$Team
+
+n=nrow(fit$points)
+index=matrix(1:n, nrow=n, ncol=n)
+index1=as.numeric(index[lower.tri(index)])
+
+n=nrow(fit$points)
+index=matrix(1:n, nrow=n, ncol=n, byrow = T)
+index2=as.numeric(index[lower.tri(index)])
+
+plot_ly()%>%
+  add_markers(x=~Original_Dist, y=~MDS_Dist, hoverinfo = 'text', name = "Datapoints",
+        text = ~paste('Obj1: ', rownames(baseball)[index1],
+                      '<br> Obj 2: ', rownames(baseball)[index2]))%>% add_lines(x=~sh$x, y=~sh$yf, name="Stress")
+
+### 4. Plotting MDS axis with variables of baseball dataset
+
+MDS_plotter <- function(MDS_axis, Col){
+  df <- cbind(baseball[[MDS_axis]], baseball[[Col]], baseball$League, baseball$Team)
+  df <- as.data.frame(df)
+  names(df) <- c(eval(MDS_axis),eval(Col), "League", "Team")
+  df$League <- as.character(df$League)
+  
+    # plotly plot
+  y_title <- list(title = Col)
+  x_title <- list(title = MDS_axis)
+   
+  plot_return <- df %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% 
+    add_trace(x = df[,1], y = df[,2], color = ~League, text = ~Team) %>% 
+    layout(title = "Plot of MDS axis vs. variable", yaxis =y_title, xaxis=x_title)
+  return(plot_return)
+}
+
+# Plotting MDS on all numeric columns
+# MDS axis 1
+# MDS_plotter("MDS1", "Won")
+# MDS_plotter("MDS1", "Lost")
+# MDS_plotter("MDS1", "Runs.per.game")
+# MDS_plotter("MDS1", "HR.per.game")
+# MDS_plotter("MDS1", "AB")
+# MDS_plotter("MDS1", "Runs")
+# MDS_plotter("MDS1", "Hits")
+# MDS_plotter("MDS1", "X2B")
+# MDS_plotter("MDS1", "X3B")
+# MDS_plotter("MDS1", "HR")
+# MDS_plotter("MDS1", "RBI")
+# MDS_plotter("MDS1", "StolenB")
+# MDS_plotter("MDS1", "CaughtS")
+# MDS_plotter("MDS1", "BB")
+# MDS_plotter("MDS1", "SO")
+# MDS_plotter("MDS1", "BAvg")
+# MDS_plotter("MDS1", "OBP")
+# MDS_plotter("MDS1", "SLG")
+# MDS_plotter("MDS1", "OPS")
+# MDS_plotter("MDS1", "TB")
+# MDS_plotter("MDS1", "GDP")
+# MDS_plotter("MDS1", "HBP")
+# MDS_plotter("MDS1", "SH")
+# MDS_plotter("MDS1", "SF")
+# MDS_plotter("MDS1", "IBB")
+# MDS_plotter("MDS1", "LOB")
+# 
+# # MDS axis 2
+# MDS_plotter("MDS2", "Won")
+# MDS_plotter("MDS2", "Lost")
+# MDS_plotter("MDS2", "Runs.per.game")
+# MDS_plotter("MDS2", "HR.per.game")
+# MDS_plotter("MDS2", "AB")
+# MDS_plotter("MDS2", "Runs")
+# MDS_plotter("MDS2", "Hits")
+# MDS_plotter("MDS2", "X2B")
+# MDS_plotter("MDS2", "X3B")
+# MDS_plotter("MDS2", "HR")
+# MDS_plotter("MDS2", "RBI")
+# MDS_plotter("MDS2", "StolenB")
+# MDS_plotter("MDS2", "CaughtS")
+# MDS_plotter("MDS2", "BB")
+# MDS_plotter("MDS2", "SO")
+# MDS_plotter("MDS2", "BAvg")
+# MDS_plotter("MDS2", "OBP")
+# MDS_plotter("MDS2", "SLG")
+# MDS_plotter("MDS2", "OPS")
+# MDS_plotter("MDS2", "TB")
+# MDS_plotter("MDS2", "GDP")
+# MDS_plotter("MDS2", "HBP")
+# MDS_plotter("MDS2", "SH")
+# MDS_plotter("MDS2", "SF")
+# MDS_plotter("MDS2", "IBB")
+# MDS_plotter("MDS2", "LOB")
+
+# Best plots are with MDS-2 with variables HR.per.game and HR
+MDS_plotter("MDS2", "HR.per.game")
+MDS_plotter("MDS2", "HR")
+
+```
