@@ -1,0 +1,93 @@
+---
+title: "Lab3_Visualization"
+author: "Anubhav Dikshit and Yusur Almutair"
+date: "27 September 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Loading library
+
+```{r, include=FALSE, message=FALSE}
+library(ggplot2)
+library(dplyr)
+library(MASS)
+library(plotly)
+library(xlsx)
+Sys.setenv('MAPBOX_TOKEN' = 'pk.eyJ1IjoiYW51Ymhhdi1kaWtzaGl0IiwiYSI6ImNqbWI1dDVjeTAwNG0zd21pcHRoMTE4YWgifQ.r4m2I2AYIvAzCNyUn4tiuw')
+```
+
+### Reading input 
+```{r}
+
+mosquito_data <- read.csv("aegypti_albopictus.csv")
+
+```
+
+### Distribution of Mosquito by Species
+```{r}
+mosquito_data %>% filter(YEAR == "2004" | YEAR == "2013") %>% 
+  select(VECTOR, COUNTRY, X, Y) %>% plot_mapbox(lon  = ~X, lat = ~Y, mode = 'scattermapbox', hoverinfo='COUNTRY', split = ~VECTOR, width = 800, height = 800) %>% 
+  layout(title = 'Mosquito Population vs. Country', margin = list(l = 50, r = 50, b = 100, t = 100, pad = 4))
+```
+
+```{r}
+
+p1 <- mosquito_data %>% filter(YEAR == "2004" & VECTOR == "Aedes aegypti") %>% group_by(COUNTRY, X, Y) %>% summarise(count = n())%>%  plot_mapbox(lon  = ~X, lat = ~Y, mode = 'scattermapbox', size=~count, hoverinfo = 'VECTOR') %>% layout(title = 'Mosquito Population vs. Country in 2004 & 2013')
+p2 <- mosquito_data %>% filter(YEAR == "2013" & VECTOR == "Aedes aegypti") %>% group_by(COUNTRY, X, Y) %>% summarise(count = n())%>%  plot_mapbox(lon  = ~X, lat = ~Y, mode = 'scattermapbox', size=~count, hoverinfo = 'VECTOR') %>% layout(title = 'Mosquito Population vs. Country in 2004 & 2013')
+p3 <- mosquito_data %>% filter(YEAR == "2004" & VECTOR == "Aedes albopictus") %>% group_by(COUNTRY, X, Y) %>% summarise(count = n())%>%  plot_mapbox(lon  = ~X, lat = ~Y, mode = 'scattermapbox', size=~count, hoverinfo = 'VECTOR') %>% layout(title = 'Mosquito Population vs. Country in 2004 & 2013')
+p4 <- mosquito_data %>% filter(YEAR == "2013" & VECTOR == "Aedes albopictus") %>% group_by(COUNTRY, X, Y) %>% summarise(count = n())%>%  plot_mapbox(lon  = ~X, lat = ~Y, mode = 'scattermapbox', size=~count, hoverinfo = 'VECTOR') %>% layout(title = 'Mosquito Population vs. Country in 2004 & 2013')
+
+subplot(p1, p2) # Aedes aegypti Mosquito population in 2004 and 2013
+subplot(p3, p4) # Aedes albopictus Mosquito population in 2004 and 2013
+```
+Analysis: 
+
+### 2. Geoplot of mosquitos per country
+```{r}
+mosquito_data %>% group_by(COUNTRY, COUNTRY_ID) %>% summarise(count = n()) %>% plot_geo(width = 800, height = 800) %>% add_trace(
+  z = ~count, text = ~COUNTRY, locations = ~COUNTRY_ID,
+  color = ~count, colors = 'Purples'
+) %>%
+  colorbar(title = "Mosquito Population") %>%
+  layout(
+    title = 'Mosquito Population vs. Country', margin = list(l = 50, r = 50, b = 100, t = 100, pad = 4),
+    geo = list(projection = list(type = 'Equirectangular')
+    )
+  )
+```
+Analysis:
+
+### 3. Equidistant projection and choropleth color log(Z)
+```{r}
+mosquito_data %>% group_by(COUNTRY, COUNTRY_ID) %>% summarise(count = n()) %>% plot_geo(width = 800, height = 800) %>% add_trace(
+  z = ~log(count), text = ~COUNTRY, locations = ~COUNTRY_ID,
+  color = ~log(count), colors = 'Purples'
+) %>%
+  colorbar(title = "Mosquito Population in Log") %>%
+  layout(
+    title = 'Mosquito Population vs. Country', margin = list(l = 50, r = 50, b = 100, t = 100, pad = 4),
+    geo = list(projection = list(type = 'Equirectangular')
+    )
+  )
+```
+
+### Conic Equal Area projection
+```{r}
+mosquito_data %>% group_by(COUNTRY, COUNTRY_ID) %>% summarise(count = n()) %>% plot_geo(width = 800, height = 800) %>% add_trace(
+  z = ~log(count), text = ~COUNTRY, locations = ~COUNTRY_ID,
+  color = ~log(count), colors = 'Purples'
+) %>%
+  colorbar(title = "Mosquito Population in Log") %>%
+  layout(
+    title = 'Mosquito Population vs. Country', margin = list(l = 50, r = 50, b = 100, t = 100, pad = 4),
+    geo = list(projection = list(type = 'Conic equal area')
+    )
+  )
+```
+Analysis:
+
+### 4. 

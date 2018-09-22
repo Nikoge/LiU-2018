@@ -31,7 +31,7 @@ olive_data$Region <- factor(olive_data$Region, levels = c(1,2,3))
 
 ### 1. Scatter plot dependence of Palmitic on Oleic, linolenic not classed and classed
 ```{r}
-
+knitr::opts_chunk$set(echo = TRUE)
 ggplot(data = olive_data, aes(x = oleic, y = palmitic), colour = linolenic) + geom_point(aes(colour = linoleic)) + ggtitle("Scatter plot of palmitic vs. oleic coloured by linolenic")
 ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point(aes(colour = cut_interval(linoleic, n = 4))) + ggtitle("Scatter plot of palmitic vs. oleic coloured by 4 intervals of linolenic")
 ```
