@@ -12,43 +12,49 @@ knitr::opts_chunk$set(echo = FALSE)
 ## Loading library
 
 ```{r, include=FALSE, message=FALSE}
-library(ggplot2)
+library(data.table)
 library(dplyr)
-library(MASS)
+library(reshape2)
 library(plotly)
-library(xlsx)
+library(ggplot2)
+library(sf)
+
 Sys.setenv('MAPBOX_TOKEN' = 'pk.eyJ1IjoiYW51Ymhhdi1kaWtzaGl0IiwiYSI6ImNqbWI1dDVjeTAwNG0zd21pcHRoMTE4YWgifQ.r4m2I2AYIvAzCNyUn4tiuw')
 ```
 
 ### Reading input 
 ```{r}
-
+knitr::opts_chunk$set(echo = TRUE)
 mosquito_data <- read.csv("aegypti_albopictus.csv")
-
 ```
 
-### Distribution of Mosquito by Species
+### 1. Distribution of Mosquito by Species
 ```{r}
 mosquito_data %>% filter(YEAR == "2004" | YEAR == "2013") %>% 
   select(VECTOR, COUNTRY, X, Y) %>% plot_mapbox(lon  = ~X, lat = ~Y, mode = 'scattermapbox', hoverinfo='COUNTRY', split = ~VECTOR, width = 800, height = 800) %>% 
   layout(title = 'Mosquito Population vs. Country', margin = list(l = 50, r = 50, b = 100, t = 100, pad = 4))
 ```
+Analysis: Brazil has the highest density of 'Aedes Aegypti', similarly Taiwan has the density of 'Aedes albopictus'. The first perception problem here is the fact the number of datapoints is directly associated with the population which is not the case. 
+
 
 ```{r}
 
-p1 <- mosquito_data %>% filter(YEAR == "2004" & VECTOR == "Aedes aegypti") %>% group_by(COUNTRY, X, Y) %>% summarise(count = n())%>%  plot_mapbox(lon  = ~X, lat = ~Y, mode = 'scattermapbox', size=~count, hoverinfo = 'VECTOR') %>% layout(title = 'Mosquito Population vs. Country in 2004 & 2013')
-p2 <- mosquito_data %>% filter(YEAR == "2013" & VECTOR == "Aedes aegypti") %>% group_by(COUNTRY, X, Y) %>% summarise(count = n())%>%  plot_mapbox(lon  = ~X, lat = ~Y, mode = 'scattermapbox', size=~count, hoverinfo = 'VECTOR') %>% layout(title = 'Mosquito Population vs. Country in 2004 & 2013')
-p3 <- mosquito_data %>% filter(YEAR == "2004" & VECTOR == "Aedes albopictus") %>% group_by(COUNTRY, X, Y) %>% summarise(count = n())%>%  plot_mapbox(lon  = ~X, lat = ~Y, mode = 'scattermapbox', size=~count, hoverinfo = 'VECTOR') %>% layout(title = 'Mosquito Population vs. Country in 2004 & 2013')
-p4 <- mosquito_data %>% filter(YEAR == "2013" & VECTOR == "Aedes albopictus") %>% group_by(COUNTRY, X, Y) %>% summarise(count = n())%>%  plot_mapbox(lon  = ~X, lat = ~Y, mode = 'scattermapbox', size=~count, hoverinfo = 'VECTOR') %>% layout(title = 'Mosquito Population vs. Country in 2004 & 2013')
+p1 <- mosquito_data %>% filter(YEAR == "2004" & VECTOR == "Aedes aegypti") %>% group_by(COUNTRY, X, Y) %>% summarise(count = n())%>%  plot_mapbox(lon  = ~X, lat = ~Y, mode = 'scattermapbox', size=~count, hoverinfo = 'VECTOR') %>% layout(title = 'Aedes aegypti Mosquito Population vs. Country in 2004')
+p2 <- mosquito_data %>% filter(YEAR == "2013" & VECTOR == "Aedes aegypti") %>% group_by(COUNTRY, X, Y) %>% summarise(count = n())%>%  plot_mapbox(lon  = ~X, lat = ~Y, mode = 'scattermapbox', size=~count, hoverinfo = 'VECTOR') %>% layout(title = 'Aedes aegypti Mosquito Population vs. Country in 2013')
+p3 <- mosquito_data %>% filter(YEAR == "2004" & VECTOR == "Aedes albopictus") %>% group_by(COUNTRY, X, Y) %>% summarise(count = n())%>%  plot_mapbox(lon  = ~X, lat = ~Y, mode = 'scattermapbox', size=~count, hoverinfo = 'VECTOR') %>% layout(title = 'Aedes albopictus Mosquito Population vs. Country in 2004')
+p4 <- mosquito_data %>% filter(YEAR == "2013" & VECTOR == "Aedes albopictus") %>% group_by(COUNTRY, X, Y) %>% summarise(count = n())%>%  plot_mapbox(lon  = ~X, lat = ~Y, mode = 'scattermapbox', size=~count, hoverinfo = 'VECTOR') %>% layout(title = ' Aedes albopictus Mosquito Population vs. Country in 2013')
 
-subplot(p1, p2) # Aedes aegypti Mosquito population in 2004 and 2013
-subplot(p3, p4) # Aedes albopictus Mosquito population in 2004 and 2013
+p1
+p2
+p3
+p4
+
 ```
-Analysis: 
+Analysis: Going from 2004 to 2013 the population of 'Aedes aegypti' increased in the world, especially in Brazil. However the incase of 'Aedes albopictus' the population decreased. Again this could be the case of the data points alone.
 
 ### 2. Geoplot of mosquitos per country
 ```{r}
-mosquito_data %>% group_by(COUNTRY, COUNTRY_ID) %>% summarise(count = n()) %>% plot_geo(width = 800, height = 800) %>% add_trace(
+mosquito_data %>% group_by(COUNTRY, COUNTRY_ID) %>% summarise(count = n()) %>% plot_geo(width = 1200, height = 800) %>% add_trace(
   z = ~count, text = ~COUNTRY, locations = ~COUNTRY_ID,
   color = ~count, colors = 'Purples'
 ) %>%
@@ -59,11 +65,11 @@ mosquito_data %>% group_by(COUNTRY, COUNTRY_ID) %>% summarise(count = n()) %>% p
     )
   )
 ```
-Analysis:
+Analysis: Due to rolling up of data we have lost the granularity of the data (level of the data), also the scale of data is mostly below 5K, while only Brazil is close to 10K, thus the no country stand out.
 
-### 3. Equidistant projection and choropleth color log(Z)
+### 3a. Equirectangular projection and choropleth color log(Z)
 ```{r}
-mosquito_data %>% group_by(COUNTRY, COUNTRY_ID) %>% summarise(count = n()) %>% plot_geo(width = 800, height = 800) %>% add_trace(
+mosquito_data %>% group_by(COUNTRY, COUNTRY_ID) %>% summarise(count = n()) %>% plot_geo(width = 1200, height = 800) %>% add_trace(
   z = ~log(count), text = ~COUNTRY, locations = ~COUNTRY_ID,
   color = ~log(count), colors = 'Purples'
 ) %>%
@@ -75,9 +81,9 @@ mosquito_data %>% group_by(COUNTRY, COUNTRY_ID) %>% summarise(count = n()) %>% p
   )
 ```
 
-### Conic Equal Area projection
+### 3b Conic Equal Area projection
 ```{r}
-mosquito_data %>% group_by(COUNTRY, COUNTRY_ID) %>% summarise(count = n()) %>% plot_geo(width = 800, height = 800) %>% add_trace(
+mosquito_data %>% group_by(COUNTRY, COUNTRY_ID) %>% summarise(count = n()) %>% plot_geo(width = 1200, height = 800) %>% add_trace(
   z = ~log(count), text = ~COUNTRY, locations = ~COUNTRY_ID,
   color = ~log(count), colors = 'Purples'
 ) %>%
@@ -88,6 +94,57 @@ mosquito_data %>% group_by(COUNTRY, COUNTRY_ID) %>% summarise(count = n()) %>% p
     )
   )
 ```
-Analysis:
+Analysis: Making the scale in log brings more information in chart compared to non log values. However the there is not much difference in the two types of projection when it comes to analysis.
 
-### 4. 
+### 4. Resolve and Map for Brazil with discreet cuts 
+```{r}
+mosquito_data$X_cut = cut_interval(mosquito_data$X, n = 100, labels=FALSE)
+mosquito_data$Y_cut = cut_interval(mosquito_data$Y, n = 100, labels=FALSE)
+
+mosquito_data %>% filter(YEAR == "2013" & COUNTRY == "Brazil") %>% group_by(COUNTRY, VECTOR, X_cut, Y_cut) %>% 
+  summarise(X_mean = mean(X), Y_mean = mean(Y), count=n()) %>% 
+  plot_mapbox(lon  = ~X_mean, lat = ~Y_mean, mode = 'scattermapbox', split = ~VECTOR, hoverinfo='count', width = 800, height = 800, color = ~count) %>% add_trace(z = ~count) %>% layout(title = 'Mosquito Population vs. Brazil', margin = list(l = 50, r = 50, b = 100, t = 100, pad = 4)) 
+
+```
+Analysis: Taking the mean of the cordintaes definetly helped the cases, although this reduced the level of detail. In terms of population of mosquito we find that "Patos", "Bauru" have the highest count of mosquitos.
+
+### Assignment 2 Visualization of Income of Swedish Household
+
+
+### 1. Loading input and reshaping the dataset
+```{r}
+income_data <- read.csv("Income_Data.csv")
+rds <- readRDS("gadm36_SWE_2_sf.rds")
+
+
+
+income_data_recasted <- dcast(income_data, region+type.of.household~age, value.var = "X2016")
+setnames(income_data_recasted, old=c("18-29 years", "30-49 years", "50-64 years" ), new=c("Young", "Adult", "Senior"))
+
+income_data$age_group <- ifelse(income_data$age == "18-29 years", "Young",
+                                ifelse(income_data$age == "30-49 years", "Adult","Senior"))
+
+```
+
+### 2. Violin Plot showing the distribution of wealth
+```{r}
+income_data %>% plot_ly(x =~age_group ,y = ~X2016, type = 'violin', split = ~age_group, box = list(visible = T), meanline = list(visible = T)) %>% layout(yaxis = list(title = "income Distribution", zeroline = F), xaxis = list(title = "Age Group"), title = "Income Distribution vs. Age Group in Sweden 2016")
+
+```
+Analysis: As expected the bulk of young earn easier than senior and adults, however there appears to be two modes here, one at around 200 and one around 500, same as for senior. The weath spread is highest in Seniors.
+
+### 3. Surface Plot showing the distribution of wealth
+```{r}
+income_data_recasted %>% plot_ly(x=~Young, y=~Adult, z=~Senior) %>% add_surface()
+
+```
+
+### 4. Choropleth of Income distribution
+```{r}
+plot_ly()%>%add_sf(data=rds, split=~NAME_2, color=~Price, showlegend=F, alpha=1)
+p
+```
+
+### Apendix
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+```

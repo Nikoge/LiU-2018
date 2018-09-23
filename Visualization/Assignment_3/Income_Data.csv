@@ -1,0 +1,946 @@
+"region","type of household","age","2016"
+"01 Stockholm county","all households","18-29 years",385.4
+"01 Stockholm county","all households","30-49 years",659.5
+"01 Stockholm county","all households","50-64 years",683.3
+"01 Stockholm county","single without children","18-29 years",237.9
+"01 Stockholm county","single without children","30-49 years",342.0
+"01 Stockholm county","single without children","50-64 years",340.2
+"01 Stockholm county","single women without children","18-29 years",226.9
+"01 Stockholm county","single women without children","30-49 years",317.4
+"01 Stockholm county","single women without children","50-64 years",326.0
+"01 Stockholm county","single men without children","18-29 years",247.5
+"01 Stockholm county","single men without children","30-49 years",357.6
+"01 Stockholm county","single men without children","50-64 years",354.1
+"01 Stockholm county","single with children aged 0-19","18-29 years",295.9
+"01 Stockholm county","single with children aged 0-19","30-49 years",403.8
+"01 Stockholm county","single with children aged 0-19","50-64 years",512.8
+"01 Stockholm county","single women with children aged 0-19","18-29 years",256.1
+"01 Stockholm county","single women with children aged 0-19","30-49 years",379.0
+"01 Stockholm county","single women with children aged 0-19","50-64 years",473.2
+"01 Stockholm county","single men with children aged 0-19","18-29 years",465.7
+"01 Stockholm county","single men with children aged 0-19","30-49 years",503.8
+"01 Stockholm county","single men with children aged 0-19","50-64 years",595.9
+"01 Stockholm county","single with adult children aged 20-29","18-29 years",494.7
+"01 Stockholm county","single with adult children aged 20-29","30-49 years",505.3
+"01 Stockholm county","single with adult children aged 20-29","50-64 years",577.2
+"01 Stockholm county","single women with adult children aged 20-29","18-29 years",458.0
+"01 Stockholm county","single women with adult children aged 20-29","30-49 years",476.2
+"01 Stockholm county","single women with adult children aged 20-29","50-64 years",541.3
+"01 Stockholm county","single men with adult children aged 20-29","18-29 years",516.8
+"01 Stockholm county","single men with adult children aged 20-29","30-49 years",603.9
+"01 Stockholm county","single men with adult children aged 20-29","50-64 years",665.8
+"01 Stockholm county","cohabiting without children","18-29 years",530.1
+"01 Stockholm county","cohabiting without children","30-49 years",717.4
+"01 Stockholm county","cohabiting without children","50-64 years",819.8
+"01 Stockholm county","cohabiting with children aged 0-19","18-29 years",536.1
+"01 Stockholm county","cohabiting with children aged 0-19","30-49 years",868.5
+"01 Stockholm county","cohabiting with children aged 0-19","50-64 years",1040.6
+"01 Stockholm county","cohabiting with adult children aged 20-29","18-29 years",748.7
+"01 Stockholm county","cohabiting with adult children aged 20-29","30-49 years",900.2
+"01 Stockholm county","cohabiting with adult children aged 20-29","50-64 years",1061.4
+"01 Stockholm county","other households without children","18-29 years",541.3
+"01 Stockholm county","other households without children","30-49 years",673.3
+"01 Stockholm county","other households without children","50-64 years",779.8
+"01 Stockholm county","other households with children aged 0-19","18-29 years",665.2
+"01 Stockholm county","other households with children aged 0-19","30-49 years",937.3
+"01 Stockholm county","other households with children aged 0-19","50-64 years",997.6
+"03 Uppsala county","all households","18-29 years",300.9
+"03 Uppsala county","all households","30-49 years",542.7
+"03 Uppsala county","all households","50-64 years",580.4
+"03 Uppsala county","single without children","18-29 years",181.2
+"03 Uppsala county","single without children","30-49 years",273.3
+"03 Uppsala county","single without children","50-64 years",286.7
+"03 Uppsala county","single women without children","18-29 years",169.1
+"03 Uppsala county","single women without children","30-49 years",258.5
+"03 Uppsala county","single women without children","50-64 years",279.7
+"03 Uppsala county","single men without children","18-29 years",192.0
+"03 Uppsala county","single men without children","30-49 years",281.5
+"03 Uppsala county","single men without children","50-64 years",293.5
+"03 Uppsala county","single with children aged 0-19","18-29 years",273.3
+"03 Uppsala county","single with children aged 0-19","30-49 years",353.8
+"03 Uppsala county","single with children aged 0-19","50-64 years",422.7
+"03 Uppsala county","single women with children aged 0-19","18-29 years",238.3
+"03 Uppsala county","single women with children aged 0-19","30-49 years",341.7
+"03 Uppsala county","single women with children aged 0-19","50-64 years",406.2
+"03 Uppsala county","single men with children aged 0-19","18-29 years",432.0
+"03 Uppsala county","single men with children aged 0-19","30-49 years",394.6
+"03 Uppsala county","single men with children aged 0-19","50-64 years",452.0
+"03 Uppsala county","single with adult children aged 20-29","18-29 years",501.4
+"03 Uppsala county","single with adult children aged 20-29","30-49 years",478.2
+"03 Uppsala county","single with adult children aged 20-29","50-64 years",488.3
+"03 Uppsala county","single women with adult children aged 20-29","18-29 years",407.0
+"03 Uppsala county","single women with adult children aged 20-29","30-49 years",450.5
+"03 Uppsala county","single women with adult children aged 20-29","50-64 years",467.6
+"03 Uppsala county","single men with adult children aged 20-29","18-29 years",544.8
+"03 Uppsala county","single men with adult children aged 20-29","30-49 years",563.2
+"03 Uppsala county","single men with adult children aged 20-29","50-64 years",534.4
+"03 Uppsala county","cohabiting without children","18-29 years",421.9
+"03 Uppsala county","cohabiting without children","30-49 years",596.1
+"03 Uppsala county","cohabiting without children","50-64 years",668.1
+"03 Uppsala county","cohabiting with children aged 0-19","18-29 years",485.8
+"03 Uppsala county","cohabiting with children aged 0-19","30-49 years",680.9
+"03 Uppsala county","cohabiting with children aged 0-19","50-64 years",806.9
+"03 Uppsala county","cohabiting with adult children aged 20-29","18-29 years",731.1
+"03 Uppsala county","cohabiting with adult children aged 20-29","30-49 years",824.6
+"03 Uppsala county","cohabiting with adult children aged 20-29","50-64 years",902.1
+"03 Uppsala county","other households without children","18-29 years",434.3
+"03 Uppsala county","other households without children","30-49 years",566.2
+"03 Uppsala county","other households without children","50-64 years",706.4
+"03 Uppsala county","other households with children aged 0-19","18-29 years",575.4
+"03 Uppsala county","other households with children aged 0-19","30-49 years",781.2
+"03 Uppsala county","other households with children aged 0-19","50-64 years",891.4
+"04 Södermanland county","all households","18-29 years",317.5
+"04 Södermanland county","all households","30-49 years",489.4
+"04 Södermanland county","all households","50-64 years",507.6
+"04 Södermanland county","single without children","18-29 years",195.5
+"04 Södermanland county","single without children","30-49 years",247.2
+"04 Södermanland county","single without children","50-64 years",253.1
+"04 Södermanland county","single women without children","18-29 years",181.0
+"04 Södermanland county","single women without children","30-49 years",233.6
+"04 Södermanland county","single women without children","50-64 years",242.1
+"04 Södermanland county","single men without children","18-29 years",205.1
+"04 Södermanland county","single men without children","30-49 years",253.7
+"04 Södermanland county","single men without children","50-64 years",263.1
+"04 Södermanland county","single with children aged 0-19","18-29 years",230.2
+"04 Södermanland county","single with children aged 0-19","30-49 years",320.6
+"04 Södermanland county","single with children aged 0-19","50-64 years",366.7
+"04 Södermanland county","single women with children aged 0-19","18-29 years",216.6
+"04 Södermanland county","single women with children aged 0-19","30-49 years",310.6
+"04 Södermanland county","single women with children aged 0-19","50-64 years",341.5
+"04 Södermanland county","single men with children aged 0-19","18-29 years",337.4
+"04 Södermanland county","single men with children aged 0-19","30-49 years",358.4
+"04 Södermanland county","single men with children aged 0-19","50-64 years",415.7
+"04 Södermanland county","single with adult children aged 20-29","18-29 years",423.9
+"04 Södermanland county","single with adult children aged 20-29","30-49 years",457.3
+"04 Södermanland county","single with adult children aged 20-29","50-64 years",448.7
+"04 Södermanland county","single women with adult children aged 20-29","18-29 years",347.4
+"04 Södermanland county","single women with adult children aged 20-29","30-49 years",406.6
+"04 Södermanland county","single women with adult children aged 20-29","50-64 years",416.6
+"04 Södermanland county","single men with adult children aged 20-29","18-29 years",456.7
+"04 Södermanland county","single men with adult children aged 20-29","30-49 years",586.8
+"04 Södermanland county","single men with adult children aged 20-29","50-64 years",514.1
+"04 Södermanland county","cohabiting without children","18-29 years",438.0
+"04 Södermanland county","cohabiting without children","30-49 years",540.2
+"04 Södermanland county","cohabiting without children","50-64 years",601.3
+"04 Södermanland county","cohabiting with children aged 0-19","18-29 years",448.7
+"04 Södermanland county","cohabiting with children aged 0-19","30-49 years",622.4
+"04 Södermanland county","cohabiting with children aged 0-19","50-64 years",705.7
+"04 Södermanland county","cohabiting with adult children aged 20-29","18-29 years",706.9
+"04 Södermanland county","cohabiting with adult children aged 20-29","30-49 years",797.8
+"04 Södermanland county","cohabiting with adult children aged 20-29","50-64 years",800.0
+"04 Södermanland county","other households without children","18-29 years",466.4
+"04 Södermanland county","other households without children","30-49 years",550.4
+"04 Södermanland county","other households without children","50-64 years",724.7
+"04 Södermanland county","other households with children aged 0-19","18-29 years",589.0
+"04 Södermanland county","other households with children aged 0-19","30-49 years",743.8
+"04 Södermanland county","other households with children aged 0-19","50-64 years",815.7
+"05 Östergötland county","all households","18-29 years",290.3
+"05 Östergötland county","all households","30-49 years",502.7
+"05 Östergötland county","all households","50-64 years",532.8
+"05 Östergötland county","single without children","18-29 years",179.9
+"05 Östergötland county","single without children","30-49 years",256.9
+"05 Östergötland county","single without children","50-64 years",262.0
+"05 Östergötland county","single women without children","18-29 years",172.3
+"05 Östergötland county","single women without children","30-49 years",235.4
+"05 Östergötland county","single women without children","50-64 years",246.8
+"05 Östergötland county","single men without children","18-29 years",185.3
+"05 Östergötland county","single men without children","30-49 years",266.8
+"05 Östergötland county","single men without children","50-64 years",275.1
+"05 Östergötland county","single with children aged 0-19","18-29 years",237.6
+"05 Östergötland county","single with children aged 0-19","30-49 years",325.1
+"05 Östergötland county","single with children aged 0-19","50-64 years",364.2
+"05 Östergötland county","single women with children aged 0-19","18-29 years",219.9
+"05 Östergötland county","single women with children aged 0-19","30-49 years",310.9
+"05 Östergötland county","single women with children aged 0-19","50-64 years",340.0
+"05 Östergötland county","single men with children aged 0-19","18-29 years",340.7
+"05 Östergötland county","single men with children aged 0-19","30-49 years",372.2
+"05 Östergötland county","single men with children aged 0-19","50-64 years",407.4
+"05 Östergötland county","single with adult children aged 20-29","18-29 years",405.7
+"05 Östergötland county","single with adult children aged 20-29","30-49 years",421.9
+"05 Östergötland county","single with adult children aged 20-29","50-64 years",440.2
+"05 Östergötland county","single women with adult children aged 20-29","18-29 years",340.7
+"05 Östergötland county","single women with adult children aged 20-29","30-49 years",400.8
+"05 Östergötland county","single women with adult children aged 20-29","50-64 years",414.2
+"05 Östergötland county","single men with adult children aged 20-29","18-29 years",431.5
+"05 Östergötland county","single men with adult children aged 20-29","30-49 years",475.0
+"05 Östergötland county","single men with adult children aged 20-29","50-64 years",491.8
+"05 Östergötland county","cohabiting without children","18-29 years",420.4
+"05 Östergötland county","cohabiting without children","30-49 years",548.5
+"05 Östergötland county","cohabiting without children","50-64 years",622.5
+"05 Östergötland county","cohabiting with children aged 0-19","18-29 years",445.7
+"05 Östergötland county","cohabiting with children aged 0-19","30-49 years",636.4
+"05 Östergötland county","cohabiting with children aged 0-19","50-64 years",779.3
+"05 Östergötland county","cohabiting with adult children aged 20-29","18-29 years",661.4
+"05 Östergötland county","cohabiting with adult children aged 20-29","30-49 years",794.0
+"05 Östergötland county","cohabiting with adult children aged 20-29","50-64 years",851.2
+"05 Östergötland county","other households without children","18-29 years",421.4
+"05 Östergötland county","other households without children","30-49 years",553.0
+"05 Östergötland county","other households without children","50-64 years",654.3
+"05 Östergötland county","other households with children aged 0-19","18-29 years",528.0
+"05 Östergötland county","other households with children aged 0-19","30-49 years",739.3
+"05 Östergötland county","other households with children aged 0-19","50-64 years",809.3
+"06 Jönköping county","all households","18-29 years",330.8
+"06 Jönköping county","all households","30-49 years",518.8
+"06 Jönköping county","all households","50-64 years",556.7
+"06 Jönköping county","single without children","18-29 years",200.5
+"06 Jönköping county","single without children","30-49 years",250.9
+"06 Jönköping county","single without children","50-64 years",253.6
+"06 Jönköping county","single women without children","18-29 years",184.8
+"06 Jönköping county","single women without children","30-49 years",233.8
+"06 Jönköping county","single women without children","50-64 years",243.6
+"06 Jönköping county","single men without children","18-29 years",211.0
+"06 Jönköping county","single men without children","30-49 years",258.6
+"06 Jönköping county","single men without children","50-64 years",261.8
+"06 Jönköping county","single with children aged 0-19","18-29 years",248.8
+"06 Jönköping county","single with children aged 0-19","30-49 years",322.7
+"06 Jönköping county","single with children aged 0-19","50-64 years",415.3
+"06 Jönköping county","single women with children aged 0-19","18-29 years",219.5
+"06 Jönköping county","single women with children aged 0-19","30-49 years",311.6
+"06 Jönköping county","single women with children aged 0-19","50-64 years",353.4
+"06 Jönköping county","single men with children aged 0-19","18-29 years",395.1
+"06 Jönköping county","single men with children aged 0-19","30-49 years",358.5
+"06 Jönköping county","single men with children aged 0-19","50-64 years",517.4
+"06 Jönköping county","single with adult children aged 20-29","18-29 years",459.5
+"06 Jönköping county","single with adult children aged 20-29","30-49 years",432.0
+"06 Jönköping county","single with adult children aged 20-29","50-64 years",471.4
+"06 Jönköping county","single women with adult children aged 20-29","18-29 years",399.4
+"06 Jönköping county","single women with adult children aged 20-29","30-49 years",402.2
+"06 Jönköping county","single women with adult children aged 20-29","50-64 years",448.0
+"06 Jönköping county","single men with adult children aged 20-29","18-29 years",480.8
+"06 Jönköping county","single men with adult children aged 20-29","30-49 years",496.5
+"06 Jönköping county","single men with adult children aged 20-29","50-64 years",513.0
+"06 Jönköping county","cohabiting without children","18-29 years",451.9
+"06 Jönköping county","cohabiting without children","30-49 years",550.9
+"06 Jönköping county","cohabiting without children","50-64 years",638.1
+"06 Jönköping county","cohabiting with children aged 0-19","18-29 years",460.0
+"06 Jönköping county","cohabiting with children aged 0-19","30-49 years",637.0
+"06 Jönköping county","cohabiting with children aged 0-19","50-64 years",773.7
+"06 Jönköping county","cohabiting with adult children aged 20-29","18-29 years",756.1
+"06 Jönköping county","cohabiting with adult children aged 20-29","30-49 years",808.7
+"06 Jönköping county","cohabiting with adult children aged 20-29","50-64 years",866.7
+"06 Jönköping county","other households without children","18-29 years",483.3
+"06 Jönköping county","other households without children","30-49 years",564.3
+"06 Jönköping county","other households without children","50-64 years",664.2
+"06 Jönköping county","other households with children aged 0-19","18-29 years",618.2
+"06 Jönköping county","other households with children aged 0-19","30-49 years",765.7
+"06 Jönköping county","other households with children aged 0-19","50-64 years",834.8
+"07 Kronoberg county","all households","18-29 years",307.3
+"07 Kronoberg county","all households","30-49 years",503.2
+"07 Kronoberg county","all households","50-64 years",530.3
+"07 Kronoberg county","single without children","18-29 years",190.3
+"07 Kronoberg county","single without children","30-49 years",247.9
+"07 Kronoberg county","single without children","50-64 years",257.1
+"07 Kronoberg county","single women without children","18-29 years",179.3
+"07 Kronoberg county","single women without children","30-49 years",235.8
+"07 Kronoberg county","single women without children","50-64 years",251.1
+"07 Kronoberg county","single men without children","18-29 years",197.6
+"07 Kronoberg county","single men without children","30-49 years",253.1
+"07 Kronoberg county","single men without children","50-64 years",262.1
+"07 Kronoberg county","single with children aged 0-19","18-29 years",238.7
+"07 Kronoberg county","single with children aged 0-19","30-49 years",319.7
+"07 Kronoberg county","single with children aged 0-19","50-64 years",349.4
+"07 Kronoberg county","single women with children aged 0-19","18-29 years",217.3
+"07 Kronoberg county","single women with children aged 0-19","30-49 years",308.4
+"07 Kronoberg county","single women with children aged 0-19","50-64 years",336.3
+"07 Kronoberg county","single men with children aged 0-19","18-29 years",362.5
+"07 Kronoberg county","single men with children aged 0-19","30-49 years",354.4
+"07 Kronoberg county","single men with children aged 0-19","50-64 years",371.6
+"07 Kronoberg county","single with adult children aged 20-29","18-29 years",489.0
+"07 Kronoberg county","single with adult children aged 20-29","30-49 years",408.4
+"07 Kronoberg county","single with adult children aged 20-29","50-64 years",450.3
+"07 Kronoberg county","single women with adult children aged 20-29","18-29 years",655.9
+"07 Kronoberg county","single women with adult children aged 20-29","30-49 years",379.3
+"07 Kronoberg county","single women with adult children aged 20-29","50-64 years",427.4
+"07 Kronoberg county","single men with adult children aged 20-29","18-29 years",443.0
+"07 Kronoberg county","single men with adult children aged 20-29","30-49 years",489.7
+"07 Kronoberg county","single men with adult children aged 20-29","50-64 years",488.2
+"07 Kronoberg county","cohabiting without children","18-29 years",431.7
+"07 Kronoberg county","cohabiting without children","30-49 years",545.9
+"07 Kronoberg county","cohabiting without children","50-64 years",612.1
+"07 Kronoberg county","cohabiting with children aged 0-19","18-29 years",444.1
+"07 Kronoberg county","cohabiting with children aged 0-19","30-49 years",625.7
+"07 Kronoberg county","cohabiting with children aged 0-19","50-64 years",726.8
+"07 Kronoberg county","cohabiting with adult children aged 20-29","18-29 years",732.4
+"07 Kronoberg county","cohabiting with adult children aged 20-29","30-49 years",778.6
+"07 Kronoberg county","cohabiting with adult children aged 20-29","50-64 years",825.0
+"07 Kronoberg county","other households without children","18-29 years",450.3
+"07 Kronoberg county","other households without children","30-49 years",531.0
+"07 Kronoberg county","other households without children","50-64 years",622.8
+"07 Kronoberg county","other households with children aged 0-19","18-29 years",531.3
+"07 Kronoberg county","other households with children aged 0-19","30-49 years",718.1
+"07 Kronoberg county","other households with children aged 0-19","50-64 years",864.7
+"08 Kalmar county","all households","18-29 years",312.3
+"08 Kalmar county","all households","30-49 years",483.8
+"08 Kalmar county","all households","50-64 years",500.5
+"08 Kalmar county","single without children","18-29 years",192.0
+"08 Kalmar county","single without children","30-49 years",246.7
+"08 Kalmar county","single without children","50-64 years",249.6
+"08 Kalmar county","single women without children","18-29 years",173.6
+"08 Kalmar county","single women without children","30-49 years",225.7
+"08 Kalmar county","single women without children","50-64 years",241.9
+"08 Kalmar county","single men without children","18-29 years",204.6
+"08 Kalmar county","single men without children","30-49 years",255.8
+"08 Kalmar county","single men without children","50-64 years",255.9
+"08 Kalmar county","single with children aged 0-19","18-29 years",240.5
+"08 Kalmar county","single with children aged 0-19","30-49 years",306.6
+"08 Kalmar county","single with children aged 0-19","50-64 years",351.1
+"08 Kalmar county","single women with children aged 0-19","18-29 years",217.7
+"08 Kalmar county","single women with children aged 0-19","30-49 years",298.4
+"08 Kalmar county","single women with children aged 0-19","50-64 years",336.2
+"08 Kalmar county","single men with children aged 0-19","18-29 years",340.4
+"08 Kalmar county","single men with children aged 0-19","30-49 years",332.0
+"08 Kalmar county","single men with children aged 0-19","50-64 years",374.7
+"08 Kalmar county","single with adult children aged 20-29","18-29 years",428.3
+"08 Kalmar county","single with adult children aged 20-29","30-49 years",397.7
+"08 Kalmar county","single with adult children aged 20-29","50-64 years",423.8
+"08 Kalmar county","single women with adult children aged 20-29","18-29 years",450.8
+"08 Kalmar county","single women with adult children aged 20-29","30-49 years",378.5
+"08 Kalmar county","single women with adult children aged 20-29","50-64 years",400.3
+"08 Kalmar county","single men with adult children aged 20-29","18-29 years",419.5
+"08 Kalmar county","single men with adult children aged 20-29","30-49 years",445.2
+"08 Kalmar county","single men with adult children aged 20-29","50-64 years",469.2
+"08 Kalmar county","cohabiting without children","18-29 years",432.9
+"08 Kalmar county","cohabiting without children","30-49 years",528.3
+"08 Kalmar county","cohabiting without children","50-64 years",586.9
+"08 Kalmar county","cohabiting with children aged 0-19","18-29 years",443.2
+"08 Kalmar county","cohabiting with children aged 0-19","30-49 years",605.8
+"08 Kalmar county","cohabiting with children aged 0-19","50-64 years",698.4
+"08 Kalmar county","cohabiting with adult children aged 20-29","18-29 years",732.3
+"08 Kalmar county","cohabiting with adult children aged 20-29","30-49 years",768.1
+"08 Kalmar county","cohabiting with adult children aged 20-29","50-64 years",805.0
+"08 Kalmar county","other households without children","18-29 years",487.7
+"08 Kalmar county","other households without children","30-49 years",535.6
+"08 Kalmar county","other households without children","50-64 years",609.9
+"08 Kalmar county","other households with children aged 0-19","18-29 years",565.8
+"08 Kalmar county","other households with children aged 0-19","30-49 years",731.6
+"08 Kalmar county","other households with children aged 0-19","50-64 years",847.2
+"09 Gotland county","all households","18-29 years",300.4
+"09 Gotland county","all households","30-49 years",487.6
+"09 Gotland county","all households","50-64 years",489.6
+"09 Gotland county","single without children","18-29 years",170.8
+"09 Gotland county","single without children","30-49 years",250.4
+"09 Gotland county","single without children","50-64 years",249.9
+"09 Gotland county","single women without children","18-29 years",164.1
+"09 Gotland county","single women without children","30-49 years",235.5
+"09 Gotland county","single women without children","50-64 years",243.3
+"09 Gotland county","single men without children","18-29 years",175.6
+"09 Gotland county","single men without children","30-49 years",260.0
+"09 Gotland county","single men without children","50-64 years",256.1
+"09 Gotland county","single with children aged 0-19","18-29 years",233.1
+"09 Gotland county","single with children aged 0-19","30-49 years",311.5
+"09 Gotland county","single with children aged 0-19","50-64 years",385.2
+"09 Gotland county","single women with children aged 0-19","18-29 years",219.1
+"09 Gotland county","single women with children aged 0-19","30-49 years",307.2
+"09 Gotland county","single women with children aged 0-19","50-64 years",396.2
+"09 Gotland county","single men with children aged 0-19","18-29 years",341.3
+"09 Gotland county","single men with children aged 0-19","30-49 years",324.2
+"09 Gotland county","single men with children aged 0-19","50-64 years",366.8
+"09 Gotland county","single with adult children aged 20-29","18-29 years",418.2
+"09 Gotland county","single with adult children aged 20-29","30-49 years",403.6
+"09 Gotland county","single with adult children aged 20-29","50-64 years",428.9
+"09 Gotland county","single women with adult children aged 20-29","18-29 years",369.3
+"09 Gotland county","single women with adult children aged 20-29","30-49 years",386.6
+"09 Gotland county","single women with adult children aged 20-29","50-64 years",405.2
+"09 Gotland county","single men with adult children aged 20-29","18-29 years",443.2
+"09 Gotland county","single men with adult children aged 20-29","30-49 years",454.5
+"09 Gotland county","single men with adult children aged 20-29","50-64 years",486.2
+"09 Gotland county","cohabiting without children","18-29 years",403.0
+"09 Gotland county","cohabiting without children","30-49 years",521.0
+"09 Gotland county","cohabiting without children","50-64 years",558.4
+"09 Gotland county","cohabiting with children aged 0-19","18-29 years",451.5
+"09 Gotland county","cohabiting with children aged 0-19","30-49 years",601.6
+"09 Gotland county","cohabiting with children aged 0-19","50-64 years",673.4
+"09 Gotland county","cohabiting with adult children aged 20-29","18-29 years",695.1
+"09 Gotland county","cohabiting with adult children aged 20-29","30-49 years",738.3
+"09 Gotland county","cohabiting with adult children aged 20-29","50-64 years",759.4
+"09 Gotland county","other households without children","18-29 years",462.5
+"09 Gotland county","other households without children","30-49 years",590.0
+"09 Gotland county","other households without children","50-64 years",634.5
+"09 Gotland county","other households with children aged 0-19","18-29 years",635.7
+"09 Gotland county","other households with children aged 0-19","30-49 years",777.1
+"09 Gotland county","other households with children aged 0-19","50-64 years",855.6
+"10 Blekinge county","all households","18-29 years",292.0
+"10 Blekinge county","all households","30-49 years",478.4
+"10 Blekinge county","all households","50-64 years",492.4
+"10 Blekinge county","single without children","18-29 years",177.8
+"10 Blekinge county","single without children","30-49 years",238.5
+"10 Blekinge county","single without children","50-64 years",248.7
+"10 Blekinge county","single women without children","18-29 years",177.0
+"10 Blekinge county","single women without children","30-49 years",226.0
+"10 Blekinge county","single women without children","50-64 years",239.8
+"10 Blekinge county","single men without children","18-29 years",178.2
+"10 Blekinge county","single men without children","30-49 years",243.6
+"10 Blekinge county","single men without children","50-64 years",256.1
+"10 Blekinge county","single with children aged 0-19","18-29 years",219.4
+"10 Blekinge county","single with children aged 0-19","30-49 years",309.2
+"10 Blekinge county","single with children aged 0-19","50-64 years",348.3
+"10 Blekinge county","single women with children aged 0-19","18-29 years",205.0
+"10 Blekinge county","single women with children aged 0-19","30-49 years",294.0
+"10 Blekinge county","single women with children aged 0-19","50-64 years",329.3
+"10 Blekinge county","single men with children aged 0-19","18-29 years",325.3
+"10 Blekinge county","single men with children aged 0-19","30-49 years",357.3
+"10 Blekinge county","single men with children aged 0-19","50-64 years",381.3
+"10 Blekinge county","single with adult children aged 20-29","18-29 years",425.5
+"10 Blekinge county","single with adult children aged 20-29","30-49 years",397.1
+"10 Blekinge county","single with adult children aged 20-29","50-64 years",501.9
+"10 Blekinge county","single women with adult children aged 20-29","18-29 years",390.4
+"10 Blekinge county","single women with adult children aged 20-29","30-49 years",376.4
+"10 Blekinge county","single women with adult children aged 20-29","50-64 years",508.7
+"10 Blekinge county","single men with adult children aged 20-29","18-29 years",441.2
+"10 Blekinge county","single men with adult children aged 20-29","30-49 years",459.9
+"10 Blekinge county","single men with adult children aged 20-29","50-64 years",488.8
+"10 Blekinge county","cohabiting without children","18-29 years",421.1
+"10 Blekinge county","cohabiting without children","30-49 years",526.9
+"10 Blekinge county","cohabiting without children","50-64 years",580.4
+"10 Blekinge county","cohabiting with children aged 0-19","18-29 years",442.5
+"10 Blekinge county","cohabiting with children aged 0-19","30-49 years",601.9
+"10 Blekinge county","cohabiting with children aged 0-19","50-64 years",695.2
+"10 Blekinge county","cohabiting with adult children aged 20-29","18-29 years",738.7
+"10 Blekinge county","cohabiting with adult children aged 20-29","30-49 years",736.1
+"10 Blekinge county","cohabiting with adult children aged 20-29","50-64 years",785.6
+"10 Blekinge county","other households without children","18-29 years",391.9
+"10 Blekinge county","other households without children","30-49 years",533.7
+"10 Blekinge county","other households without children","50-64 years",563.7
+"10 Blekinge county","other households with children aged 0-19","18-29 years",468.0
+"10 Blekinge county","other households with children aged 0-19","30-49 years",670.0
+"10 Blekinge county","other households with children aged 0-19","50-64 years",703.5
+"12 Skåne county","all households","18-29 years",307.5
+"12 Skåne county","all households","30-49 years",500.4
+"12 Skåne county","all households","50-64 years",538.3
+"12 Skåne county","single without children","18-29 years",187.4
+"12 Skåne county","single without children","30-49 years",254.2
+"12 Skåne county","single without children","50-64 years",268.0
+"12 Skåne county","single women without children","18-29 years",179.7
+"12 Skåne county","single women without children","30-49 years",242.7
+"12 Skåne county","single women without children","50-64 years",258.6
+"12 Skåne county","single men without children","18-29 years",193.9
+"12 Skåne county","single men without children","30-49 years",260.5
+"12 Skåne county","single men without children","50-64 years",277.0
+"12 Skåne county","single with children aged 0-19","18-29 years",241.8
+"12 Skåne county","single with children aged 0-19","30-49 years",319.3
+"12 Skåne county","single with children aged 0-19","50-64 years",406.0
+"12 Skåne county","single women with children aged 0-19","18-29 years",218.5
+"12 Skåne county","single women with children aged 0-19","30-49 years",309.6
+"12 Skåne county","single women with children aged 0-19","50-64 years",403.5
+"12 Skåne county","single men with children aged 0-19","18-29 years",375.0
+"12 Skåne county","single men with children aged 0-19","30-49 years",360.6
+"12 Skåne county","single men with children aged 0-19","50-64 years",411.6
+"12 Skåne county","single with adult children aged 20-29","18-29 years",428.4
+"12 Skåne county","single with adult children aged 20-29","30-49 years",426.0
+"12 Skåne county","single with adult children aged 20-29","50-64 years",467.8
+"12 Skåne county","single women with adult children aged 20-29","18-29 years",384.8
+"12 Skåne county","single women with adult children aged 20-29","30-49 years",411.7
+"12 Skåne county","single women with adult children aged 20-29","50-64 years",441.2
+"12 Skåne county","single men with adult children aged 20-29","18-29 years",449.1
+"12 Skåne county","single men with adult children aged 20-29","30-49 years",467.1
+"12 Skåne county","single men with adult children aged 20-29","50-64 years",532.6
+"12 Skåne county","cohabiting without children","18-29 years",422.9
+"12 Skåne county","cohabiting without children","30-49 years",527.5
+"12 Skåne county","cohabiting without children","50-64 years",631.9
+"12 Skåne county","cohabiting with children aged 0-19","18-29 years",428.6
+"12 Skåne county","cohabiting with children aged 0-19","30-49 years",637.8
+"12 Skåne county","cohabiting with children aged 0-19","50-64 years",779.3
+"12 Skåne county","cohabiting with adult children aged 20-29","18-29 years",697.2
+"12 Skåne county","cohabiting with adult children aged 20-29","30-49 years",784.5
+"12 Skåne county","cohabiting with adult children aged 20-29","50-64 years",867.7
+"12 Skåne county","other households without children","18-29 years",428.2
+"12 Skåne county","other households without children","30-49 years",537.6
+"12 Skåne county","other households without children","50-64 years",607.3
+"12 Skåne county","other households with children aged 0-19","18-29 years",551.7
+"12 Skåne county","other households with children aged 0-19","30-49 years",694.1
+"12 Skåne county","other households with children aged 0-19","50-64 years",758.9
+"13 Halland county","all households","18-29 years",349.7
+"13 Halland county","all households","30-49 years",575.0
+"13 Halland county","all households","50-64 years",619.5
+"13 Halland county","single without children","18-29 years",206.4
+"13 Halland county","single without children","30-49 years",267.2
+"13 Halland county","single without children","50-64 years",281.1
+"13 Halland county","single women without children","18-29 years",194.4
+"13 Halland county","single women without children","30-49 years",246.4
+"13 Halland county","single women without children","50-64 years",266.6
+"13 Halland county","single men without children","18-29 years",215.0
+"13 Halland county","single men without children","30-49 years",277.6
+"13 Halland county","single men without children","50-64 years",294.5
+"13 Halland county","single with children aged 0-19","18-29 years",264.1
+"13 Halland county","single with children aged 0-19","30-49 years",359.2
+"13 Halland county","single with children aged 0-19","50-64 years",423.5
+"13 Halland county","single women with children aged 0-19","18-29 years",232.0
+"13 Halland county","single women with children aged 0-19","30-49 years",333.6
+"13 Halland county","single women with children aged 0-19","50-64 years",397.4
+"13 Halland county","single men with children aged 0-19","18-29 years",416.7
+"13 Halland county","single men with children aged 0-19","30-49 years",441.2
+"13 Halland county","single men with children aged 0-19","50-64 years",470.6
+"13 Halland county","single with adult children aged 20-29","18-29 years",453.6
+"13 Halland county","single with adult children aged 20-29","30-49 years",445.9
+"13 Halland county","single with adult children aged 20-29","50-64 years",486.6
+"13 Halland county","single women with adult children aged 20-29","18-29 years",447.4
+"13 Halland county","single women with adult children aged 20-29","30-49 years",430.5
+"13 Halland county","single women with adult children aged 20-29","50-64 years",447.6
+"13 Halland county","single men with adult children aged 20-29","18-29 years",456.0
+"13 Halland county","single men with adult children aged 20-29","30-49 years",492.2
+"13 Halland county","single men with adult children aged 20-29","50-64 years",576.0
+"13 Halland county","cohabiting without children","18-29 years",462.8
+"13 Halland county","cohabiting without children","30-49 years",580.7
+"13 Halland county","cohabiting without children","50-64 years",681.8
+"13 Halland county","cohabiting with children aged 0-19","18-29 years",473.2
+"13 Halland county","cohabiting with children aged 0-19","30-49 years",700.4
+"13 Halland county","cohabiting with children aged 0-19","50-64 years",914.3
+"13 Halland county","cohabiting with adult children aged 20-29","18-29 years",763.5
+"13 Halland county","cohabiting with adult children aged 20-29","30-49 years",830.0
+"13 Halland county","cohabiting with adult children aged 20-29","50-64 years",926.2
+"13 Halland county","other households without children","18-29 years",522.1
+"13 Halland county","other households without children","30-49 years",593.9
+"13 Halland county","other households without children","50-64 years",714.3
+"13 Halland county","other households with children aged 0-19","18-29 years",679.5
+"13 Halland county","other households with children aged 0-19","30-49 years",844.3
+"13 Halland county","other households with children aged 0-19","50-64 years",935.5
+"14 Västra Götaland county","all households","18-29 years",329.0
+"14 Västra Götaland county","all households","30-49 years",522.3
+"14 Västra Götaland county","all households","50-64 years",561.7
+"14 Västra Götaland county","single without children","18-29 years",200.9
+"14 Västra Götaland county","single without children","30-49 years",265.9
+"14 Västra Götaland county","single without children","50-64 years",272.6
+"14 Västra Götaland county","single women without children","18-29 years",190.0
+"14 Västra Götaland county","single women without children","30-49 years",250.9
+"14 Västra Götaland county","single women without children","50-64 years",262.0
+"14 Västra Götaland county","single men without children","18-29 years",209.2
+"14 Västra Götaland county","single men without children","30-49 years",273.8
+"14 Västra Götaland county","single men without children","50-64 years",282.4
+"14 Västra Götaland county","single with children aged 0-19","18-29 years",249.2
+"14 Västra Götaland county","single with children aged 0-19","30-49 years",335.1
+"14 Västra Götaland county","single with children aged 0-19","50-64 years",402.5
+"14 Västra Götaland county","single women with children aged 0-19","18-29 years",221.8
+"14 Västra Götaland county","single women with children aged 0-19","30-49 years",322.2
+"14 Västra Götaland county","single women with children aged 0-19","50-64 years",382.8
+"14 Västra Götaland county","single men with children aged 0-19","18-29 years",398.2
+"14 Västra Götaland county","single men with children aged 0-19","30-49 years",384.4
+"14 Västra Götaland county","single men with children aged 0-19","50-64 years",441.7
+"14 Västra Götaland county","single with adult children aged 20-29","18-29 years",452.6
+"14 Västra Götaland county","single with adult children aged 20-29","30-49 years",469.8
+"14 Västra Götaland county","single with adult children aged 20-29","50-64 years",504.4
+"14 Västra Götaland county","single women with adult children aged 20-29","18-29 years",421.7
+"14 Västra Götaland county","single women with adult children aged 20-29","30-49 years",419.7
+"14 Västra Götaland county","single women with adult children aged 20-29","50-64 years",464.6
+"14 Västra Götaland county","single men with adult children aged 20-29","18-29 years",466.7
+"14 Västra Götaland county","single men with adult children aged 20-29","30-49 years",606.5
+"14 Västra Götaland county","single men with adult children aged 20-29","50-64 years",588.2
+"14 Västra Götaland county","cohabiting without children","18-29 years",450.1
+"14 Västra Götaland county","cohabiting without children","30-49 years",566.2
+"14 Västra Götaland county","cohabiting without children","50-64 years",650.4
+"14 Västra Götaland county","cohabiting with children aged 0-19","18-29 years",467.9
+"14 Västra Götaland county","cohabiting with children aged 0-19","30-49 years",664.0
+"14 Västra Götaland county","cohabiting with children aged 0-19","50-64 years",807.5
+"14 Västra Götaland county","cohabiting with adult children aged 20-29","18-29 years",764.8
+"14 Västra Götaland county","cohabiting with adult children aged 20-29","30-49 years",807.5
+"14 Västra Götaland county","cohabiting with adult children aged 20-29","50-64 years",929.0
+"14 Västra Götaland county","other households without children","18-29 years",477.5
+"14 Västra Götaland county","other households without children","30-49 years",573.8
+"14 Västra Götaland county","other households without children","50-64 years",652.2
+"14 Västra Götaland county","other households with children aged 0-19","18-29 years",608.4
+"14 Västra Götaland county","other households with children aged 0-19","30-49 years",778.8
+"14 Västra Götaland county","other households with children aged 0-19","50-64 years",873.3
+"17 Värmland county","all households","18-29 years",281.1
+"17 Värmland county","all households","30-49 years",456.4
+"17 Värmland county","all households","50-64 years",469.9
+"17 Värmland county","single without children","18-29 years",176.1
+"17 Värmland county","single without children","30-49 years",231.4
+"17 Värmland county","single without children","50-64 years",241.9
+"17 Värmland county","single women without children","18-29 years",168.7
+"17 Värmland county","single women without children","30-49 years",221.8
+"17 Värmland county","single women without children","50-64 years",232.2
+"17 Värmland county","single men without children","18-29 years",181.4
+"17 Värmland county","single men without children","30-49 years",235.9
+"17 Värmland county","single men without children","50-64 years",250.2
+"17 Värmland county","single with children aged 0-19","18-29 years",222.6
+"17 Värmland county","single with children aged 0-19","30-49 years",303.4
+"17 Värmland county","single with children aged 0-19","50-64 years",352.7
+"17 Värmland county","single women with children aged 0-19","18-29 years",210.2
+"17 Värmland county","single women with children aged 0-19","30-49 years",296.7
+"17 Värmland county","single women with children aged 0-19","50-64 years",329.0
+"17 Värmland county","single men with children aged 0-19","18-29 years",301.2
+"17 Värmland county","single men with children aged 0-19","30-49 years",325.3
+"17 Värmland county","single men with children aged 0-19","50-64 years",391.3
+"17 Värmland county","single with adult children aged 20-29","18-29 years",387.5
+"17 Värmland county","single with adult children aged 20-29","30-49 years",382.0
+"17 Värmland county","single with adult children aged 20-29","50-64 years",426.8
+"17 Värmland county","single women with adult children aged 20-29","18-29 years",294.6
+"17 Värmland county","single women with adult children aged 20-29","30-49 years",364.3
+"17 Värmland county","single women with adult children aged 20-29","50-64 years",386.0
+"17 Värmland county","single men with adult children aged 20-29","18-29 years",421.0
+"17 Värmland county","single men with adult children aged 20-29","30-49 years",424.7
+"17 Värmland county","single men with adult children aged 20-29","50-64 years",506.2
+"17 Värmland county","cohabiting without children","18-29 years",405.3
+"17 Värmland county","cohabiting without children","30-49 years",497.3
+"17 Värmland county","cohabiting without children","50-64 years",558.7
+"17 Värmland county","cohabiting with children aged 0-19","18-29 years",434.2
+"17 Värmland county","cohabiting with children aged 0-19","30-49 years",591.4
+"17 Värmland county","cohabiting with children aged 0-19","50-64 years",673.3
+"17 Värmland county","cohabiting with adult children aged 20-29","18-29 years",684.6
+"17 Värmland county","cohabiting with adult children aged 20-29","30-49 years",682.2
+"17 Värmland county","cohabiting with adult children aged 20-29","50-64 years",767.4
+"17 Värmland county","other households without children","18-29 years",419.7
+"17 Värmland county","other households without children","30-49 years",506.6
+"17 Värmland county","other households without children","50-64 years",562.1
+"17 Värmland county","other households with children aged 0-19","18-29 years",488.6
+"17 Värmland county","other households with children aged 0-19","30-49 years",684.1
+"17 Värmland county","other households with children aged 0-19","50-64 years",817.0
+"18 Örebro county","all households","18-29 years",290.9
+"18 Örebro county","all households","30-49 years",478.1
+"18 Örebro county","all households","50-64 years",494.8
+"18 Örebro county","single without children","18-29 years",184.9
+"18 Örebro county","single without children","30-49 years",240.4
+"18 Örebro county","single without children","50-64 years",256.4
+"18 Örebro county","single women without children","18-29 years",171.6
+"18 Örebro county","single women without children","30-49 years",227.5
+"18 Örebro county","single women without children","50-64 years",251.6
+"18 Örebro county","single men without children","18-29 years",195.5
+"18 Örebro county","single men without children","30-49 years",246.6
+"18 Örebro county","single men without children","50-64 years",260.6
+"18 Örebro county","single with children aged 0-19","18-29 years",238.4
+"18 Örebro county","single with children aged 0-19","30-49 years",319.4
+"18 Örebro county","single with children aged 0-19","50-64 years",369.9
+"18 Örebro county","single women with children aged 0-19","18-29 years",215.9
+"18 Örebro county","single women with children aged 0-19","30-49 years",305.7
+"18 Örebro county","single women with children aged 0-19","50-64 years",336.2
+"18 Örebro county","single men with children aged 0-19","18-29 years",363.9
+"18 Örebro county","single men with children aged 0-19","30-49 years",364.3
+"18 Örebro county","single men with children aged 0-19","50-64 years",431.0
+"18 Örebro county","single with adult children aged 20-29","18-29 years",403.1
+"18 Örebro county","single with adult children aged 20-29","30-49 years",430.1
+"18 Örebro county","single with adult children aged 20-29","50-64 years",438.4
+"18 Örebro county","single women with adult children aged 20-29","18-29 years",373.0
+"18 Örebro county","single women with adult children aged 20-29","30-49 years",408.9
+"18 Örebro county","single women with adult children aged 20-29","50-64 years",416.1
+"18 Örebro county","single men with adult children aged 20-29","18-29 years",418.2
+"18 Örebro county","single men with adult children aged 20-29","30-49 years",481.9
+"18 Örebro county","single men with adult children aged 20-29","50-64 years",479.9
+"18 Örebro county","cohabiting without children","18-29 years",417.1
+"18 Örebro county","cohabiting without children","30-49 years",535.6
+"18 Örebro county","cohabiting without children","50-64 years",588.9
+"18 Örebro county","cohabiting with children aged 0-19","18-29 years",448.6
+"18 Örebro county","cohabiting with children aged 0-19","30-49 years",617.9
+"18 Örebro county","cohabiting with children aged 0-19","50-64 years",722.3
+"18 Örebro county","cohabiting with adult children aged 20-29","18-29 years",693.9
+"18 Örebro county","cohabiting with adult children aged 20-29","30-49 years",770.1
+"18 Örebro county","cohabiting with adult children aged 20-29","50-64 years",820.7
+"18 Örebro county","other households without children","18-29 years",428.5
+"18 Örebro county","other households without children","30-49 years",532.1
+"18 Örebro county","other households without children","50-64 years",590.6
+"18 Örebro county","other households with children aged 0-19","18-29 years",510.0
+"18 Örebro county","other households with children aged 0-19","30-49 years",684.3
+"18 Örebro county","other households with children aged 0-19","50-64 years",793.5
+"19 Västmanland county","all households","18-29 years",319.0
+"19 Västmanland county","all households","30-49 years",501.3
+"19 Västmanland county","all households","50-64 years",515.3
+"19 Västmanland county","single without children","18-29 years",197.6
+"19 Västmanland county","single without children","30-49 years",257.7
+"19 Västmanland county","single without children","50-64 years",272.3
+"19 Västmanland county","single women without children","18-29 years",185.5
+"19 Västmanland county","single women without children","30-49 years",241.3
+"19 Västmanland county","single women without children","50-64 years",247.5
+"19 Västmanland county","single men without children","18-29 years",205.6
+"19 Västmanland county","single men without children","30-49 years",265.5
+"19 Västmanland county","single men without children","50-64 years",293.5
+"19 Västmanland county","single with children aged 0-19","18-29 years",234.3
+"19 Västmanland county","single with children aged 0-19","30-49 years",329.5
+"19 Västmanland county","single with children aged 0-19","50-64 years",364.3
+"19 Västmanland county","single women with children aged 0-19","18-29 years",214.2
+"19 Västmanland county","single women with children aged 0-19","30-49 years",312.3
+"19 Västmanland county","single women with children aged 0-19","50-64 years",343.2
+"19 Västmanland county","single men with children aged 0-19","18-29 years",362.4
+"19 Västmanland county","single men with children aged 0-19","30-49 years",390.1
+"19 Västmanland county","single men with children aged 0-19","50-64 years",406.4
+"19 Västmanland county","single with adult children aged 20-29","18-29 years",428.5
+"19 Västmanland county","single with adult children aged 20-29","30-49 years",430.7
+"19 Västmanland county","single with adult children aged 20-29","50-64 years",448.8
+"19 Västmanland county","single women with adult children aged 20-29","18-29 years",359.0
+"19 Västmanland county","single women with adult children aged 20-29","30-49 years",418.1
+"19 Västmanland county","single women with adult children aged 20-29","50-64 years",420.8
+"19 Västmanland county","single men with adult children aged 20-29","18-29 years",450.6
+"19 Västmanland county","single men with adult children aged 20-29","30-49 years",463.5
+"19 Västmanland county","single men with adult children aged 20-29","50-64 years",499.4
+"19 Västmanland county","cohabiting without children","18-29 years",453.0
+"19 Västmanland county","cohabiting without children","30-49 years",566.2
+"19 Västmanland county","cohabiting without children","50-64 years",613.7
+"19 Västmanland county","cohabiting with children aged 0-19","18-29 years",461.6
+"19 Västmanland county","cohabiting with children aged 0-19","30-49 years",636.4
+"19 Västmanland county","cohabiting with children aged 0-19","50-64 years",736.0
+"19 Västmanland county","cohabiting with adult children aged 20-29","18-29 years",710.6
+"19 Västmanland county","cohabiting with adult children aged 20-29","30-49 years",777.9
+"19 Västmanland county","cohabiting with adult children aged 20-29","50-64 years",835.5
+"19 Västmanland county","other households without children","18-29 years",467.9
+"19 Västmanland county","other households without children","30-49 years",544.1
+"19 Västmanland county","other households without children","50-64 years",625.9
+"19 Västmanland county","other households with children aged 0-19","18-29 years",581.1
+"19 Västmanland county","other households with children aged 0-19","30-49 years",830.8
+"19 Västmanland county","other households with children aged 0-19","50-64 years",803.0
+"20 Dalarna county","all households","18-29 years",307.5
+"20 Dalarna county","all households","30-49 years",468.7
+"20 Dalarna county","all households","50-64 years",482.1
+"20 Dalarna county","single without children","18-29 years",188.8
+"20 Dalarna county","single without children","30-49 years",242.1
+"20 Dalarna county","single without children","50-64 years",252.8
+"20 Dalarna county","single women without children","18-29 years",175.8
+"20 Dalarna county","single women without children","30-49 years",226.8
+"20 Dalarna county","single women without children","50-64 years",244.3
+"20 Dalarna county","single men without children","18-29 years",196.8
+"20 Dalarna county","single men without children","30-49 years",249.2
+"20 Dalarna county","single men without children","50-64 years",260.0
+"20 Dalarna county","single with children aged 0-19","18-29 years",231.3
+"20 Dalarna county","single with children aged 0-19","30-49 years",314.6
+"20 Dalarna county","single with children aged 0-19","50-64 years",347.7
+"20 Dalarna county","single women with children aged 0-19","18-29 years",207.6
+"20 Dalarna county","single women with children aged 0-19","30-49 years",304.6
+"20 Dalarna county","single women with children aged 0-19","50-64 years",335.6
+"20 Dalarna county","single men with children aged 0-19","18-29 years",373.4
+"20 Dalarna county","single men with children aged 0-19","30-49 years",347.1
+"20 Dalarna county","single men with children aged 0-19","50-64 years",367.7
+"20 Dalarna county","single with adult children aged 20-29","18-29 years",433.0
+"20 Dalarna county","single with adult children aged 20-29","30-49 years",424.4
+"20 Dalarna county","single with adult children aged 20-29","50-64 years",441.9
+"20 Dalarna county","single women with adult children aged 20-29","18-29 years",407.5
+"20 Dalarna county","single women with adult children aged 20-29","30-49 years",406.9
+"20 Dalarna county","single women with adult children aged 20-29","50-64 years",408.6
+"20 Dalarna county","single men with adult children aged 20-29","18-29 years",442.1
+"20 Dalarna county","single men with adult children aged 20-29","30-49 years",466.4
+"20 Dalarna county","single men with adult children aged 20-29","50-64 years",501.6
+"20 Dalarna county","cohabiting without children","18-29 years",429.0
+"20 Dalarna county","cohabiting without children","30-49 years",522.5
+"20 Dalarna county","cohabiting without children","50-64 years",572.8
+"20 Dalarna county","cohabiting with children aged 0-19","18-29 years",439.5
+"20 Dalarna county","cohabiting with children aged 0-19","30-49 years",599.7
+"20 Dalarna county","cohabiting with children aged 0-19","50-64 years",680.7
+"20 Dalarna county","cohabiting with adult children aged 20-29","18-29 years",873.3
+"20 Dalarna county","cohabiting with adult children aged 20-29","30-49 years",731.8
+"20 Dalarna county","cohabiting with adult children aged 20-29","50-64 years",770.2
+"20 Dalarna county","other households without children","18-29 years",448.7
+"20 Dalarna county","other households without children","30-49 years",528.5
+"20 Dalarna county","other households without children","50-64 years",587.1
+"20 Dalarna county","other households with children aged 0-19","18-29 years",552.0
+"20 Dalarna county","other households with children aged 0-19","30-49 years",708.4
+"20 Dalarna county","other households with children aged 0-19","50-64 years",757.5
+"21 Gävleborg county","all households","18-29 years",297.8
+"21 Gävleborg county","all households","30-49 years",462.1
+"21 Gävleborg county","all households","50-64 years",480.1
+"21 Gävleborg county","single without children","18-29 years",184.8
+"21 Gävleborg county","single without children","30-49 years",239.2
+"21 Gävleborg county","single without children","50-64 years",248.8
+"21 Gävleborg county","single women without children","18-29 years",172.4
+"21 Gävleborg county","single women without children","30-49 years",225.0
+"21 Gävleborg county","single women without children","50-64 years",237.1
+"21 Gävleborg county","single men without children","18-29 years",192.8
+"21 Gävleborg county","single men without children","30-49 years",245.6
+"21 Gävleborg county","single men without children","50-64 years",258.5
+"21 Gävleborg county","single with children aged 0-19","18-29 years",222.9
+"21 Gävleborg county","single with children aged 0-19","30-49 years",304.7
+"21 Gävleborg county","single with children aged 0-19","50-64 years",337.2
+"21 Gävleborg county","single women with children aged 0-19","18-29 years",204.2
+"21 Gävleborg county","single women with children aged 0-19","30-49 years",296.0
+"21 Gävleborg county","single women with children aged 0-19","50-64 years",328.7
+"21 Gävleborg county","single men with children aged 0-19","18-29 years",360.4
+"21 Gävleborg county","single men with children aged 0-19","30-49 years",335.0
+"21 Gävleborg county","single men with children aged 0-19","50-64 years",353.5
+"21 Gävleborg county","single with adult children aged 20-29","18-29 years",409.5
+"21 Gävleborg county","single with adult children aged 20-29","30-49 years",391.9
+"21 Gävleborg county","single with adult children aged 20-29","50-64 years",416.4
+"21 Gävleborg county","single women with adult children aged 20-29","18-29 years",353.5
+"21 Gävleborg county","single women with adult children aged 20-29","30-49 years",376.6
+"21 Gävleborg county","single women with adult children aged 20-29","50-64 years",401.5
+"21 Gävleborg county","single men with adult children aged 20-29","18-29 years",431.2
+"21 Gävleborg county","single men with adult children aged 20-29","30-49 years",430.4
+"21 Gävleborg county","single men with adult children aged 20-29","50-64 years",445.2
+"21 Gävleborg county","cohabiting without children","18-29 years",423.4
+"21 Gävleborg county","cohabiting without children","30-49 years",521.7
+"21 Gävleborg county","cohabiting without children","50-64 years",587.2
+"21 Gävleborg county","cohabiting with children aged 0-19","18-29 years",440.8
+"21 Gävleborg county","cohabiting with children aged 0-19","30-49 years",595.3
+"21 Gävleborg county","cohabiting with children aged 0-19","50-64 years",689.7
+"21 Gävleborg county","cohabiting with adult children aged 20-29","18-29 years",728.4
+"21 Gävleborg county","cohabiting with adult children aged 20-29","30-49 years",753.2
+"21 Gävleborg county","cohabiting with adult children aged 20-29","50-64 years",787.5
+"21 Gävleborg county","other households without children","18-29 years",452.3
+"21 Gävleborg county","other households without children","30-49 years",523.0
+"21 Gävleborg county","other households without children","50-64 years",591.0
+"21 Gävleborg county","other households with children aged 0-19","18-29 years",530.2
+"21 Gävleborg county","other households with children aged 0-19","30-49 years",708.1
+"21 Gävleborg county","other households with children aged 0-19","50-64 years",751.1
+"22 Västernorrland county","all households","18-29 years",303.6
+"22 Västernorrland county","all households","30-49 years",477.2
+"22 Västernorrland county","all households","50-64 years",488.7
+"22 Västernorrland county","single without children","18-29 years",185.9
+"22 Västernorrland county","single without children","30-49 years",240.2
+"22 Västernorrland county","single without children","50-64 years",251.1
+"22 Västernorrland county","single women without children","18-29 years",175.9
+"22 Västernorrland county","single women without children","30-49 years",227.6
+"22 Västernorrland county","single women without children","50-64 years",241.3
+"22 Västernorrland county","single men without children","18-29 years",192.3
+"22 Västernorrland county","single men without children","30-49 years",246.0
+"22 Västernorrland county","single men without children","50-64 years",259.3
+"22 Västernorrland county","single with children aged 0-19","18-29 years",239.0
+"22 Västernorrland county","single with children aged 0-19","30-49 years",317.8
+"22 Västernorrland county","single with children aged 0-19","50-64 years",380.9
+"22 Västernorrland county","single women with children aged 0-19","18-29 years",208.2
+"22 Västernorrland county","single women with children aged 0-19","30-49 years",304.5
+"22 Västernorrland county","single women with children aged 0-19","50-64 years",347.1
+"22 Västernorrland county","single men with children aged 0-19","18-29 years",451.2
+"22 Västernorrland county","single men with children aged 0-19","30-49 years",357.0
+"22 Västernorrland county","single men with children aged 0-19","50-64 years",439.5
+"22 Västernorrland county","single with adult children aged 20-29","18-29 years",434.5
+"22 Västernorrland county","single with adult children aged 20-29","30-49 years",451.5
+"22 Västernorrland county","single with adult children aged 20-29","50-64 years",437.2
+"22 Västernorrland county","single women with adult children aged 20-29","18-29 years",395.4
+"22 Västernorrland county","single women with adult children aged 20-29","30-49 years",415.8
+"22 Västernorrland county","single women with adult children aged 20-29","50-64 years",411.2
+"22 Västernorrland county","single men with adult children aged 20-29","18-29 years",451.2
+"22 Västernorrland county","single men with adult children aged 20-29","30-49 years",559.7
+"22 Västernorrland county","single men with adult children aged 20-29","50-64 years",480.8
+"22 Västernorrland county","cohabiting without children","18-29 years",433.4
+"22 Västernorrland county","cohabiting without children","30-49 years",525.0
+"22 Västernorrland county","cohabiting without children","50-64 years",575.0
+"22 Västernorrland county","cohabiting with children aged 0-19","18-29 years",429.9
+"22 Västernorrland county","cohabiting with children aged 0-19","30-49 years",609.6
+"22 Västernorrland county","cohabiting with children aged 0-19","50-64 years",704.7
+"22 Västernorrland county","cohabiting with adult children aged 20-29","18-29 years",764.7
+"22 Västernorrland county","cohabiting with adult children aged 20-29","30-49 years",753.2
+"22 Västernorrland county","cohabiting with adult children aged 20-29","50-64 years",781.0
+"22 Västernorrland county","other households without children","18-29 years",455.3
+"22 Västernorrland county","other households without children","30-49 years",536.1
+"22 Västernorrland county","other households without children","50-64 years",588.2
+"22 Västernorrland county","other households with children aged 0-19","18-29 years",593.9
+"22 Västernorrland county","other households with children aged 0-19","30-49 years",723.4
+"22 Västernorrland county","other households with children aged 0-19","50-64 years",791.3
+"23 Jämtland county","all households","18-29 years",293.0
+"23 Jämtland county","all households","30-49 years",468.7
+"23 Jämtland county","all households","50-64 years",474.5
+"23 Jämtland county","single without children","18-29 years",179.1
+"23 Jämtland county","single without children","30-49 years",237.7
+"23 Jämtland county","single without children","50-64 years",244.2
+"23 Jämtland county","single women without children","18-29 years",173.1
+"23 Jämtland county","single women without children","30-49 years",240.7
+"23 Jämtland county","single women without children","50-64 years",241.6
+"23 Jämtland county","single men without children","18-29 years",183.7
+"23 Jämtland county","single men without children","30-49 years",236.2
+"23 Jämtland county","single men without children","50-64 years",246.3
+"23 Jämtland county","single with children aged 0-19","18-29 years",226.5
+"23 Jämtland county","single with children aged 0-19","30-49 years",309.6
+"23 Jämtland county","single with children aged 0-19","50-64 years",366.6
+"23 Jämtland county","single women with children aged 0-19","18-29 years",204.1
+"23 Jämtland county","single women with children aged 0-19","30-49 years",301.7
+"23 Jämtland county","single women with children aged 0-19","50-64 years",366.8
+"23 Jämtland county","single men with children aged 0-19","18-29 years",316.4
+"23 Jämtland county","single men with children aged 0-19","30-49 years",331.5
+"23 Jämtland county","single men with children aged 0-19","50-64 years",366.3
+"23 Jämtland county","single with adult children aged 20-29","18-29 years",462.6
+"23 Jämtland county","single with adult children aged 20-29","30-49 years",431.0
+"23 Jämtland county","single with adult children aged 20-29","50-64 years",476.8
+"23 Jämtland county","single women with adult children aged 20-29","18-29 years",417.1
+"23 Jämtland county","single women with adult children aged 20-29","30-49 years",415.3
+"23 Jämtland county","single women with adult children aged 20-29","50-64 years",464.6
+"23 Jämtland county","single men with adult children aged 20-29","18-29 years",475.8
+"23 Jämtland county","single men with adult children aged 20-29","30-49 years",466.2
+"23 Jämtland county","single men with adult children aged 20-29","50-64 years",497.8
+"23 Jämtland county","cohabiting without children","18-29 years",407.3
+"23 Jämtland county","cohabiting without children","30-49 years",502.9
+"23 Jämtland county","cohabiting without children","50-64 years",563.3
+"23 Jämtland county","cohabiting with children aged 0-19","18-29 years",429.9
+"23 Jämtland county","cohabiting with children aged 0-19","30-49 years",610.4
+"23 Jämtland county","cohabiting with children aged 0-19","50-64 years",716.5
+"23 Jämtland county","cohabiting with adult children aged 20-29","18-29 years",781.4
+"23 Jämtland county","cohabiting with adult children aged 20-29","30-49 years",794.8
+"23 Jämtland county","cohabiting with adult children aged 20-29","50-64 years",762.7
+"23 Jämtland county","other households without children","18-29 years",446.6
+"23 Jämtland county","other households without children","30-49 years",520.0
+"23 Jämtland county","other households without children","50-64 years",579.9
+"23 Jämtland county","other households with children aged 0-19","18-29 years",535.5
+"23 Jämtland county","other households with children aged 0-19","30-49 years",721.0
+"23 Jämtland county","other households with children aged 0-19","50-64 years",781.2
+"24 Västerbotten county","all households","18-29 years",281.2
+"24 Västerbotten county","all households","30-49 years",478.9
+"24 Västerbotten county","all households","50-64 years",511.9
+"24 Västerbotten county","single without children","18-29 years",173.9
+"24 Västerbotten county","single without children","30-49 years",239.4
+"24 Västerbotten county","single without children","50-64 years",258.0
+"24 Västerbotten county","single women without children","18-29 years",163.6
+"24 Västerbotten county","single women without children","30-49 years",225.1
+"24 Västerbotten county","single women without children","50-64 years",247.0
+"24 Västerbotten county","single men without children","18-29 years",181.7
+"24 Västerbotten county","single men without children","30-49 years",246.3
+"24 Västerbotten county","single men without children","50-64 years",267.4
+"24 Västerbotten county","single with children aged 0-19","18-29 years",237.9
+"24 Västerbotten county","single with children aged 0-19","30-49 years",317.9
+"24 Västerbotten county","single with children aged 0-19","50-64 years",370.9
+"24 Västerbotten county","single women with children aged 0-19","18-29 years",199.8
+"24 Västerbotten county","single women with children aged 0-19","30-49 years",308.9
+"24 Västerbotten county","single women with children aged 0-19","50-64 years",350.8
+"24 Västerbotten county","single men with children aged 0-19","18-29 years",423.9
+"24 Västerbotten county","single men with children aged 0-19","30-49 years",344.1
+"24 Västerbotten county","single men with children aged 0-19","50-64 years",398.6
+"24 Västerbotten county","single with adult children aged 20-29","18-29 years",418.4
+"24 Västerbotten county","single with adult children aged 20-29","30-49 years",415.1
+"24 Västerbotten county","single with adult children aged 20-29","50-64 years",440.2
+"24 Västerbotten county","single women with adult children aged 20-29","18-29 years",426.1
+"24 Västerbotten county","single women with adult children aged 20-29","30-49 years",415.1
+"24 Västerbotten county","single women with adult children aged 20-29","50-64 years",419.8
+"24 Västerbotten county","single men with adult children aged 20-29","18-29 years",415.9
+"24 Västerbotten county","single men with adult children aged 20-29","30-49 years",415.2
+"24 Västerbotten county","single men with adult children aged 20-29","50-64 years",476.9
+"24 Västerbotten county","cohabiting without children","18-29 years",400.9
+"24 Västerbotten county","cohabiting without children","30-49 years",515.2
+"24 Västerbotten county","cohabiting without children","50-64 years",590.7
+"24 Västerbotten county","cohabiting with children aged 0-19","18-29 years",453.3
+"24 Västerbotten county","cohabiting with children aged 0-19","30-49 years",609.8
+"24 Västerbotten county","cohabiting with children aged 0-19","50-64 years",708.2
+"24 Västerbotten county","cohabiting with adult children aged 20-29","18-29 years",759.9
+"24 Västerbotten county","cohabiting with adult children aged 20-29","30-49 years",760.9
+"24 Västerbotten county","cohabiting with adult children aged 20-29","50-64 years",803.1
+"24 Västerbotten county","other households without children","18-29 years",412.0
+"24 Västerbotten county","other households without children","30-49 years",548.8
+"24 Västerbotten county","other households without children","50-64 years",657.5
+"24 Västerbotten county","other households with children aged 0-19","18-29 years",548.2
+"24 Västerbotten county","other households with children aged 0-19","30-49 years",755.4
+"24 Västerbotten county","other households with children aged 0-19","50-64 years",795.0
+"25 Norrbotten county","all households","18-29 years",317.1
+"25 Norrbotten county","all households","30-49 years",487.3
+"25 Norrbotten county","all households","50-64 years",495.6
+"25 Norrbotten county","single without children","18-29 years",194.9
+"25 Norrbotten county","single without children","30-49 years",249.6
+"25 Norrbotten county","single without children","50-64 years",253.7
+"25 Norrbotten county","single women without children","18-29 years",182.1
+"25 Norrbotten county","single women without children","30-49 years",232.6
+"25 Norrbotten county","single women without children","50-64 years",244.6
+"25 Norrbotten county","single men without children","18-29 years",201.8
+"25 Norrbotten county","single men without children","30-49 years",257.1
+"25 Norrbotten county","single men without children","50-64 years",260.9
+"25 Norrbotten county","single with children aged 0-19","18-29 years",243.0
+"25 Norrbotten county","single with children aged 0-19","30-49 years",328.7
+"25 Norrbotten county","single with children aged 0-19","50-64 years",383.3
+"25 Norrbotten county","single women with children aged 0-19","18-29 years",214.7
+"25 Norrbotten county","single women with children aged 0-19","30-49 years",315.4
+"25 Norrbotten county","single women with children aged 0-19","50-64 years",370.5
+"25 Norrbotten county","single men with children aged 0-19","18-29 years",384.7
+"25 Norrbotten county","single men with children aged 0-19","30-49 years",364.2
+"25 Norrbotten county","single men with children aged 0-19","50-64 years",403.6
+"25 Norrbotten county","single with adult children aged 20-29","18-29 years",478.6
+"25 Norrbotten county","single with adult children aged 20-29","30-49 years",429.5
+"25 Norrbotten county","single with adult children aged 20-29","50-64 years",466.7
+"25 Norrbotten county","single women with adult children aged 20-29","18-29 years",408.4
+"25 Norrbotten county","single women with adult children aged 20-29","30-49 years",406.3
+"25 Norrbotten county","single women with adult children aged 20-29","50-64 years",416.2
+"25 Norrbotten county","single men with adult children aged 20-29","18-29 years",505.2
+"25 Norrbotten county","single men with adult children aged 20-29","30-49 years",488.5
+"25 Norrbotten county","single men with adult children aged 20-29","50-64 years",551.1
+"25 Norrbotten county","cohabiting without children","18-29 years",438.9
+"25 Norrbotten county","cohabiting without children","30-49 years",546.9
+"25 Norrbotten county","cohabiting without children","50-64 years",578.1
+"25 Norrbotten county","cohabiting with children aged 0-19","18-29 years",489.2
+"25 Norrbotten county","cohabiting with children aged 0-19","30-49 years",621.9
+"25 Norrbotten county","cohabiting with children aged 0-19","50-64 years",712.5
+"25 Norrbotten county","cohabiting with adult children aged 20-29","18-29 years",853.0
+"25 Norrbotten county","cohabiting with adult children aged 20-29","30-49 years",765.1
+"25 Norrbotten county","cohabiting with adult children aged 20-29","50-64 years",801.2
+"25 Norrbotten county","other households without children","18-29 years",473.9
+"25 Norrbotten county","other households without children","30-49 years",573.5
+"25 Norrbotten county","other households without children","50-64 years",602.6
+"25 Norrbotten county","other households with children aged 0-19","18-29 years",583.3
+"25 Norrbotten county","other households with children aged 0-19","30-49 years",742.3
+"25 Norrbotten county","other households with children aged 0-19","50-64 years",853.2
