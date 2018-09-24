@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = FALSE)
 ```{r, include=FALSE, message=FALSE}
 library(data.table)
 library(dplyr)
-library(reshape2)
+library(tidyr)
 library(plotly)
 library(ggplot2)
 library(akima)
@@ -117,8 +117,6 @@ Analysis: Taking the mean of the cordintaes definetly helped the cases, although
 income_data <- read.csv("Income_Data.csv")
 rds <- readRDS("gadm36_SWE_2_sf.rds")
 
-
-
 income_data_recasted <- dcast(income_data, region+type.of.household~age, value.var = "X2016")
 setnames(income_data_recasted, old=c("18-29 years", "30-49 years", "50-64 years" ), new=c("Young", "Adult", "Senior"))
 
@@ -136,14 +134,37 @@ Analysis: As expected the bulk of young earn easier than senior and adults, howe
 
 ### 3. Surface Plot showing the distribution of wealth
 ```{r}
-# income_data_recasted %>% plot_ly(x=~Young, y=~Adult, z=~Senior) %>% add_surface()
+smoothed_surface=interp(income_data_recasted$Young, income_data_recasted$Adult, income_data_recasted$Senior, duplicate = "mean")
+
+plot_ly(x=~smoothed_surface$x, y=~smoothed_surface$y, z=~smoothed_surface$z, type="surface") %>% layout(yaxis = list(title = "Adult Income", zeroline = F), xaxis = list(title = "Young Income"), title = "Surface Plot of Income Distribution between Young, Adult and Senior")
 
 ```
+Analysis: We see an almost increasing linear relationship between Income of Young and Adult with Senior. We also think a linear regression will be a good for this dataset.
 
 ### 4. Choropleth of Income distribution
 ```{r}
-plot_ly()%>%add_sf(data=rds, split=~NAME_2, color=~Price, showlegend=F, alpha=1)
-p
+income_data_recasted <- income_data_recasted %>% separate(region, c("region_no", "region", "type"), " ")
+income_data_recasted$region <- as.character(income_data_recasted$region)
+rds$NAME_2 <- as.character(rds$NAME_2)
+
+rds <- inner_join(x = rds[,c("NAME_1", "NAME_2", "TYPE_2", "geometry")], y = income_data_recasted, by=c("NAME_2" = "region"))
+class(rds) <- "sf"
+
+#plotly
+plot_ly() %>% add_sf(data=rds, split=~NAME_2, color=~Young, showlegend=F, alpha=1)
+plot_ly() %>% add_sf(data=rds, split=~NAME_2, color=~Adult, showlegend=F, alpha=1)
+
+```
+
+### 5. GPVisualizier
+```{r}
+latitude = 58.409814
+longitude = 15.624525
+name = "Linkoping"
+desc = "Linköping, Östergötlands län, SE"
+
+our_location <- data.frame(latitude, longitude, name, desc)
+
 ```
 
 ### Apendix
