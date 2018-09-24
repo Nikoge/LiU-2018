@@ -17,6 +17,7 @@ library(dplyr)
 library(reshape2)
 library(plotly)
 library(ggplot2)
+library(akima)
 library(sf)
 
 Sys.setenv('MAPBOX_TOKEN' = 'pk.eyJ1IjoiYW51Ymhhdi1kaWtzaGl0IiwiYSI6ImNqbWI1dDVjeTAwNG0zd21pcHRoMTE4YWgifQ.r4m2I2AYIvAzCNyUn4tiuw')
@@ -135,7 +136,7 @@ Analysis: As expected the bulk of young earn easier than senior and adults, howe
 
 ### 3. Surface Plot showing the distribution of wealth
 ```{r}
-income_data_recasted %>% plot_ly(x=~Young, y=~Adult, z=~Senior) %>% add_surface()
+# income_data_recasted %>% plot_ly(x=~Young, y=~Adult, z=~Senior) %>% add_surface()
 
 ```
 
