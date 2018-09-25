@@ -115,9 +115,9 @@ Analysis: Taking the mean of the cordintaes definetly helped the cases, although
 ### 1. Loading input and reshaping the dataset
 ```{r}
 income_data <- read.csv("Income_Data.csv")
-rds <- readRDS("gadm36_SWE_2_sf.rds")
+rds <- readRDS("gadm36_SWE_1_sf.rds")
 
-income_data_recasted <- dcast(income_data, region+type.of.household~age, value.var = "X2016")
+income_data_recasted <- dcast(income_data, region~age, value.var = "X2016")
 setnames(income_data_recasted, old=c("18-29 years", "30-49 years", "50-64 years" ), new=c("Young", "Adult", "Senior"))
 
 income_data$age_group <- ifelse(income_data$age == "18-29 years", "Young",
@@ -130,7 +130,8 @@ income_data$age_group <- ifelse(income_data$age == "18-29 years", "Young",
 income_data %>% plot_ly(x =~age_group ,y = ~X2016, type = 'violin', split = ~age_group, box = list(visible = T), meanline = list(visible = T)) %>% layout(yaxis = list(title = "income Distribution", zeroline = F), xaxis = list(title = "Age Group"), title = "Income Distribution vs. Age Group in Sweden 2016")
 
 ```
-Analysis: As expected the bulk of young earn easier than senior and adults, however there appears to be two modes here, one at around 200 and one around 500, same as for senior. The weath spread is highest in Seniors.
+Analysis: As expected the bulk of young earn lesser than adults and seniors. The minima of senior and adults are closer but the mean of senior is highest among all classes. All three classes have a single mode.
+
 
 ### 3. Surface Plot showing the distribution of wealth
 ```{r}
@@ -145,16 +146,15 @@ Analysis: We see an almost increasing linear relationship between Income of Youn
 ```{r}
 income_data_recasted <- income_data_recasted %>% separate(region, c("region_no", "region", "type"), " ")
 income_data_recasted$region <- as.character(income_data_recasted$region)
-rds$NAME_2 <- as.character(rds$NAME_2)
 
-rds <- inner_join(x = rds[,c("NAME_1", "NAME_2", "TYPE_2", "geometry")], y = income_data_recasted, by=c("NAME_2" = "region"))
-class(rds) <- "sf"
+rds <- inner_join(x = rds[,c("NAME_1", "geometry")], y = income_data_recasted, by=c("NAME_1" = "region"))
+
 
 #plotly
-plot_ly() %>% add_sf(data=rds, split=~NAME_2, color=~Young, showlegend=F, alpha=1)
-plot_ly() %>% add_sf(data=rds, split=~NAME_2, color=~Adult, showlegend=F, alpha=1)
-
+plot_ly() %>% add_sf(data=rds, split=~NAME_1, color=~Young, showlegend=F, alpha=1, type = "scatter") %>% layout(title = "Choropleth of Income of Young")
+plot_ly() %>% add_sf(data=rds, split=~NAME_1, color=~Adult, showlegend=F, alpha=1, type = "scatter") %>% layout(title = "Choropleth of Income of Adult")
 ```
+Analysis: We see that people in Stockholm and Gothenberg make more money than rest of Sweden, this may also be due to higher cost of living. We find that only in the case of Adults does Uppsala favours a higher income than others.
 
 ### 5. GPVisualizier
 ```{r}
@@ -165,7 +165,10 @@ desc = "Linköping, Östergötlands län, SE"
 
 our_location <- data.frame(latitude, longitude, name, desc)
 
+plot_ly() %>% add_sf(data=rds, split=~NAME_1, color=~Young, showlegend=F, alpha=1, type = "scatter") %>% layout(title = "Choropleth of Income of Young") %>% add_markers(data = our_location, y = ~latitude, x = ~longitude, color = I("red"), text='Linkoping')
+
 ```
+Analysis: We are located on the reddot on the map.
 
 ### Apendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
