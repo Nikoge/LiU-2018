@@ -158,7 +158,22 @@ ggplot(data = adult_data, aes(x=age, color = incomeLevel, fill = incomeLevel)) +
 ```
 Analysis: 
 
-### 3.
+### 3. 3D scatter plot and Trellis Plot of Education-num vs Age vs Captial Loss
+```{r}
+adult_data %>% filter(capitalLoss > 0) %>% plot_ly(x = ~education, y = ~age, z = ~capitalLoss) %>% add_markers() %>% layout(scene = list(xaxis = list(title = 'Education'), yaxis = list(title = 'Age'), zaxis = list(title = 'CapitalLoss')))
+
+
+
+```
+Analysis:
+
+### 4. Trellis Plot  of Capital Loss versus Education-num
+```{r}
+
+```
+Analysis:
+
+
 
 ### Apendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}

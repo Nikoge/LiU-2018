@@ -14,6 +14,7 @@ knitr::opts_chunk$set(echo = FALSE)
 ```{r, include=FALSE, message=FALSE}
 library(ggplot2)
 library(dplyr)
+library(reshape2)
 library(MASS)
 library(plotly)
 library(xlsx)
@@ -37,7 +38,7 @@ ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point(aes(colour 
 ```
 
 Analysis: The second graph is easier to analysis than compared to first one, the perception
-problem highlighted here is the difference in the channel capacity of human preception. Where capacity of distingushing hue > intensity 
+problem highlighted here is the difference in the channel capacity of human preception. Its difficult to distinguish between different shades of blue while its easier to distinguish between differnet hues (channel capacity is here). Eg: The difference in values say at 400 to 900 is very similar in first graph.
 
 ### 2. Scatter plot dependence of Palmitic on Oleic, linolenic split by different attributes
 ```{r}
@@ -68,23 +69,34 @@ Analysis: Using a factor simply as number assumes that the difference between re
 ggplot(data = olive_data, aes(x = oleic, y = eicosenoic)) + geom_point(aes(colour = cut_interval(linoleic, n = 3), shape = cut_interval(palmitic, n = 3), size = cut_interval(palmitoleic, n = 3)))
 ```
 
-Analysis: Its very hard to distinguish between 27 types of combination due to no clear boundary between the regions, the perception problem demostrated here is the attentive mechanism and no individual feature of the chart (shape, color, size) helps in distinguish the boundary
+Analysis: Its very hard to distinguish between 27 types of combination due to no clear boundary between the regions, the perception problem the channel capacity does not follow mathematical summation that channel capacity of an object where there are three shades of colour + three types of shapes != channel capacity of 3 shapes + channel capacity of 3 colours in a chart.
 
 ### 5. Scatter plot dependence of Oleic on Eicosenoic, linoleic not classed and classed and 27 objects
 ```{r}
 ggplot(data = olive_data, aes(x = oleic, y = eicosenoic)) + geom_point(aes(colour = Region, shape = cut_interval(palmitic, n = 3), size = cut_interval(palmitoleic, n = 3)))
 ```
 
-Analysis: Due to establishment of viusally clear boundary between the regions, the attentive mechanism has no problems scanning through the individual feature of the chart (shape, color, size) which inturns helps in distinguish the boundary
+Analysis: According to Treisman's theory, in case of perceiving a stimulus, features are "registered early, automatically, and in parallel, while objects are identified separately" and at a later stage in processing. The explaination is as follows: Any object's feature will be processed parallely and serially, if an object can be split with reasonable boundary (say shape) then our brain process the individual features seperately, thus identify a boundary becomes easy in this chart compared to above.
 
 ### 6. piechart of oils vs. region
 
 ```{r}
 
-p <- (olive_data) %>% group_by(Region) %>% summarize(total_oils = sum(palmitic, palmitoleic, stearic, oleic, linoleic, linolenic, arachidic, eicosenoic)) %>% plot_ly(values = ~total_oils, type = 'pie', showlegend = FALSE) %>% layout(title = 'Total oils by region',
-         xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
-         yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
-p
+olive_data_sum <- olive_data %>% group_by(Region) %>% summarise(palmitic = sum(palmitic),
+                                                     palmitoleic = sum(palmitoleic),
+                                                     stearic = sum(stearic),
+                                                     oleic = sum(oleic),
+                                                     linoleic = sum(linoleic),
+                                                     linolenic = sum(linolenic),
+                                                     arachidic = sum(arachidic),
+                                                     eicosenoic = sum(eicosenoic))
+
+
+olive_data_sum_long <- melt(olive_data_sum, id.vars = c("Region"))
+
+olive_data_sum_long %>% group_by(Region) %>% plot_ly(labels = ~variable, values = ~value, 
+                                                     type = 'pie', showlegend = FALSE) %>% layout(title = 'Total oils by region', 
+                                                                                                  xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE), yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
 ```
 
 Analysis: The plot does not conform to the practices under good visualization, it is generally not advised to use piechart because angles are harder to detect than size. Not having clear lables/legend simply adds to more overhead to process the information
@@ -108,7 +120,7 @@ baseball <- read.xlsx("baseball-2016.xlsx", sheetName = "Sheet1")
 
 Analysis: Yes its reasonable to scale the data (perform dimensionality reduction) since more than visualizing more than 4 feaures is not advised.
 
-### 2. Non mertic MDS
+### 2. Non mertic MDS (ISOMDS)
 ```{r}
 distance <- dist(baseball[, !names(baseball) %in% c("Team", "League")] , method = "minkowski")
 fit <- isoMDS(distance, k = 2, maxit = 100)
@@ -238,174 +250,5 @@ Analysis:  For batter, the three metric "Batting average", "Runs batted in (RBI)
 
 ### Appendix
 
-```{r, echo=TRUE, eval= FALSE}
-
-## Lab 2 loading library
-
-library(ggplot2)
-library(dplyr)
-library(MASS)
-library(plotly)
-library(xlsx)
-
-### Reading input 
-
-olive_data <- read.csv("olive.csv")
-olive_data <- olive_data[,-1]
-olive_data$Region <- factor(olive_data$Region, levels = c(1,2,3))
-
-### 1. Scatter plot dependence of Palmitic on Oleic, linolenic not classed and classed
-
-ggplot(data = olive_data, aes(x = oleic, y = palmitic), colour = linolenic) + geom_point(aes(colour = linoleic)) + ggtitle("Scatter plot of palmitic vs. oleic coloured by linolenic")
-ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point(aes(colour = cut_interval(linoleic, n = 4))) + ggtitle("Scatter plot of palmitic vs. oleic coloured by 4 intervals of linolenic")
-
-### 2. Scatter plot dependence of Palmitic on Oleic, linolenic split by different attributes
-
-ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point(aes(colour = cut_interval(linolenic, n = 4))) + ggtitle("Scatter plot of palmitic vs. oleic coloured by 4 intervals of linolenic")
-ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point(aes(size = cut_interval(linolenic, n = 4))) + ggtitle("Scatter plot of palmitic vs. oleic sized by 4 intervals of linolenic")
-ggplot(data = olive_data, aes(x = oleic, y = palmitic)) + geom_point() +  geom_spoke(aes(angle = as.numeric(cut_interval(linolenic, n = 4))*10), radius = 50) + ggtitle("Scatter plot of palmitic vs. oleic spoke angles by 4 intervals of linolenic")
-
-### 3. Scatter plot dependence of Oleic on Eicosenoic, Region split by different attributes
-
-ggplot(data = olive_data, aes(x = oleic, y = eicosenoic)) + geom_point(aes(colour = as.numeric(Region))) + ggtitle("Scatter plot of palmitic vs. oleic, coloured by region as number")
-ggplot(data = olive_data, aes(x = oleic, y = eicosenoic)) + geom_point(aes(colour = Region)) + ggtitle("Scatter plot of palmitic vs. oleic, coloured by region as factors")                                                                       
-
-### 4. Scatter plot dependence of Oleic on Eicosenoic, linoleic not classed and classed and 27 objects 
-
-ggplot(data = olive_data, aes(x = oleic, y = eicosenoic)) + geom_point(aes(colour = cut_interval(linoleic, n = 3), shape = cut_interval(palmitic, n = 3), size = cut_interval(palmitoleic, n = 3)))
-
-### 5. Scatter plot dependence of Oleic on Eicosenoic, linoleic not classed and classed and 27 objects
-
-ggplot(data = olive_data, aes(x = oleic, y = eicosenoic)) + geom_point(aes(colour = Region, shape = cut_interval(palmitic, n = 3), size = cut_interval(palmitoleic, n = 3)))
-
-### 6. piechart of oils vs. region
-
-(olive_data) %>% group_by(Region) %>% summarize(total_oils = sum(palmitic, palmitoleic, stearic, oleic, linoleic, linolenic, arachidic, eicosenoic)) %>% plot_ly(values = ~total_oils, type = 'pie', showlegend = FALSE) %>% layout(title = 'Total oils by region',
-         xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
-         yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
-
-### 7. 2D density contour plot
-
-ggplot(olive_data, aes(x = linoleic, y = eicosenoic)) + geom_point(aes(colour = Region)) + geom_density_2d()
-ggplot(olive_data, aes(x = linoleic, y = eicosenoic)) + geom_point(aes(colour = Region))
-
-## Assignment 2
-
-### 1. Loading the input xlxs file
-baseball <- read.xlsx("baseball-2016.xlsx", sheetName = "Sheet1")
-
-### 2. Non mertic MDS
-
-distance <- dist(baseball[, !names(baseball) %in% c("Team", "League")] , method = "minkowski")
-fit <- isoMDS(distance, k = 2, maxit = 100)
-
-baseball$MDS1 <- fit$points[,1]
-baseball$MDS2 <- fit$points[,2]
-
-# plotly plot
-baseball %>% plot_ly(type = "scatter", 
-                     mode = "markers", 
-                     colors = "Set1",
-                     showlegend = T) %>% add_trace(x = ~MDS1, y = ~MDS2, color = ~League, text = ~Team) %>% layout(title = "Non Metric MDS plot")
-
-### 3. Shepard plot of MDS
-
-sh <- Shepard(distance, fit$points)
-Original_Dist <-as.numeric(distance)
-MDS_Dist <- as.numeric(dist(fit$points))
-
-rownames(baseball) <- baseball$Team
-
-n=nrow(fit$points)
-index=matrix(1:n, nrow=n, ncol=n)
-index1=as.numeric(index[lower.tri(index)])
-
-n=nrow(fit$points)
-index=matrix(1:n, nrow=n, ncol=n, byrow = T)
-index2=as.numeric(index[lower.tri(index)])
-
-plot_ly()%>%
-  add_markers(x=~Original_Dist, y=~MDS_Dist, hoverinfo = 'text', name = "Datapoints",
-        text = ~paste('Obj1: ', rownames(baseball)[index1],
-                      '<br> Obj 2: ', rownames(baseball)[index2]))%>% add_lines(x=~sh$x, y=~sh$yf, name="Stress")
-
-### 4. Plotting MDS axis with variables of baseball dataset
-
-MDS_plotter <- function(MDS_axis, Col){
-  df <- cbind(baseball[[MDS_axis]], baseball[[Col]], baseball$League, baseball$Team)
-  df <- as.data.frame(df)
-  names(df) <- c(eval(MDS_axis),eval(Col), "League", "Team")
-  df$League <- as.character(df$League)
-  
-    # plotly plot
-  y_title <- list(title = Col)
-  x_title <- list(title = MDS_axis)
-   
-  plot_return <- df %>% plot_ly(type = "scatter", mode = "markers", colors = "Set1", showlegend = T) %>% 
-    add_trace(x = df[,1], y = df[,2], color = ~League, text = ~Team) %>% 
-    layout(title = "Plot of MDS axis vs. variable", yaxis =y_title, xaxis=x_title)
-  return(plot_return)
-}
-
-# Plotting MDS on all numeric columns
-# MDS axis 1
-# MDS_plotter("MDS1", "Won")
-# MDS_plotter("MDS1", "Lost")
-# MDS_plotter("MDS1", "Runs.per.game")
-# MDS_plotter("MDS1", "HR.per.game")
-# MDS_plotter("MDS1", "AB")
-# MDS_plotter("MDS1", "Runs")
-# MDS_plotter("MDS1", "Hits")
-# MDS_plotter("MDS1", "X2B")
-# MDS_plotter("MDS1", "X3B")
-# MDS_plotter("MDS1", "HR")
-# MDS_plotter("MDS1", "RBI")
-# MDS_plotter("MDS1", "StolenB")
-# MDS_plotter("MDS1", "CaughtS")
-# MDS_plotter("MDS1", "BB")
-# MDS_plotter("MDS1", "SO")
-# MDS_plotter("MDS1", "BAvg")
-# MDS_plotter("MDS1", "OBP")
-# MDS_plotter("MDS1", "SLG")
-# MDS_plotter("MDS1", "OPS")
-# MDS_plotter("MDS1", "TB")
-# MDS_plotter("MDS1", "GDP")
-# MDS_plotter("MDS1", "HBP")
-# MDS_plotter("MDS1", "SH")
-# MDS_plotter("MDS1", "SF")
-# MDS_plotter("MDS1", "IBB")
-# MDS_plotter("MDS1", "LOB")
-# 
-# # MDS axis 2
-# MDS_plotter("MDS2", "Won")
-# MDS_plotter("MDS2", "Lost")
-# MDS_plotter("MDS2", "Runs.per.game")
-# MDS_plotter("MDS2", "HR.per.game")
-# MDS_plotter("MDS2", "AB")
-# MDS_plotter("MDS2", "Runs")
-# MDS_plotter("MDS2", "Hits")
-# MDS_plotter("MDS2", "X2B")
-# MDS_plotter("MDS2", "X3B")
-# MDS_plotter("MDS2", "HR")
-# MDS_plotter("MDS2", "RBI")
-# MDS_plotter("MDS2", "StolenB")
-# MDS_plotter("MDS2", "CaughtS")
-# MDS_plotter("MDS2", "BB")
-# MDS_plotter("MDS2", "SO")
-# MDS_plotter("MDS2", "BAvg")
-# MDS_plotter("MDS2", "OBP")
-# MDS_plotter("MDS2", "SLG")
-# MDS_plotter("MDS2", "OPS")
-# MDS_plotter("MDS2", "TB")
-# MDS_plotter("MDS2", "GDP")
-# MDS_plotter("MDS2", "HBP")
-# MDS_plotter("MDS2", "SH")
-# MDS_plotter("MDS2", "SF")
-# MDS_plotter("MDS2", "IBB")
-# MDS_plotter("MDS2", "LOB")
-
-# Best plots are with MDS-2 with variables HR.per.game and HR
-MDS_plotter("MDS2", "HR.per.game")
-MDS_plotter("MDS2", "HR")
-
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
 ```
