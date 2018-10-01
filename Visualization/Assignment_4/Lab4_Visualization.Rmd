@@ -1,7 +1,7 @@
 ---
 title: "Lab4_Visualization"
 author: "Anubhav Dikshit and Yusur Almutair"
-date: "10 October 2018"
+date: "30 October 2018"
 output: html_document
 ---
 
@@ -18,6 +18,7 @@ library(scales)
 library(plotly)
 library(ggplot2)
 library(seriation)
+library(GGally)
 
 ```
 
@@ -35,6 +36,7 @@ price_data_scale <- scale(price_data[,-1])
 plot_ly(x=colnames(price_data_scale), y=rownames(price_data_scale), 
         z=price_data_scale, type="heatmap", colors =colorRamp(c("yellow", "red"))) %>% layout(title = "Heatmap of price dataset")
 ```
+
 Analysis: No its not possible to see clusters, very hard to even see an outlier.
 
 ### 3. Distance matrix computation and ordering by Hierarchical Clustering
@@ -66,8 +68,8 @@ plot_ly(x=colnames(reordmatr), y=rownames(reordmatr),
 
 plot_ly(x=colnames(reordmatr_cor), y=rownames(reordmatr_cor), 
         z=reordmatr_cor, type="heatmap", colors =colorRamp(c("yellow", "red"))) %>% layout(title = "Heatmap of correlations of price dataset")
-
 ```
+
 Analysis: Both are graphs are similar to each other. We can see a cluster in the digonals of both the plots.
 
 ### 4. Distance matrix computation and ordering by Traveling Sales Man
@@ -85,6 +87,7 @@ plot_ly(x=colnames(reordmatr), y=rownames(reordmatr),
 criterion(dist(price_data_scale[rev(ord1_tsp)], method = "euclidean"), method = c("Gradient_raw", "Path_length"))
 criterion(dist(price_data_scale[rev(ord1)], method = "euclidean"), method = c("Gradient_raw", "Path_length"))
 ```
+
 Analysis: The 'Travelling Sales Man' approach performs worse than 'Hierarchical clustering' in terms of Gradient raw but has a better path length.
 
 ### 5. Parallel Coordinate Plots
@@ -96,7 +99,7 @@ setnames(price_data, old = c("Food.Costs...", "iPhone.4S.hr.", "Clothing.Index",
          new=c("FoodCosts", "iPhone4S", "ClothingIndex", "Hours", "NetWage", "VacationDays", 
                "BigMac", "Bread", "Rice", "GoodsServices"))
 
-(price_data[,-1]) %>% plot_ly(type = 'parcoords', 
+price_data[,-1] %>% plot_ly(type = 'parcoords', 
                              dimensions = list(
                                list(label = "Food Costs", values = ~FoodCosts),
                                list(label = "iPhone 4S", values = ~iPhone4S),
@@ -108,8 +111,16 @@ setnames(price_data, old = c("Food.Costs...", "iPhone.4S.hr.", "Clothing.Index",
                                list(label = "Bread", values = ~Bread),
                                list(label = "Rice", values = ~Rice),
                                list(label = "Goods Services", values = ~GoodsServices)))
+
+#coloring lines
+data=price_data[,-1]
+data$BigMac_cluster=ifelse(data$BigMac <= 21, 1, 0)
+obj <- ggparcoord(data, scale="uniminmax", groupColumn = "BigMac_cluster")
+
+ggplotly(obj)
 ```
-Analysis:
+
+Analysis: Using iPhone4S, BigMac, Netwage and Foodcost clusters can be formed. We can see that split on the variable BigMac, there are two distinct clusters, one where BigMac < 21 and BigMac > 21. There appears to be no outlier considering the variables that we have formed the cluster on (BigMac, NetWage, FoodCost, iPhone4S)
 
 ### 6. Radar Chart Plots
 ```{r}
@@ -127,7 +138,8 @@ ggsave("radar_plot.png", width = 40, height = 60, units = "cm")
 ```{r pressure, echo=FALSE, out.width = '100%'}
 knitr::include_graphics("radar_plot.png")
 ```
-Analysis: 
+
+Analysis: Berlin, Bejing and Bogoat is one of the cluster. Caracas, Copenhagen and Chicago is the second cluster. The outliers are the following: Bogoat in first cluster and Copenhagen in second cluster.
 
 ### 7. Best tools for Analysis
 Analysis: Radar plot was the most effective. Its easy to see clusters and pattern and compare two very classes very well as well as picking outliers.
@@ -145,8 +157,8 @@ ggplot(data = adult_data, aes(x=age, y=hours, colour = incomeLevel)) + geom_poin
 
 # Trellis Plot
 ggplot(data = adult_data, aes(x=age, y=hours, color = incomeLevel)) + geom_point()+ facet_grid(incomeLevel~.) + ggtitle("Hours per Week vs. Age")
-
 ```
+
 Analysis: People earning less than 50K tend to work for longer hours and longer age. This information was difficult to see in the scatter plot 
 
 ### 2. Density and Trellis Plot of Age
@@ -154,26 +166,64 @@ Analysis: People earning less than 50K tend to work for longer hours and longer 
 ggplot(adult_data, aes(age, colour = incomeLevel, fill = incomeLevel)) + geom_density(alpha = 0.1) + ggtitle("Denisty Plot of Age")
 
 ggplot(data = adult_data, aes(x=age, color = incomeLevel, fill = incomeLevel)) + geom_density(alpha = 0.1) + facet_grid(marital~.) + ggtitle("Trellis Plot of Age vs. Marital Status")
-
 ```
-Analysis: 
+
+Analysis: The Mode of 'Never-mind' of people earning (<=50K) is the lowest among all classes. The difference in age between <=50K and >50K is largest in 'Never-mind'. The highest amount of widowed are around age 65, and there is no difference between the IncomeLevel.
 
 ### 3. 3D scatter plot and Trellis Plot of Education-num vs Age vs Captial Loss
 ```{r}
 adult_data %>% filter(capitalLoss > 0) %>% plot_ly(x = ~education, y = ~age, z = ~capitalLoss) %>% add_markers() %>% layout(scene = list(xaxis = list(title = 'Education'), yaxis = list(title = 'Age'), zaxis = list(title = 'CapitalLoss')))
-
-
-
 ```
-Analysis:
+
+```{r}
+adult_data$age_discreet <- cut_number(adult_data$age, 6)
+
+raster_3d <- adult_data %>% filter(capitalLoss > 0) %>% ggplot(aes(x=education, y=capitalLoss)) + stat_density_2d(aes(fill = ..density..), geom = "raster", contour = FALSE) + facet_grid(age_discreet~.) + ggtitle("Trellis Plot of Captail Loss vs. Education")
+
+ggsave("raster_3d.png", width = 40, height = 60, units = "cm")
+```
+
+```{r raster, echo=FALSE, out.width = '100%'}
+knitr::include_graphics("raster_3d.png")
+```
+
+Analysis: The 3D scatter plot is difficult to analyse due to density of data around similar values. In the raster type 2D density we definetly see outliers/clusters, which is the most prominent in the age group of 17-24, around captailloss of 1500.
 
 ### 4. Trellis Plot  of Capital Loss versus Education-num
 ```{r}
+# Trellis Plot
 
+adult_data$age_discreet <- cut_number(adult_data$age, 4)
+
+ggplot(data = adult_data, aes(x=education, y=capitalLoss, color = capitalLoss)) + 
+  geom_point() + facet_grid(age_discreet~.) + 
+  ggtitle("Education vs. Capital Loss")
+
+Agerange <-lattice::equal.count(adult_data$age, number=4, overlap=0.10) #overlap is 10% 
+
+L<-matrix(unlist(levels(Agerange)), ncol=2, byrow = T)
+
+L1<-data.frame(Lower=L[,1],Upper=L[,2], Interval=factor(1:nrow(L)))
+
+index=c()
+Class=c()
+for(i in 1:nrow(L)){
+  Cl=paste("[", L1$Lower[i], ",", L1$Upper[i], "]", sep="")
+  ind=which(adult_data$age>=L1$Lower[i] &adult_data$age<=L1$Upper[i])
+  index=c(index,ind)
+  Class=c(Class, rep(Cl, length(ind)))
+}
+
+df4<-adult_data[index,]
+df4$Class<-as.factor(Class)
+
+
+ggplot(data = df4, aes(x=education, y=capitalLoss, color = capitalLoss)) + 
+  geom_point() + facet_grid(Class~.) + 
+  ggtitle("Education vs. Capital Loss using Shingles")
 ```
-Analysis:
 
-
+Analysis: In this case contribution by Shingles seems to be not too great, the advatage of shingles compared to simple split would be that sudden jumps in data would be missed if it occured in the transition period (change of quaters). The disadvatge is that the onus of choosing the overlap falls on the designer/plotter, otherwise there would be redudunacy of data.
 
 ### Apendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
