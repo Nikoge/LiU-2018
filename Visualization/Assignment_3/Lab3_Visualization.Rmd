@@ -91,11 +91,11 @@ mosquito_data %>% group_by(COUNTRY, COUNTRY_ID) %>% summarise(count = n()) %>% p
   colorbar(title = "Mosquito Population in Log") %>%
   layout(
     title = 'Mosquito Population vs. Country', margin = list(l = 50, r = 50, b = 100, t = 100, pad = 4),
-    geo = list(projection = list(type = 'Conic equal area')
+    geo = list(projection = list(type = 'conic equal area')
     )
   )
 ```
-Analysis: Making the scale in log brings more information in chart compared to non log values. However the there is not much difference in the two types of projection when it comes to analysis.
+Analysis:  The known issue of conic projection is that, the distortion becomes more as we move away from the regions where cone intersects the globe. Here, as we are trying to visualize the distribution of mosquitoes around the world, the area we try to project is entire world and hence the distortion is more in this view compared to rectangular projection and hence chances of misinterpretation is more. In this particular example, we observed that equidistant rectangular maps are better than conic.
 
 ### 4. Resolve and Map for Brazil with discreet cuts 
 ```{r}

@@ -1,0 +1,140 @@
+---
+title: "Lab6_Visualization"
+author: "Anubhav Dikshit"
+date: "17 October 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Loading library
+
+```{r, include=FALSE, message=FALSE}
+library(data.table)
+library(dplyr)
+library(plotly)
+library(ggplot2)
+library(GGally)
+library(crosstalk)
+library(tidyr)
+library(visNetwork)
+library(igraph)
+library(seriation)
+
+set.seed(42)
+```
+### Assignment 1
+
+### 1. Reading input and the network graph
+```{r}
+
+edges <- read.delim("trainData.dat", header = FALSE, sep  = " ")
+nodes <- read.delim("trainMeta.dat", header = FALSE, sep = " ")
+
+
+nodes$id <- rownames(nodes)
+colnames(nodes) <- c("label", "group", "id")
+colnames(edges) <- c("temp", "from", "to", "value")
+edges$temp <- NULL
+graph <- graph.data.frame(edges, directed = T)
+degree_value <- degree(graph)
+nodes$value <- degree_value[match(nodes$id, names(degree_value))]
+nodes <- na.omit(nodes) # removing non connected nodes
+
+visNetwork(nodes = nodes, edges = edges, main = "Network of people invloved in Madrid Bombing") %>% 
+  visGroups(groupname = "0", color = "blue") %>% 
+  visGroups(groupname = "1", color = "red") %>% 
+  visEdges(arrows = "to") %>%
+  visOptions(highlightNearest = list(enabled =TRUE, 
+                                     algorithm = "hierarchical", degree = 1), 
+             collapse = TRUE,
+             selectedBy = "group",
+             nodesIdSelection = TRUE) %>%
+  visLayout(randomSeed = 42) %>%
+  visPhysics(solver= "repulsion") %>% 
+  visLegend() %>% addFontAwesome()
+
+```
+Analysis: The clusters that I see are based of the following people. First cluster is based on 'Jamal Zougam', second cluster is based on 'Semaan Gaby Eid' and the  third cluster is based on 'Taysir Alouny'.
+
+### 2. Adding the highlight of degree 1 and 2
+```{r}
+visNetwork(nodes = nodes, edges = edges, main = "Network of people invloved in Madrid Bombing") %>% 
+  visGroups(groupname = "0", color = "blue") %>% 
+  visGroups(groupname = "1", color = "red") %>% 
+  visEdges(arrows = "to") %>%
+  visOptions(highlightNearest = list(enabled =TRUE,  algorithm = "hierarchical",
+                                     degree = list(from = 1, to = 2)), 
+             collapse = TRUE,
+             selectedBy = "group",
+             nodesIdSelection = TRUE) %>%
+  visLayout(randomSeed = 42) %>%
+  visPhysics(solver= "repulsion") %>% 
+  visLegend() %>% addFontAwesome()
+```
+Analysis: 'Jamal Zougam' is the individual with the maximum connection in the network, hence this person is the most influencial to the network in terms of spreading information. From Wikipedia we know the following - "Zougam (main accused in the Madrid bombing) owned a mobile phone shop in the Lavapiés neighborhood in Madrid. He is believed to be the person who sold telephones which were used to detonate the bombs in the attack. He also reportedly helped construct the bombs and was one of the first to be arrested."
+
+### 3. Identification of Clusters
+```{r}
+graph_for_clusters <- graph.data.frame(edges, directed = FALSE)
+clusters <- cluster_edge_betweenness(graph_for_clusters, directed = T)
+nodes$clusters <- clusters$membership
+
+visNetwork(nodes = nodes, edges = edges, main = "Network of people invloved in Madrid Bombing") %>% 
+  visEdges(arrows = "to") %>%
+  visOptions(highlightNearest = list(enabled =TRUE,  algorithm = "hierarchical",
+                                     degree = list(from = 1, to = 2)), 
+             collapse = TRUE,
+             selectedBy = "group",
+             nodesIdSelection = TRUE) %>%
+  visLayout(randomSeed = 42) %>%
+  visPhysics(solver= "repulsion") %>% 
+  visLegend() %>% addFontAwesome() %>%visIgraphLayout()
+```
+Analysis: The automatic cluster detection found only two clusters, 'Jamal Zougam' cluster and other cluster was a lossly based on manually identified clusters ('Semaan Gaby Eid' and 'Taysir Alouny')
+
+### 4. Heatmap plot for cluster identification
+```{r}
+clusters <- cluster_edge_betweenness(graph_for_clusters)
+nodes$clusters <- clusters$membership
+netm <- get.adjacency(graph_for_clusters, sparse=F)
+colnames(netm) <- nodes$label
+rownames(netm) <- nodes$label
+rowdist<-dist(netm)
+
+order1<-seriate(rowdist, "HC")
+ord1<-get_order(order1)
+reordmatr<-netm[ord1,ord1]
+
+plot_ly(z=~reordmatr, x=~colnames(reordmatr), 
+        y=~rownames(reordmatr), type="heatmap") %>% layout(title = "Heatmap to find clusters among the bombing suspects")
+```
+Analysis: Most profound cluster is based again on 'Jamal Zougam' and this was identitfied in step 1 and 3.
+
+### Assignment 2
+
+### Animated Bubble Chart 
+```{r}
+oilcoal_data <- read.csv2("Oilcoal.csv", header = TRUE, sep = ";")
+
+oilcoal_data <- oilcoal_data[,c("Country", "Year", "Coal", "Oil", "Marker.size")]
+
+oilcoal_data %>% plot_ly(x=~Coal, y=~Oil, frame =~Year, type = 'scatter', text = ~Country, mode = 'markers', size= ~Marker.size) %>% animation_opts(100, easing = "cubic", redraw = F) %>% layout(title="Timeline of Consumption of Oil vs. Coal by Country")
+```
+Analysis: Most countries very little coal and oil when compared to US and China.
+Over of the years US consumption of oil increases over coal.
+Despite its demand India consumes way lesser coal and oil compared to China.
+France Oil consumption reduced from the peak of 1983, over the years they are reducing their dependence on oil and coal, the similar was the trend in Germany, we know this is due to Germany uses Nuclear and Renewable sources.
+In the year 1998 there was a brief reversal in the consumption of Oil by China however this trend quickly died and the growth in consumption of coal increased. 
+
+### Animated Bubble Chart for selected countries
+```{r}
+oilcoal_data %>% filter(Country %in% c("France", "Germany")) %>% plot_ly(x=~Coal, y=~Oil, frame =~Year, type = 'scatter', text = ~Country, mode = 'markers') %>% animation_opts(100, easing = "cubic", redraw = F) %>% layout(title="Timeline of Consumption of Oil vs. Coal by Country")
+```
+Analysis: 
+
+### Apendix
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+```

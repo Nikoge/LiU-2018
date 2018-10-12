@@ -20,6 +20,7 @@ library(ggplot2)
 library(seriation)
 library(GGally)
 
+set.seed(42)
 ```
 
 ### 1. Reading input and filter column by index
@@ -31,7 +32,9 @@ price_data <- price_data[,c(1,2,5,6,7,9,10,16,17,18,19)]
 
 ### 2. Heatmap of data without reorder
 ```{r}
+rownames(price_data) <- price_data$City
 price_data_scale <- scale(price_data[,-1])
+rownames(price_data_scale) <- price_data$City
 
 plot_ly(x=colnames(price_data_scale), y=rownames(price_data_scale), 
         z=price_data_scale, type="heatmap", colors =colorRamp(c("yellow", "red"))) %>% layout(title = "Heatmap of price dataset")
@@ -126,9 +129,17 @@ Analysis: Using iPhone4S, BigMac, Netwage and Foodcost clusters can be formed. W
 ```{r}
 
 reordmatr <- as.data.frame(reordmatr)
-reordmatr$City = price_data$City
+reordmatr$City = rownames(reordmatr)
 
 reordmatr_transformed <- reordmatr%>%tidyr::gather(variable, value, -City, factor_key=T)%>%arrange(City)
+
+first_col_order <- rownames(reordmatr)
+second_col_order <- unique(reordmatr_transformed$variable)
+
+reordmatr_transformed$City <- factor(reordmatr_transformed$City , levels = first_col_order)
+reordmatr_transformed$variable <- factor(reordmatr_transformed$variable , levels = second_col_order)
+
+reordmatr_transformed <- reordmatr_transformed[order(reordmatr_transformed$City, reordmatr_transformed$variable),]
 
 radar_plot <- reordmatr_transformed %>% ggplot(aes(x=variable, y=value, group=City)) + geom_polygon(fill="blue") + coord_polar() + theme_bw() + facet_wrap(~ City) + theme(axis.text.x = element_text(size = 5))
 
@@ -139,7 +150,7 @@ ggsave("radar_plot.png", width = 40, height = 60, units = "cm")
 knitr::include_graphics("radar_plot.png")
 ```
 
-Analysis: Berlin, Bejing and Bogoat is one of the cluster. Caracas, Copenhagen and Chicago is the second cluster. The outliers are the following: Bogoat in first cluster and Copenhagen in second cluster.
+Analysis: Berlin, Madrid and Barcelona is one of the cluster. Mumbai, Delhi and Cario is the second cluster. The outliers are the following: Barcelona in first cluster and Mumbai in second cluster.
 
 ### 7. Best tools for Analysis
 Analysis: Radar plot was the most effective. Its easy to see clusters and pattern and compare two very classes very well as well as picking outliers.

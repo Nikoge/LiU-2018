@@ -1,0 +1,175 @@
+---
+title: "Lab5_Visualization"
+author: "Anubhav Dikshit"
+date: "11 October 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Loading library
+
+```{r, include=FALSE, message=FALSE}
+library(data.table)
+library(dplyr)
+library(plotly)
+library(ggplot2)
+library(GGally)
+library(crosstalk)
+library(tidyr)
+library(NLP)
+library(tm)
+library(RColorBrewer)
+library(wordcloud)
+
+set.seed(42)
+```
+### Assignment 1
+
+![](Five.png)
+![](OneTwo.png)
+
+Analysis: The people who are happy with the watch talk about the durability, the nice looks and the fact that they go well with any clothing/occasion.
+
+The people who are unhappy about these are complaining about the battery and issues of the watch not working soon. However the brand was head in both good and bad light.
+
+### Assignment 2
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+olive_data <- read.csv("olive.csv")
+olive_data <- olive_data[,-1]
+olive_data$Region <- factor(olive_data$Region, levels = c(1,2,3))
+shared_olive <- SharedData$new(olive_data)
+
+```
+
+### 1. Interactive Scatter Plot eicosenoic against linoleic
+```{r}
+scatter_olive <- shared_olive %>% plot_ly() %>% add_markers(x = ~eicosenoic
+                                                  ,y = ~linoleic, color = I("blue"))
+
+scatter_olive
+```
+
+### 2. Linking bar chart to Scatter Plot eicosenoic against linoleic
+```{r}
+
+bar_olive <- shared_olive %>% plot_ly(x = ~Region) %>% add_histogram(color = I("blue")) %>% layout(barmode = 'overlay')
+
+bscols(widths = c(3,NA), filter_slider(id = "FS",label = "values of stearic",sharedData = shared_olive, column = ~stearic)
+,subplot(scatter_olive, bar_olive) %>% highlight(on = 'plotly_select'
+                               ,off = 'plotly_deselect',persistent = FALSE 
+                               ,dynamic = TRUE, color = c("red","blue","gold","green")
+                               ,opacityDim = I(1)) %>% hide_legend() %>% layout(title = "Linked Scatter Plot of Eicosenoic against linoleic"))
+```
+
+Analysis: The interaction operators used here are: Level of details since the bar chart can be used to identify region. The additional relationship here is that the low values all belong to region 2 and 3.
+
+### 3. eicosenoic against linoleic and arachidic against linolenic
+```{r}
+scatter1 <- shared_olive %>% plot_ly() %>% add_markers(x = ~eicosenoic
+                                       ,y = ~linoleic, color = I("yellow")
+                                       ,hoverinfo = 'text'
+                                       ,text = ~paste0('eicosenoic: ',eicosenoic,'<br>'
+                                                       ,'linoleic: ',linoleic)
+                                       )
+
+scatter2 <- shared_olive %>% plot_ly() %>% add_markers(x = ~arachidic
+                                       ,y = ~linoleic, color = I("black")
+                                       ,hoverinfo = 'text'
+                                       ,text = ~paste0('arachidic: ',arachidic,'<br>'
+                                                       ,'linoleic: ',linoleic)
+                                       )
+
+subplot(scatter1,scatter2,shareY = TRUE) %>% highlight(on = 'plotly_select',off = 'plotly_deselect'
+                                         ,persistent = FALSE ,dynamic = TRUE
+                                         ,opacityDim = I(1)
+                                         ,color = c("red","blue","gold","green") 
+                                         ) %>% layout(title = "Linked Scatter Plot of Eicosenoic against linoleic and arachidic against linolenic")
+```
+
+### 4. Parallel coordinate plot, a linked 3d-scatter plot and linked bar chart 
+```{r}
+
+parcoord <- olive_data %>% ggparcoord(columns = c(3:10),scale = 'uniminmax')
+d_parcood <- plotly_data(ggplotly(parcoord)) %>% group_by(.ID)
+sh_parcood <- SharedData$new(d_parcood, key = ~.ID, group = "olive")
+parcoord4 <- sh_parcood %>% plot_ly(x = ~variable, y = ~value, color = I("slategray3")) %>% add_lines(
+line = list(width = 0.4)) %>% add_markers(marker=list(size=0.3), text=~.ID, hoverinfo="text")
+
+#--- 3D_scatter plot
+
+scatter_d <- olive_data
+scatter_d$.ID <- 1:nrow(olive_data)
+sh_scatter <- SharedData$new(scatter_d, key = ~.ID, group = "olive_data")
+#---- Creating dropboxes
+#---X
+ButtonsX <- list()
+for (i in 3:10){
+  ButtonsX[[i-2]]= list(method = "restyle",
+                        args = list( "x", list(olive_data[[i]])),
+                        label = colnames(olive_data)[i])
+}
+#---Y
+ButtonsY <- list()
+for (i in 3:10){
+  ButtonsY[[i-2]]= list(method = "restyle",
+                        args = list( "y", list(olive_data[[i]])),
+                        label = colnames(olive_data)[i])
+}
+#---Z
+ButtonsZ <- list()
+for (i in 3:10){
+  ButtonsZ[[i-2]]= list(method = "restyle",
+                        args = list( "z", list(olive_data[[i]])),
+                        label = colnames(olive_data)[i])
+}
+
+scatter4 <- sh_scatter %>% plot_ly(x = ~eicosenoic, y= ~linoleic
+                                   , z = ~arachidic, color = I("slategray3")) %>%
+  add_markers() %>%
+  layout( updatemenus = list(
+           list(y = 1, buttons = ButtonsX),
+           list(y = 0.8, buttons = ButtonsY),
+           list(y = 0.6, buttons = ButtonsZ)
+         )  )
+
+
+#--- Bar chart
+
+barchart4 <- sh_scatter %>% plot_ly(x = ~Region
+                          , color = I("slategray3")) %>% add_histogram() %>% layout(barmode = 'overlay')
+
+
+#--- Creating linked plots
+bscols(
+parcoord4 %>% highlight(on = 'plotly_select'
+                        , persistent = FALSE ,dynamic = TRUE
+                        ,opacityDim = I(1)
+                        ,color = c("red","blue","gold","green") 
+                        ) %>% hide_legend()
+,scatter4 %>% highlight(on = 'plotly_click'
+                        ,persistent = FALSE ,dynamic = TRUE
+                        ,opacityDim = I(1)
+                        ,color = c("red","blue","gold","green") 
+                        ) %>% hide_legend()
+,barchart4 %>% highlight(on = 'plotly_click'
+                         ,persistent = FALSE ,dynamic = TRUE
+                         ,opacityDim = I(1)
+                         ,color = c("red","blue","gold","green") 
+                        ) %>% hide_legend())
+```
+
+### 5. Analysis of 4.
+
+Selection operator and Connection operator was mainly used for the above plot. We chose the region by brushing and connected observations were showed on parallel coordinate plot. Re configuring operator is used when we are selecting variables for the 3D scatter plot.
+We were able to transform the plot and analyze relations between each variables.
+
+Strategy for better analysis: Coloring by region, this allows to understand the hierarchical clusters in the data. Multiple Linked scatter plots (per region) are excellent to see outliers and allow to see for correleations above different variables. Finally using these both using them on a 3D scatter plot seems to provide an excellent insight.
+
+### Apendix
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+```
