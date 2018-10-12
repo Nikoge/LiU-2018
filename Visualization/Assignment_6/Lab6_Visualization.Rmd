@@ -12,16 +12,12 @@ knitr::opts_chunk$set(echo = FALSE)
 ## Loading library
 
 ```{r, include=FALSE, message=FALSE}
-library(data.table)
 library(dplyr)
 library(plotly)
-library(ggplot2)
-library(GGally)
-library(crosstalk)
-library(tidyr)
 library(visNetwork)
 library(igraph)
 library(seriation)
+library(tourr)
 
 set.seed(42)
 ```
@@ -74,7 +70,7 @@ visNetwork(nodes = nodes, edges = edges, main = "Network of people invloved in M
   visPhysics(solver= "repulsion") %>% 
   visLegend() %>% addFontAwesome()
 ```
-Analysis: 'Jamal Zougam' is the individual with the maximum connection in the network, hence this person is the most influencial to the network in terms of spreading information. From Wikipedia we know the following - "Zougam (main accused in the Madrid bombing) owned a mobile phone shop in the Lavapiés neighborhood in Madrid. He is believed to be the person who sold telephones which were used to detonate the bombs in the attack. He also reportedly helped construct the bombs and was one of the first to be arrested."
+Analysis: 'Jamal Zougam' is the individual with the maximum connection in the network, hence this person is the most influential to the network in terms of spreading information. From Wikipedia we know the following - "Zougam (main accused in the Madrid bombing) owned a mobile phone shop in the Lavapiés neighborhood in Madrid. He is believed to be the person who sold telephones which were used to detonate the bombs in the attack. He also reportedly helped construct the bombs and was one of the first to be arrested."
 
 ### 3. Identification of Clusters
 ```{r}
@@ -111,11 +107,11 @@ reordmatr<-netm[ord1,ord1]
 plot_ly(z=~reordmatr, x=~colnames(reordmatr), 
         y=~rownames(reordmatr), type="heatmap") %>% layout(title = "Heatmap to find clusters among the bombing suspects")
 ```
-Analysis: Most profound cluster is based again on 'Jamal Zougam' and this was identitfied in step 1 and 3.
+Analysis: Most profound cluster is based again on 'Jamal Zougam' and this was identified in step 1 and 3.
 
 ### Assignment 2
 
-### Animated Bubble Chart 
+### 1. Animated Bubble Chart 
 ```{r}
 oilcoal_data <- read.csv2("Oilcoal.csv", header = TRUE, sep = ";")
 
@@ -129,11 +125,28 @@ Despite its demand India consumes way lesser coal and oil compared to China.
 France Oil consumption reduced from the peak of 1983, over the years they are reducing their dependence on oil and coal, the similar was the trend in Germany, we know this is due to Germany uses Nuclear and Renewable sources.
 In the year 1998 there was a brief reversal in the consumption of Oil by China however this trend quickly died and the growth in consumption of coal increased. 
 
-### Animated Bubble Chart for selected countries
+### 2. Animated Bubble Chart for selected countries
 ```{r}
 oilcoal_data %>% filter(Country %in% c("France", "Germany")) %>% plot_ly(x=~Coal, y=~Oil, frame =~Year, type = 'scatter', text = ~Country, mode = 'markers') %>% animation_opts(100, easing = "cubic", redraw = F) %>% layout(title="Timeline of Consumption of Oil vs. Coal by Country")
 ```
-Analysis: 
+Analysis: The reversal in the consumption of coal and oil by these countries starts from 1991 for Germany. The reduction in the coal occurred due to merging of East and West Germany. France is a champion of nuclear energy, they switched to almost nuclear only power in the year 1983 and have never looked back since then, this was due to the series of nuclear test that France was pushing for in the height of cold war.
+
+### 3. Animated chart of fuel consumption in terms of oil consumption
+```{r}
+temp1 <- oilcoal_data %>% group_by(Year, Country) %>% mutate(oil_p = Oil/sum(Oil, Coal))
+temp2 <- oilcoal_data %>% group_by(Year, Country) %>% mutate(oil_p = 0)
+temp3 <- rbind(temp1, temp2)
+temp3 %>% plot_ly(x=~Country, y=~oil_p, frame =~Year, type = 'scatter', mode='line', text = ~Country) %>% animation_opts(100, easing = "cubic", redraw = F) %>% layout(title="Timeline of energy in terms of oil consumption")
+
+```
+Analysis:
+
+### 4. Animated chart of fuel consumption in terms of oil consumption with  elastic easing
+```{r}
+temp3 %>% plot_ly(x=~Country, y=~oil_p, frame =~Year, type = 'scatter', mode='line', text = ~Country) %>% animation_opts(100, easing = "elastic", redraw = F) %>% layout(title="Timeline of energy in terms of oil consumption")
+
+```
+Analysis: Due to elastic easing, large changes are easier seen this is due to the fact the larger the change larger is the oscialltion/jump due to elastic effect.
 
 ### Apendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
