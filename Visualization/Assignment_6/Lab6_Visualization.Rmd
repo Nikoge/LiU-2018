@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ```{r, include=FALSE, message=FALSE}
 library(dplyr)
+library(tidyr)
 library(plotly)
 library(visNetwork)
 library(igraph)
@@ -141,12 +142,87 @@ temp3 %>% plot_ly(x=~Country, y=~oil_p, frame =~Year, type = 'scatter', mode='li
 ```
 Analysis:
 
-### 4. Animated chart of fuel consumption in terms of oil consumption with  elastic easing
+### 4. Animated chart of fuel consumption in terms of oil consumption with elastic easing
 ```{r}
 temp3 %>% plot_ly(x=~Country, y=~oil_p, frame =~Year, type = 'scatter', mode='line', text = ~Country) %>% animation_opts(100, easing = "elastic", redraw = F) %>% layout(title="Timeline of energy in terms of oil consumption")
 
 ```
 Analysis: Due to elastic easing, large changes are easier seen this is due to the fact the larger the change larger is the oscialltion/jump due to elastic effect.
+
+
+
+### 5. Custom Tour of dataset
+```{r}
+
+oilcoal <- read.csv2("Oilcoal.csv", header = TRUE, sep = ";")
+oilcoal$X <- NULL
+set.seed(42)
+
+oilcoal_tour <- oilcoal[, c("Country", "Year", "Coal")]
+oilcoal_tour$Coal <- as.numeric(gsub(",", ".", oilcoal_tour$Coal))
+oilcoal_tour <- oilcoal_tour %>%spread(Country, Coal)
+oilcoal_scale <- rescale(oilcoal_tour[, 2:9])
+
+rownames(oilcoal_scale) <- oilcoal_tour$Year
+colnames(oilcoal_scale) <- names(oilcoal_tour)[-1]
+
+
+tour <- new_tour(oilcoal_scale, guided_tour(cmass), NULL)
+steps <- c(0, rep(1/15, 200))
+
+Projs<-lapply(steps, function(step_size){  
+  step <- tour(step_size)
+  if(is.null(step)) {
+    .GlobalEnv$tour<- new_tour(oilcoal_scale, guided_tour(cmass), NULL)
+    step <- tour(step_size)
+  }
+  step
+}
+)
+
+# projection of each observation
+tour_dat <- function(i) {
+  step <- Projs[[i]]
+  proj <- center(oilcoal_scale %*% step$proj)
+  data.frame(x = proj[,1], y = proj[,2], state = rownames(oilcoal_scale))
+}
+# projection of each variable's axis
+proj_dat <- function(i) {
+  step <- Projs[[i]]
+  data.frame(
+    x = step$proj[,1], y = step$proj[,2], variable = colnames(oilcoal_scale)
+  )
+}
+stepz <- cumsum(steps)
+# tidy version of tour data
+tour_dats <- lapply(1:length(steps), tour_dat)
+tour_datz <- Map(function(x, y) cbind(x, step = y), tour_dats, stepz)
+tour_dat <- dplyr::bind_rows(tour_datz)
+# tidy version of tour projection data
+proj_dats <- lapply(1:length(steps), proj_dat)
+proj_datz <- Map(function(x, y) cbind(x, step = y), proj_dats, stepz)
+proj_dat <- dplyr::bind_rows(proj_datz)
+ax <- list(
+  title = "", showticklabels = FALSE,
+  zeroline = FALSE, showgrid = FALSE,
+  range = c(-1.1, 1.1)
+)
+```
+
+```{r}
+# for nicely formatted slider labels
+options(digits = 3)
+tour_dat <- highlight_key(tour_dat, ~state, group = "A")
+tour <- proj_dat %>%
+  plot_ly(x = ~x, y = ~y, frame = ~step, color = I("black")) %>%
+  add_segments(xend = 0, yend = 0, color = I("gray80")) %>%
+  add_text(text = ~variable) %>%
+  add_markers(data = tour_dat, text = ~state, ids = ~state, hoverinfo = "text") %>%
+  layout(xaxis = ax, yaxis = ax, title = "Animated tour of the coal consumption by country")#%>%animation_opts(frame=0, transition=0, redraw = F)
+tour
+
+```
+Analysis: Yes clusters are depended on the year range, this is due to the fact that many european countries moved away from coal as a group and also US and India strated growing in similar years. China and Brazil have the largest effect on the projection.
 
 ### Apendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
