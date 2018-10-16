@@ -134,20 +134,23 @@ Analysis: The reversal in the consumption of coal and oil by these countries sta
 
 ### 3. Animated chart of fuel consumption in terms of oil consumption
 ```{r}
-temp1 <- oilcoal_data %>% group_by(Year, Country) %>% mutate(oil_p = Oil/sum(Oil, Coal))
+temp1 <- oilcoal_data %>% group_by(Year, Country) %>% mutate(oil_p = Oil/sum(Oil, Coal) * 100)
 temp2 <- oilcoal_data %>% group_by(Year, Country) %>% mutate(oil_p = 0)
 temp3 <- rbind(temp1, temp2)
-temp3 %>% plot_ly(x=~Country, y=~oil_p, frame =~Year, type = 'scatter', mode='line', text = ~Country) %>% animation_opts(100, easing = "cubic", redraw = F) %>% layout(title="Timeline of energy in terms of oil consumption")
+
+temp3 %>% plot_ly(x=~Country, y=~oil_p, frame =~Year, type = 'scatter', mode='lines', text = ~Country,  color = ~Country, line = list(width = 20)) %>% animation_opts(300, easing = "cubic", redraw = F) %>% layout(title="Timeline of energy in terms of oil consumption")
 
 ```
-Analysis:
+Analysis: 
+Advantages -> Trend over the same years and across countries is possible. Clusters in terms of country growing in the same manner can be identified, this is easier to do than compared to bubble chart.
+Disadvantages -> When compared to bubble chart, bar chart animation lose on one more dimension to show change say the bubble size. However one more level of detail can be added in terms of varying colour however this is not as eye catchy as compared to size change in bubble chart.
 
 ### 4. Animated chart of fuel consumption in terms of oil consumption with elastic easing
 ```{r}
-temp3 %>% plot_ly(x=~Country, y=~oil_p, frame =~Year, type = 'scatter', mode='line', text = ~Country) %>% animation_opts(100, easing = "elastic", redraw = F) %>% layout(title="Timeline of energy in terms of oil consumption")
+temp3 %>% plot_ly(x=~Country, y=~oil_p, frame =~Year, type = 'scatter', mode='lines', text = ~Country,  color = ~Country, line = list(width = 20)) %>% animation_opts(300, easing = "elastic", redraw = F) %>% layout(title="Timeline of energy in terms of oil consumption")
 
 ```
-Analysis: Due to elastic easing, large changes are easier seen this is due to the fact the larger the change larger is the oscialltion/jump due to elastic effect.
+Analysis: Due to elastic easing, large changes are easier seen this is due to the fact the larger the change larger is the oscillation/jump due to elastic effect.
 
 
 
@@ -222,7 +225,7 @@ tour <- proj_dat %>%
 tour
 
 ```
-Analysis: Yes clusters are depended on the year range, this is due to the fact that many european countries moved away from coal as a group and also US and India strated growing in similar years. China and Brazil have the largest effect on the projection.
+Analysis: Yes clusters are depended on the year range, this is due to the fact that many European countries moved away from coal as a group and also US and India started growing in similar years. China and Brazil have the largest effect on the projection.
 
 ### Apendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
