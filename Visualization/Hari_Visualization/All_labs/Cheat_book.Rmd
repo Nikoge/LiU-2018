@@ -4,7 +4,12 @@ author: "Anubhav Dikshit (anudi287)"
 date: "02 Nov 2018"
 output: 
   html_document:
+   theme: cosmo
    toc: true
+   number_sections: true
+   # toc_float:
+   #    collapsed: false
+   #    smooth_scroll: false
 always_allow_html: yes
 ---
 
@@ -21,7 +26,10 @@ library(shiny)
 library(gridExtra)
 library(xlsx)
 library(MASS)
-library(webshot)
+library(sf)
+library(akima)
+
+Sys.setenv('MAPBOX_TOKEN' = 'pk.eyJ1IjoibGFrc2hpZGFhIiwiYSI6ImNqbWIyOHN2NTRlZ3kzam10aTljeGNybWgifQ.8EG9Y6r024e-TGk79f7GpA')
 ```
 
 # Reading Data
@@ -35,10 +43,12 @@ senic_data = read.table("SENIC.txt",
                                 "Available_Facilities_and_Services"))
 
 olive_data <- read.csv("olive.csv")
+baseball_data = read.xlsx("baseball-2016.xlsx", sheetName = "Sheet1")
+aegypti_data = read.csv("aegypti_albopictus.csv")
 ```
 
 # Data Mugging
-## Quantile Computation
+### Quantile Computation
 
 ```{r get_outliers_function}
 get_outliers <- function(x){
@@ -49,6 +59,27 @@ get_outliers <- function(x){
   return(c(which((x > (q3+1.5*(q3-q1)))), which(x < (q1-1.5*(q3-q1)))))
 }
 ```
+### Scaling the Data
+```{r}
+baseball_scaled <- scale(baseball_data[,3:length(baseball_data)])
+```
+
+### Distance Matrix between rows
+```{r}
+distance_matrix <- dist(baseball_scaled)
+```
+
+### Non-metric MDS
+```{r}
+mds_result <- isoMDS(distance_matrix, k=2, p=2)
+coords <- mds_result$points
+coords_mds <- as.data.frame(coords)
+baseball_data_with_mds <- baseball_data
+baseball_data_with_mds$MDS_V1 <- coords_mds$V1
+baseball_data_with_mds$MDS_V2 <- coords_mds$V2
+
+```
+
 
 # Single Plots
 ## Density Plot
@@ -141,6 +172,99 @@ Orientation angle of spoke : Linolenic class
   theme(plot.title = element_text(hjust = 0.5)) 
 
 ```
+
+### Scatter plot with color, size and shape
+```{r}
+
+ggplot(olive_data)+
+  geom_point(aes(x = oleic, y = eicosenoic, color = cut_interval(linoleic, n = 3),
+                            shape = cut_interval(palmitic, n = 3),
+                            size = cut_interval(palmitoleic, n = 3))) + 
+  scale_size_manual(values = c(2,3,4)) +
+  labs(shape = "Palmitic range", color = "Linoleic range", size = "Palmitoleic range") +
+  ggtitle("Dependence of Oleic vs Eicosenoic vs Linoleic vs Palmitic vs Palmitoleic") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+### Scatter Plot of MDS
+```{r}
+
+baseball_scaled <- scale(baseball_data[,3:length(baseball_data)])
+
+### Distance Matrix between rows
+distance_matrix <- dist(baseball_scaled)
+
+### Non-metric MDS
+mds_result <- isoMDS(distance_matrix, k=2, p=2)
+coords <- mds_result$points
+coords_mds <- as.data.frame(coords)
+baseball_data_with_mds <- baseball_data
+baseball_data_with_mds$MDS_V1 <- coords_mds$V1
+baseball_data_with_mds$MDS_V2 <- coords_mds$V2
+
+
+
+plot_ly(baseball_data_with_mds, x=~MDS_V1, y=~MDS_V2) %>% 
+  add_markers(color=~League, colors = c("blue", "red"), 
+              text=baseball_data_with_mds$Team, hoverinfo="text") %>%
+  layout(title="Scatterplot of the 2 MDS variables")
+```
+
+## Shepard Plot
+### Shepard plot shows the fit of MDS, the distance in original dataset vs. distance in reordered dataset should be similar
+```{r}
+
+baseball_scaled <- scale(baseball_data[,3:length(baseball_data)])
+
+### Distance Matrix between rows
+distance_matrix <- dist(baseball_scaled)
+mds_result <- isoMDS(distance_matrix, k=2, p=2)
+coords <- mds_result$points
+
+shp <- Shepard(distance_matrix, coords)
+delta <- as.numeric(distance_matrix)
+D <- as.numeric(dist(coords))
+
+n <- nrow(coords)
+index <- matrix(1:n, nrow=n, ncol=n)
+index1 <- as.numeric(index[lower.tri(index)])
+
+n <- nrow(coords)
+index <- matrix(1:n, nrow=n, ncol=n, byrow = T)
+index2 <- as.numeric(index[lower.tri(index)])
+
+
+plot_ly()%>%
+  add_markers(x=~delta, y=~D, name="Observation pairs", hoverinfo = 'text', 
+              text = ~paste('Obj 1: ', 
+                            rownames(baseball_data_with_mds)[index1], 
+                            '<br> Obj 2: ', 
+                            rownames(baseball_data_with_mds)[index2])) %>%
+  add_lines(x=~shp$x, y=~shp$yf, name="Isotonic regression line") %>%
+  layout(title="Shepard's plot of MDS operation")
+```
+
+
+## Pie Charts
+### Simple pie chart
+```{r piechart_oils}
+
+plot_ly(olive_data,labels=~Area,type='pie',textinfo = "none") %>%
+  layout(title = "Pie chart of proportion of oils coming from different areas")
+
+```
+
+## 2D density contour plot
+### Simple 2D plot using ggplot2
+```{r contour_plot}
+
+ggplot(olive_data)+geom_density_2d(aes(x=eicosenoic, y=linoleic)) +
+  ggtitle("Contour plot of Linoleic vs Eicosenoic") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
 
 # Multiple Plots
 ## Density Plots
