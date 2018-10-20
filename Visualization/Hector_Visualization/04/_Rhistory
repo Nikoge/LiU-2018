@@ -1,0 +1,512 @@
+{
+stop()
+}
+# Empty vector to store the moving median.
+moving_median = c()
+for (i in 1:(length(x) - n))
+{
+moving_median = c(moving_median, median(x[i: (i + n)], na.rm=na.rm))
+}
+return(moving_median)
+}
+# 1.2.2 for_mult_table().
+for_mult_table = function(from, to)
+{
+# Checking that the arguments are scalars.
+if (!(is.numeric(from) & is.numeric(to)))
+{
+stop()
+}
+# Clean way of doing it below.
+#vector = matrix(from:to, nrow=1)
+#return(t(vector) %*% vector)
+# Boring way of doing it (loops).
+res_matrix = matrix(nrow=(to-from+1), ncol=(to-from+1))
+for (i in from:to)
+{
+for (j in from:to)
+{
+res_matrix[(i - from + 1), (j - from + 1)] = i * j
+}
+}
+return(res_matrix)
+}
+# 1.2.3 * cor_matrix().
+cor_matrix = function(X)
+{
+# Setting up the correlation matrix.
+len = length(X)
+cor_m = diag(len)
+for (i in 1:len)
+{
+for (j in 1:len)
+{
+# This condition checks that we are only going to
+# fill up the upper right part of the correlation
+# matrix since it's reusable in the bottom half.
+if (i < j)
+{
+# Calculating the correlation between the two variables.
+mu_i = mean(X[, i])
+mu_j = mean(X[, j])
+sum2_i = sum((X[, i] - mu_i) ^ 2)
+sum2_j = sum((X[, j] - mu_j) ^ 2)
+sum_ij = sum((X[, i] - mu_i) * (X[, j] - mu_j))
+cor_m[i, j] = sum_ij / sqrt(sum2_i * sum2_j)
+}
+if (i == j)
+{
+cor_m[i, j] = 1
+}
+}
+}
+cor_m = cor_m + t(cor_m) - diag(len)
+return(cor_m)
+}
+# 1.3 while loops.
+# 1.3.1 find_cumsum().
+find_cumsum = function(x, find_sum)
+{
+# Checking if the vector is numeric.
+if (!is.numeric(x)) stop()
+cumsum = 0
+i = 1
+len = length(x)
+while (cumsum < find_sum & i <= len)
+{
+cumsum = cumsum + x[i]
+i = i + 1
+}
+return(cumsum)
+}
+# 1.3.2 while_mult_table().
+while_mult_table = function(from, to)
+{
+# Checking that the arguments are scalars.
+if (!(is.numeric(from) & is.numeric(to)))
+{
+stop()
+}
+# Boring way of doing it (while loops).
+res_matrix = matrix(nrow=(to-from+1), ncol=(to-from+1))
+i = from
+j = from
+while (i <= to)
+{
+while (j <= to)
+{
+res_matrix[(i - from + 1), (j - from + 1)] = i * j
+j = j + 1
+}
+i = i + 1
+j = from
+}
+return(res_matrix)
+}
+# 1.3.3 * trial_division_factorization().
+trial_division_factorization = function(x)
+{
+prime = c()
+while(x %% 2 == 0)
+{
+prime = cbind(prime, 2)
+x = x / 2
+}
+f = 3
+while ((f * f) <= x)
+{
+if (x %% f == 0)
+{
+prime = cbind(prime, f[1])
+x = x / f
+}
+else
+{
+f = f + 2
+}
+}
+if (x != 1)
+{
+prime = cbind(prime, x[1])
+}
+return(as.vector(prime))
+}
+# 1.4 Repeat and loop controls.
+# 1.4.1 repeat_find_cumsum().
+repeat_find_cumsum = function(x, find_sum)
+{
+# Checking if the vector is numeric.
+if (!is.numeric(x)) stop()
+cumsum = 0
+i = 1
+len = length(x)
+repeat
+{
+cumsum = cumsum + x[i]
+i = i + 1
+if (cumsum > find_sum | i > len)
+{
+break
+}
+}
+return(cumsum)
+}
+# 1.4.2 repeat_my_moving_median().
+repeat_my_moving_median = function(x, n, na.rm=FALSE)
+{
+# Check if the vector and the variable n are numeric.
+if (!(is.numeric(x) & is.numeric(n)))
+{
+stop()
+}
+# Empty vector to store the moving median.
+moving_median = c()
+i = 1
+repeat
+{
+moving_median = c(moving_median, median(x[i: (i + n)], na.rm=na.rm))
+i = i + 1
+if (i > length(x) - n)
+{
+break
+}
+}
+return(moving_median)
+}
+# 1.5 Environment.
+# 1.5.1 in_environment().
+in_environment = function(env)
+{
+}
+mark_my_assignment()
+my_magic_matrix = function()
+{
+m = matrix(c(4, 9, 2, 3, 5, 7, 8, 1, 6), 3, 3, TRUE)
+return(m)
+}
+my_magic_list()
+lsf.str("package:base")
+lsf.str("package:base")[1:5]
+in_environment = function(env)
+{
+return(lsf.str(env))
+}
+env <- search()[length(search())]
+funs <- in_environment(env)
+funs[1:5]
+help(lsf)
+help("lsf.str")
+ls.str("package:base")
+ls.str("package:base")[1:5]
+length("asd")
+env()
+.packages(TRUE)
+# 1.5.2 * where().
+where = function(fun)
+{
+if (length(fun) != 1)
+{
+stop()
+}
+pkgs = .packages(TRUE)
+for (pkg in pkgs)
+{
+path = paste("package:", pkg, sep="")
+if (fun %in% lsf.str(path))
+{
+return(path)
+}
+}
+return("[fun] not found!")
+}
+where(fun = "sd")
+help(".packages")
+where = function(fun)
+{
+if (length(fun) != 1)
+{
+stop()
+}
+pkgs = .packages()
+for (pkg in pkgs)
+{
+path = paste("package:", pkg, sep="")
+if (fun %in% lsf.str(path))
+{
+return(path)
+}
+}
+return("[fun] not found!")
+}
+where(fun = "sd")
+where(fun = "read.table")
+where(fun = "non_existant_function")
+k = head(iris)
+k
+k["Sepal.Length"]
+c = "Sepal.Length"
+k[c]
+k[[c]]
+help(lapply)
+help(apply)
+help(rapply)
+help(lapply(list, function))
+help(lapply)
+lapply(iris[1:4], function(x) sd(x) / mean(x))
+moment = function(i)
+{
+function(vec, i)
+{
+return(vec + i)
+}
+}
+m = moment(1)
+m(2)
+moment = function(i)
+{
+function(vec)
+{
+return(vec + i)
+}
+}
+m = moment(1)
+m(2)
+moment = function(i)
+{
+function(vec)
+{
+m = sum((vec ^ i) * (1 / length(vec)))
+return(m)
+}
+}
+m1 <- moment(i=1)
+m2 <- moment(i=2)
+m1(1:100)
+m2(1:100)
+# 1.7.1 moment().
+moment = function(i)
+{
+function(vec)
+{
+m = sum(((vec - mean(vec) ^ i) * (1 / length(vec))))
+return(m)
+}
+}
+m1 <- moment(i=1)
+m2 <- moment(i=2)
+m1(1:100)
+m2(1:100)
+moment = function(i)
+{
+function(vec)
+{
+m = sum(((vec - mean(vec)) ^ i) * (1 / length(vec)))
+return(m)
+}
+}
+m1 <- moment(i=1)
+m2 <- moment(i=2)
+m1(1:100)
+m2(1:100)
+a = matrix(1:9, 3,3)
+a
+nrow(a)
+library(markmyassignment)
+lab_path = "https://raw.githubusercontent.com/STIMALiU/AdvRCourse/master/Labs/Tests/lab1.yml"
+set_assignment(lab_path)
+name = "Héctor Plata"
+liuid = "hecpl268"
+# 1.1 Vectors.
+# 1.1.1 my_num_vector.
+my_num_vector = function()
+{
+x1 = log10(11)
+x2 = cos(pi / 5)
+x3 = exp(pi / 3)
+x4 = (1173 %% 7) / 19
+return(c(x1, x2, x3, x4))
+}
+# 1.1.2 filter_my_vector(x, leq).
+filter_my_vector = function(x, leq)
+{
+x[x >= leq] = NA
+return(x)
+}
+# 1.1.3 dot_prod(a, b).
+dot_prod = function(a, b)
+{
+r = a * b
+r = sum(r)
+return(r)
+}
+# 1.1.4 approx_e(N).
+approx_e = function(N)
+{
+series = 0:N
+series = factorial(series)
+e = sum(1 / series)
+return(e)
+}
+# 1.2 Matrices.
+# 1.2.1 my_magic_matrix().
+# The magic is that the sum of all rows/columns is equal to 15.
+my_magic_matrix = function()
+{
+m = matrix(c(4, 9, 2, 3, 5, 7, 8, 1, 6), 3, 3, TRUE)
+return(m)
+}
+# 1.2.2 calculate_elements(A)
+calculate_elements = function(A)
+{
+return(length(A))
+}
+# 1.2.3 row_to_zero(A, i).
+row_to_zero = function(A, i)
+{
+A[i, ] = 0
+return(A)
+}
+# 1.2.4 add_elements_to_matrix(A, x, i, j).
+add_elements_to_matrix = function(A, x, i, j)
+{
+A[i, j] = A[i, j] + x
+return(A)
+}
+# Lists.
+# 1.3.1 my_magic_list().
+my_magic_list = function()
+{
+magic_list = list(
+info="my own list",
+my_num_vector(),
+my_magic_matrix())
+return(magic_list)
+}
+# 1.3.2 change_info(x, text).
+change_info = function(x, text)
+{
+x$info = text
+return(x)
+}
+# 1.3.3 add_note(x, note).
+add_note = function(x, note)
+{
+x$note = note
+return(x)
+}
+# 1.3.4 sum_numeric_parts(X).
+sum_numeric_parts = function(x)
+{
+# Variable for summation.
+sum_numeric = 0
+# Looping through every element of the list
+# and checking if it is numeric in order to
+# add it to the overall sum.
+for(element in x)
+{
+if(is.numeric(element))
+{
+sum_numeric = sum_numeric + sum(element)
+}
+}
+return(sum_numeric)
+}
+# 1.4 data.frames.
+# 1.4.1 my_data.frame().
+my_data.frame = function()
+{
+df = data.frame(list(
+id=c(1, 2, 3),
+name=c("John", "Lisa", "Azra"),
+income=c(7.30, 0.00, 15.21),
+rich=c(FALSE, FALSE, TRUE)))
+return(df)
+}
+# 1.4.2 sort_head(df, var.name, n).
+sort_head = function(df, var.name, n)
+{
+idxs = order(df[var.name], decreasing=TRUE)
+df = df[idxs, ]
+df = df[1:n,]
+return(df)
+}
+# 1.4.3 add_median_variable(df, j).
+add_median_variable = function(df, j)
+{
+# Getting the median value of the column.
+col_median = median(df[[j]])
+# Creating a new column using the filter.
+df["compared_to_median"] = apply(
+df,
+j,
+function(x) if(col_median > x[1]) "Smaller" else if(col_median == x[1]) "Median" else "Greater")
+return(df)
+}
+# 1.4.4 analyze_columns(df, j).
+analyze_columns = function(df, j)
+{
+data_summary = list()
+for(col in j)
+{
+col_name = names(df)[[col]]
+data_summary[[col_name]] = c(
+mean=mean(df[[col]]),
+median=median(df[[col]]),
+sd=sd(df[[col]]))
+}
+data_summary[["correlation_matrix"]] = cor(df[j])
+return(data_summary)
+}
+mark_my_assignment()
+formals(moemnt)
+formals(moment)
+body(f)
+body(moment)
+environment(f)
+environment(moment)
+help(c)
+help(c())
+help(vector)
+c(NA)
+is.numeric(NA)
+help(NA)
+c(NA, 3)
+ls()
+1+1
+getwd()
+setwd("Drive/h4pZ/liu/2018_02/advanced_academic_studies/paper/")
+getwd()
+1 %% 5
+5 %% 1
+10 %% 6
+a = c(1,2,3)
+b = 4
+cbind(a, b)
+c(a, b)
+help("cbind")
+cbind(a, b, 1)
+cbind(a, b, 2)
+help("median")
+# 1.2.1 my_moving_median(x, n, na.rm=FALSE).
+my_moving_median = function(x, n, ...)
+{
+# Check if the vector and the variable n are numeric.
+if (!(is.numeric(x) & is.numeric(n)))
+{
+stop()
+}
+# Empty vector to store the moving median.
+moving_median = c()
+for (i in 1:(length(x) - n))
+{
+moving_median = c(moving_median, median(x[i: (i + n)], na.rm=...))
+}
+return(moving_median)
+}
+my_moving_median(1:10, 2, 3)
+my_moving_median(1:10, 2, "asd")
+1+1
+getwd()
+setwd("Drive/h4pZ/liu/2018_02/visualization/labs/viz_liu/02/")
+setwd("Drive/h4pZ/liu/2018_02/visualization/labs/viz_liu/04/")
+setwd("~/Drive/h4pZ/liu/2018_02/visualization/labs/viz_liu/04/")

@@ -1,0 +1,171 @@
+---
+title: "Lab03_assg02"
+author: "mk"
+date: "9/27/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Assignment 2
+
+Analyze the mean incomes of Swedish households.  
+The data that downloaded from http://www.scb.se can be seen in below.
+
+```{r}
+## Load data
+df = read.csv(file="income_households.csv", fileEncoding="ISO-8859-1", sep=",")
+head(df)
+```
+
+## Task 2.1
+Download a relevant map of Swedish counties from http://gadm.org/country and load it into R. Read your data into R and process it in such a way that different age groups are shown in different columns. Let’s call these groups Young, Adult and Senior.
+
+```{r, message=F, warning=F}
+library(dplyr)
+
+## Load map
+rds = readRDS("gadm36_SWE_2_sf.rds")
+
+## Create groups
+grouped_df = df %>%
+  group_by(region) %>%
+  summarise(Young = mean(X2016[age=="18-29 years"]), Adult = mean(X2016[age=="30-49 years"]), Senior = mean(X2016[age=="50-64 years"]))
+
+head(grouped_df)
+```
+
+## Task 2.2
+Create a plot containing three violin plots showing mean income distributions per age group. Analyze this plot and interpret your analysis in terms of income.
+
+```{r, echo=F, message=F, warning=F, fig.align='center', }
+library(ggplot2)
+library(plotly)
+
+violin_plot_age <- df %>%
+  filter(age!="18+ years") %>%
+  droplevels() %>%
+  plot_ly(
+    x = ~age,
+    y = ~X2016,
+    split = ~age,
+    type = 'violin',
+    box = list(
+      visible = T
+    ),
+    meanline = list(
+      visible = T
+    )
+  ) %>% 
+  layout(
+    xaxis = list(
+      title = "Mean Income in Thousands"
+    ),
+    yaxis = list(
+      title = "Age",
+      zeroline = F
+    )
+  )
+ggplotly(violin_plot_age)
+```
+
+### Analysis
+We can see there is a huge difference in mean income of householders between young people and others. When we look the difference of adult and senior people, senior people generally have a little bit more high pay that affect the q3 point. 
+
+## Task 2.3
+Create a surface plot showing dependence of Senior incomes on Adult and Young incomes in various counties.
+
+```{r, echo=F, message=F, warning=F, fig.align='center'}
+library(ggplot2)
+library(plotly)
+
+library(akima)
+attach(grouped_df)
+s=interp(Young,Adult,Senior, duplicate = "mean")
+s$Senior = s$z
+detach(grouped_df)
+plot_ly(x=~s$x, y=~s$y, z=~s$Senior, type="surface") %>%
+  layout(
+    scene = list(
+        xaxis = list(
+        title = "Young"
+      ),
+      yaxis = list(
+        title = "Adult"
+      ),
+      zaxis = list(
+        title = "Senior"
+      )
+    )
+  )
+```
+
+### Analysis
+
+When we look the side of young and adult, it looks like in a rise trend. In the same time the graph has been coloured by mean income of seniors. We can see that senior has follow this trend, too. So Linear Regression would be suitable for this model. Additionally, Linear Regression function will be as a plate in this graph.
+
+## Task 2.4
+Use Plotly and add_sf() function to visualize incomes of Young and Adults in two choropleth maps. 
+```{r, echo=F, message=F, warning=F, fig.align='center'}
+library(sf)
+grouped_df = as.data.frame(grouped_df)
+splitted_region = strsplit(as.character(grouped_df$region) , " ")
+# get all words except first and last
+splitted_region = sapply(splitted_region, FUN=function(el){
+  paste(el[2:(length(el)-1)], collapse=" ")
+})
+# fix the Orebro label
+splitted_region[which(splitted_region=="Örebro")]="Orebro"
+rownames(grouped_df) = splitted_region
+# Set Young means to rds
+rds$Young=grouped_df[rds$NAME_1, "Young"]
+rds$Young[is.na(rds$Young)]=0
+# Set Adult means to rds
+rds$Adult=grouped_df[rds$NAME_1, "Adult"]
+rds$Adult[is.na(rds$Adult)]=0
+
+# young map
+choropleth_map_1 = plot_ly() %>%
+  add_sf(data=rds, split=~NAME_1, color=~Young, showlegend=F, alpha=1) %>%
+  layout(
+    title = "Mean of Young"
+  )
+# adult map
+choropleth_map_2 = plot_ly() %>%
+  add_sf(data=rds, split=~NAME_1, color=~Adult, showlegend=F, alpha=1)%>%
+  layout(
+    title = "Mean of Adult"
+  )
+
+subplot(choropleth_map_1,choropleth_map_2) %>%
+  layout(title = "Mean of Young           |           Mean of Adult")
+# choropleth_map_1
+# choropleth_map_2
+```
+
+### Analysis
+
+In other plots, we are able to analyse and compare mean income of householders by their ages. But this graph provide us to compare them by counties.  
+We can see in the both graph, young and adult people have the highest income in Stockholm. In the graph of young people, observations have really various values when you look in the countie level. When we look the observations of adults, it is more clear to see a regularly increase of mean income when go to South from North.
+
+## Task 2.5
+Extract the coordinates of Linköping and add it as a red dot to Mean of Young graph in Task 2.4  
+Lat = 58.409814  
+Long = 15.624525
+```{r, echo=F, message=F, warning=F, fig.align='center'}
+li_lat = 58.409814
+li_long = 15.624525
+choropleth_map = choropleth_map_1 %>%
+  add_markers(
+    y = li_lat, x = li_long,
+    size = 5, color = rgb(1,0,0), text = "Linköping"
+  ) 
+
+choropleth_map
+```
+
+
+

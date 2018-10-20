@@ -1,0 +1,512 @@
+{
+if (x %% f == 0)
+{
+prime = cbind(prime, f[1])
+x = x / f
+}
+else
+{
+f = f + 2
+}
+}
+if (x != 1)
+{
+prime = cbind(prime, x[1])
+}
+return(as.vector(prime))
+}
+# 1.4 Repeat and loop controls.
+# 1.4.1 repeat_find_cumsum().
+repeat_find_cumsum = function(x, find_sum)
+{
+# Checking if the vector is numeric.
+if (!is.numeric(x)) stop()
+cumsum = 0
+i = 1
+len = length(x)
+repeat
+{
+cumsum = cumsum + x[i]
+i = i + 1
+if (cumsum > find_sum | i > len)
+{
+break
+}
+}
+return(cumsum)
+}
+# 1.4.2 repeat_my_moving_median().
+repeat_my_moving_median = function(x, n, ...)
+{
+# Check if the vector and the variable n are numeric.
+if (!(is.numeric(x) & is.numeric(n)))
+{
+stop()
+}
+# Empty vector to store the moving median.
+moving_median = c()
+i = 1
+repeat
+{
+moving_median = c(moving_median, median(x[i: (i + n)], na.rm=...))
+i = i + 1
+if (i > length(x) - n)
+{
+break
+}
+}
+return(moving_median)
+}
+# 1.5 Environment.
+# 1.5.1 in_environment().
+in_environment = function(env)
+{
+return(as.vector(lsf.str(env)))
+}
+# 1.5.2 * where().
+where = function(fun)
+{
+if (length(fun) != 1)
+{
+stop()
+}
+pkgs = .packages()
+for (pkg in pkgs)
+{
+path = paste("package:", pkg, sep="")
+if (fun %in% lsf.str(path))
+{
+return(path)
+}
+}
+return("[fun] not found!")
+}
+# 1.6 Functionals.
+# 1.6.1 cov().
+cov = function(X)
+{
+if(!is.data.frame(X))
+{
+stop()
+}
+feature_names = names(X)
+coef_var = lapply(X, FUN=function(X) (sd(X) / mean(X)))
+coef_var = as.numeric(coef_var)
+names(coef_var) = feature_names
+return(coef_var)
+}
+# 1.7 Closures.
+# 1.7.1 moment().
+moment = function(i)
+{
+if (!is.numeric(i))
+{
+stop()
+}
+function(vec)
+{
+m = sum(((vec - mean(vec)) ^ i) * (1 / length(vec)))
+return(m)
+}
+}
+# 1.7.2 * mcmc_counter_factory().
+mcmc_counter_factory = function(burnin, thin)
+{
+if(burnin <= 0 | thin <= 0)
+{
+stop()
+}
+iteration = 0
+store_sample = FALSE
+samples = 0
+function()
+{
+counter = c(iteration, store_sample, samples)
+iteration = iteration + 1
+return(c(iteration, store_sample, samples))
+}
+}
+mark_my_assignment()
+length(1)
+length(2)
+is.vector(c())
+is.vector(c(1,2,3))
+library(markmyassignment)
+lab_path = "https://raw.githubusercontent.com/STIMALiU/AdvRCourse/master/Labs/Tests/lab2.yml"
+set_assignment(lab_path)
+name = "Héctor Plata"
+liuid = "hecpl268"
+# Lab Assignments.
+# 1.1 Conditional statements.
+# 1.1.1 sheldon_game(player1, player2).
+sheldon_game = function(player1, player2)
+{
+# Storing all the valid options a player can choose from.
+options = c("rock", "paper", "scissors", "lizard", "spock")
+# Checking if the player options are valid or not.
+if (!(player1 %in% options & player2 %in% options))
+{
+# Since they aren't we exit the function.
+stop()
+}
+if (player1==player2)
+{
+return("Draw!")
+}
+else if (player1=="scissors" & (player2 %in% c("paper", "lizard")))
+{
+return("Player 1 wins!")
+}
+else if (player1=="paper" & (player2 %in% c("rock", "spock")))
+{
+return("Player 1 wins!")
+}
+else if (player1=="rock" & (player2 %in% c("lizard", "scissors")))
+{
+return("Player 1 wins!")
+}
+else if (player1=="lizard" & (player2 %in% c("spock", "paper")))
+{
+return("Player 1 wins!")
+}
+else if (player1=="spock" & (player2 %in% c("scissors", "rock")))
+{
+return("Player 1 wins!")
+}
+else
+{
+return("Player 2 wins!")
+}
+}
+# 1.2 Loops.
+# 1.2.1 my_moving_median(x, n, na.rm=FALSE).
+my_moving_median = function(x, n, ...)
+{
+# Check if the vector and the variable n are numeric.
+if (!(is.numeric(x) & is.numeric(n)))
+{
+stop()
+}
+# Empty vector to store the moving median.
+moving_median = c()
+for (i in 1:(length(x) - n))
+{
+moving_median = c(moving_median, median(x[i: (i + n)], na.rm=...))
+}
+return(moving_median)
+}
+# 1.2.2 for_mult_table().
+for_mult_table = function(from, to)
+{
+# Checking that the arguments are scalars.
+if (!(is.numeric(from) & is.numeric(to)))
+{
+stop()
+}
+# Clean way of doing it below.
+#vector = matrix(from:to, nrow=1)
+#return(t(vector) %*% vector)
+# Boring way of doing it (loops).
+res_matrix = matrix(nrow=(to-from+1), ncol=(to-from+1))
+for (i in from:to)
+{
+for (j in from:to)
+{
+res_matrix[(i - from + 1), (j - from + 1)] = i * j
+}
+}
+return(res_matrix)
+}
+# 1.2.3 * cor_matrix().
+cor_matrix = function(X)
+{
+# Setting up the correlation matrix.
+len = length(X)
+cor_m = diag(len)
+for (i in 1:len)
+{
+for (j in 1:len)
+{
+# This condition checks that we are only going to
+# fill up the upper right part of the correlation
+# matrix since it's reusable in the bottom half.
+if (i < j)
+{
+# Calculating the correlation between the two variables.
+mu_i = mean(X[, i])
+mu_j = mean(X[, j])
+sum2_i = sum((X[, i] - mu_i) ^ 2)
+sum2_j = sum((X[, j] - mu_j) ^ 2)
+sum_ij = sum((X[, i] - mu_i) * (X[, j] - mu_j))
+cor_m[i, j] = sum_ij / sqrt(sum2_i * sum2_j)
+}
+if (i == j)
+{
+cor_m[i, j] = 1
+}
+}
+}
+cor_m = cor_m + t(cor_m) - diag(len)
+return(cor_m)
+}
+# 1.3 while loops.
+# 1.3.1 find_cumsum().
+find_cumsum = function(x, find_sum)
+{
+# Checking if the vector is numeric.
+if (!is.numeric(x)) stop()
+cumsum = 0
+i = 1
+len = length(x)
+while (cumsum < find_sum & i <= len)
+{
+cumsum = cumsum + x[i]
+i = i + 1
+}
+return(cumsum)
+}
+# 1.3.2 while_mult_table().
+while_mult_table = function(from, to)
+{
+# Checking that the arguments are scalars.
+if (!(is.numeric(from) & is.numeric(to)))
+{
+stop()
+}
+# Boring way of doing it (while loops).
+res_matrix = matrix(nrow=(to-from+1), ncol=(to-from+1))
+i = from
+j = from
+while (i <= to)
+{
+while (j <= to)
+{
+res_matrix[(i - from + 1), (j - from + 1)] = i * j
+j = j + 1
+}
+i = i + 1
+j = from
+}
+return(res_matrix)
+}
+# 1.3.3 * trial_division_factorization().
+trial_division_factorization = function(x)
+{
+prime = c()
+while(x %% 2 == 0)
+{
+prime = cbind(prime, 2)
+x = x / 2
+}
+f = 3
+while ((f * f) <= x)
+{
+if (x %% f == 0)
+{
+prime = cbind(prime, f[1])
+x = x / f
+}
+else
+{
+f = f + 2
+}
+}
+if (x != 1)
+{
+prime = cbind(prime, x[1])
+}
+return(as.vector(prime))
+}
+# 1.4 Repeat and loop controls.
+# 1.4.1 repeat_find_cumsum().
+repeat_find_cumsum = function(x, find_sum)
+{
+# Checking if the vector is numeric.
+if (!is.numeric(x)) stop()
+cumsum = 0
+i = 1
+len = length(x)
+repeat
+{
+cumsum = cumsum + x[i]
+i = i + 1
+if (cumsum > find_sum | i > len)
+{
+break
+}
+}
+return(cumsum)
+}
+# 1.4.2 repeat_my_moving_median().
+repeat_my_moving_median = function(x, n, ...)
+{
+# Check if the vector and the variable n are numeric.
+if (!(is.numeric(x) & is.numeric(n)))
+{
+stop()
+}
+# Empty vector to store the moving median.
+moving_median = c()
+i = 1
+repeat
+{
+moving_median = c(moving_median, median(x[i: (i + n)], na.rm=...))
+i = i + 1
+if (i > length(x) - n)
+{
+break
+}
+}
+return(moving_median)
+}
+# 1.5 Environment.
+# 1.5.1 in_environment().
+in_environment = function(env)
+{
+return(as.vector(lsf.str(env)))
+}
+# 1.5.2 * where().
+where = function(fun)
+{
+if (length(fun) != 1)
+{
+stop()
+}
+pkgs = .packages()
+for (pkg in pkgs)
+{
+path = paste("package:", pkg, sep="")
+if (fun %in% lsf.str(path))
+{
+return(path)
+}
+}
+return("[fun] not found!")
+}
+# 1.6 Functionals.
+# 1.6.1 cov().
+cov = function(X)
+{
+if(!is.data.frame(X))
+{
+stop()
+}
+feature_names = names(X)
+coef_var = lapply(X, FUN=function(X) (sd(X) / mean(X)))
+coef_var = as.numeric(coef_var)
+names(coef_var) = feature_names
+return(coef_var)
+}
+# 1.7 Closures.
+# 1.7.1 moment().
+moment = function(i)
+{
+if (!is.numeric(i))
+{
+stop()
+}
+function(vec)
+{
+m = sum(((vec - mean(vec)) ^ i) * (1 / length(vec)))
+return(m)
+}
+}
+# 1.7.2 * mcmc_counter_factory().
+mcmc_counter_factory = function(burnin, thin)
+{
+if(burnin <= 0 | thin <= 0)
+{
+stop()
+}
+iteration = 0
+store_sample = FALSE
+samples = 0
+function()
+{
+counter = c(iteration, store_sample, samples)
+iteration = iteration + 1
+return(c(iteration, store_sample, samples))
+}
+}
+mark_my_assignment()
+library(tidyverse)
+install.packages("tidyverse")
+library(tidyverse)
+ggplot(data = mpg)
+mtcars[mtcars$mpg > 20 & mtcars$cyl == 6, ]
+mtcars[mtcars$mpg > 20 && mtcars$cyl == 6, ]
+mtcars$mpg > 20 && mtcars$cyl == 6
+mtcars
+library(plotly)
+library("plotly")
+install.packages("plotly")
+?scatter
+library(plotly)
+?scatter
+??scatter
+help(scatter)
+Inf
+Inf > Inf
+Inf > 10
+c(1:10)
+rep(Inf, 10)
+!c(FALSE, FALSE, TRUE)
+?which.min
+?match
+match(2 c(2,1,5))
+match(2, c(2,1,5))
+2 %in% c(2,1,5)
+a = c(1,2,3,4,5)
+a[c(3,5,7)]
+a[c(3,5,1)]
+FALSE * 10
+rep(Inf, 10)
+rbind(c(1,4), 5)
+cbind(c(1,4), 5)
+c(c(1,2), 5)
+3 %in% c(1,4,5,3)
+c(1)
+1 %in% 1
+library(rols)
+?linreg
+devtools::install_github("h4pZ/rols")
+library(rols)
+browseVignettes("rols")
+getwd()
+setwd("Google Drive/h4pZ/liu/2018_02/visualization/labs/viz_liu/03/")
+Sys.setenv('MAPBOX_TOKEN'='pk.eyJ1IjoiaDRweiIsImEiOiJjam1ldnRwa3kwaWwwM290OHU1MDBodmRqIn0.fvTUhFat1kuXHk5mEJ7tjw')
+library(plotly)
+library(tidyverse)
+df = read.csv("aegypti_albopictus.csv")
+cut_interval(df$X, 100)
+df$X1 = cut_interval(df$X, 100)
+head(df)
+length(unique(df$X1))
+df$X1
+head(df)
+tail(df)
+help(aggregate)
+df$X1 = cut_interval(df$X, 100)
+df$Y1 = cut_interval(df$Y, 100)
+head(df)
+aggregate(df$X, by=list(X1=df$X1), FUN=mean)
+aggregate(df$Y, by=list(Y1=df$Y1), FUN=mean)
+df$count = 1
+aggregate(df$count, by=list(Y1=df$Y1, X1=df$X1), FUN=mean)
+aggregate(df$count, by=list(Y1=df$Y1, X1=df$X1), FUN=msum)
+aggregate(df$count, by=list(Y1=df$Y1, X1=df$X1), FUN=sum)
+dim(aggregate(df$count, by=list(Y1=df$Y1, X1=df$X1), FUN=sum))
+head(df)
+df$X1
+X1_mean = aggregate(df$X, by=list(X1=df$X1, Y1=df$Y1), FUN=mean)
+X1_mean
+X1_mean = aggregate(df[, c('X', 'Y')], by=list(X1=df$X1, Y1=df$Y1), FUN=mean)
+X1_mean
+X1_mean = aggregate(df[, c('X', 'Y')], by=list(X1=df$X1, Y1=df$Y1), FUN=list(X=mean, Y=mean, count=sum))
+head(df)
+library(dplyr)
+a = df %>% groupby(X1, Y1) %>% summarise(X1_mean=mean(X), Y1_mean=mean(Y), nobs=sum(count))
+a = df %>% group_by(X1, Y1) %>% summarise(X1_mean=mean(X), Y1_mean=mean(Y), nobs=sum(count))
+a
+dim(a)
+help(log)

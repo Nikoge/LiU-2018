@@ -73,7 +73,10 @@ plot_ly(x=colnames(reordmatr_cor), y=rownames(reordmatr_cor),
         z=reordmatr_cor, type="heatmap", colors =colorRamp(c("yellow", "red"))) %>% layout(title = "Heatmap of correlations of price dataset")
 ```
 
-Analysis: Both are graphs are similar to each other. We can see a cluster in the digonals of both the plots.
+Analysis: Both are graphs are similar to each other. We can see a cluster in the digonals of both the plots however, for the the one that uses the correlation as a distance matrix seems like some observations could be paired together. For example, in the second plot, the rows corresponding to `Manila`, `Caracas`, `Jakarta`, `Bogota` and others, could be grouped together due to their high values corresponding to the first 5 variables. This allows implies there are two clusters.
+
+While in the case of the euclidean distance, it's possible to see at least 4 clusters. These clusters are more well defined and less mixed up like the ones seen on the correlation distance matrix heatmap. 
+
 
 ### 4. Distance matrix computation and ordering by Traveling Sales Man
 ```{r}
@@ -91,7 +94,7 @@ criterion(dist(price_data_scale[rev(ord1_tsp)], method = "euclidean"), method = 
 criterion(dist(price_data_scale[rev(ord1)], method = "euclidean"), method = c("Gradient_raw", "Path_length"))
 ```
 
-Analysis: The 'Travelling Sales Man' approach performs worse than 'Hierarchical clustering' in terms of Gradient raw but has a better path length.
+Analysis: The Traveling Sales Person solver was the best at minimizing the `Path Length` (loss function) while the HC performed better at maximizing the 'Gradient Measure' (merit function).
 
 ### 5. Parallel Coordinate Plots
 ```{r}
@@ -123,7 +126,9 @@ obj <- ggparcoord(data, scale="uniminmax", groupColumn = "BigMac_cluster")
 ggplotly(obj)
 ```
 
-Analysis: Using iPhone4S, BigMac, Netwage and Foodcost clusters can be formed. We can see that split on the variable BigMac, there are two distinct clusters, one where BigMac < 21 and BigMac > 21. There appears to be no outlier considering the variables that we have formed the cluster on (BigMac, NetWage, FoodCost, iPhone4S)
+Analysis: Using iPhone4S, BigMac, Netwage and Foodcost clusters can be formed. We can see that split on the variable BigMac, there are two distinct clusters, one where BigMac < 21 and BigMac > 21. There appears to be no outlier considering the variables that we have formed the cluster on (BigMac, NetWage, FoodCost, iPhone4S).
+
+Outside the variables there is an outlier which can be seen `Food.Costs` with a value of almost 2. This observation corresponds to the city of `Caracas`. This city is the capital of Venezuela currently under hyper inflation.
 
 ### 6. Radar Chart Plots
 ```{r}
@@ -142,7 +147,7 @@ reordmatr_transformed$variable <- factor(reordmatr_transformed$variable , levels
 reordmatr_transformed <- reordmatr_transformed[order(reordmatr_transformed$City, reordmatr_transformed$variable),]
 
 radar_plot <- reordmatr_transformed %>% ggplot(aes(x=variable, y=value, group=City)) + geom_polygon(fill="blue") + coord_polar() + theme_bw() + facet_wrap(~ City) + theme(axis.text.x = element_text(size = 5))
-
+ 
 ggsave("radar_plot.png", width = 40, height = 60, units = "cm")
 ```
 
@@ -179,7 +184,11 @@ ggplot(adult_data, aes(age, colour = incomeLevel, fill = incomeLevel)) + geom_de
 ggplot(data = adult_data, aes(x=age, color = incomeLevel, fill = incomeLevel)) + geom_density(alpha = 0.1) + facet_grid(marital~.) + ggtitle("Trellis Plot of Age vs. Marital Status")
 ```
 
-Analysis: The Mode of 'Never-mind' of people earning (<=50K) is the lowest among all classes. The difference in age between <=50K and >50K is largest in 'Never-mind'. The highest amount of widowed are around age 65, and there is no difference between the IncomeLevel.
+Analysis: Rich people are older than poor people. Also we can see that there is more variance in poor people.
+As we see from divorced people, married-civ-spouse, separated, widowed graphs have the almost same distribution of the age by income level.  
+Low level income people who are never married tend to be young which is expected, because people who have low level income are usually younger and they don't tend to be married early in life.
+
+Married people that are elder tend to have low level income than the younger ones. In the same graph we can see that younger or elder people do not have much difference between incomes.
 
 ### 3. 3D scatter plot and Trellis Plot of Education-num vs Age vs Captial Loss
 ```{r}
@@ -234,7 +243,9 @@ ggplot(data = df4, aes(x=education, y=capitalLoss, color = capitalLoss)) +
   ggtitle("Education vs. Capital Loss using Shingles")
 ```
 
-Analysis: In this case contribution by Shingles seems to be not too great, the advatage of shingles compared to simple split would be that sudden jumps in data would be missed if it occured in the transition period (change of quaters). The disadvatge is that the onus of choosing the overlap falls on the designer/plotter, otherwise there would be redudunacy of data.
+Analysis: We can see more smooth transition between bins of age that are divided by shingles, that is to say that shingles is a way of categorical to continous convertor, this is the advantage of using shingles. 
+
+The main disadvantage -> Shingles can create/destroy some patterns which are not visible otherwise. For example in the 4th bin without shingles, it is visible that the points are more concentrated while in the one with shingles, the data seems more spread out.
 
 ### Apendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}

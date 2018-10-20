@@ -1,0 +1,112 @@
+---
+title: "Assignment_02"
+output: html_document
+df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Group 17
+- Mim Kemal Tekin (mimte666)
+- Hector Plata (hecpl268)
+
+# Assignment 2. Multidimensional scaling of a high-dimensional dataset.
+The data set **baseball-2016.xlsx** contains information about the scores of baseball teams in USA in 2016, such as:
+
+>Games won, Games Lost, Runs peer game, At bats, Runs, Hits, Doubles, Triples, Home runs, Runs batted in, Bases stolen, Time caught stealing, Bases on Balls, Strikeouts, Hits/At Bats, On Base Percentage, Slugging percentage, On base+Slugging, Total bases, Double plays grounded into, Times hit by pitch, Sacrifice hits, Sacrifice flies, Intentional base on balls, and Runners Left On Base.
+
+1. Load the file to R and answer whether it is reasonable to scale these data in order to perform a multidimensional scaling (MDS).
+
+The dataset is conformed of 30 unique baseball teams with some statistics about their runs in some leagues (NL and AL). In this case it would be reasonable to scale (MDS) or reduce the dimensionality of the vectors in order to get a more digestiable dataset, on which we can compare each team and see how close to each other they are.
+
+```{r, echo=FALSE}
+library(readxl)
+df = read_excel("baseball-2016.xlsx")
+df = as.data.frame(df)
+print("Dimensions of the dataset:")
+print(dim(df))
+```
+
+2. Write an R code that performs a non-metric MDS with Minkowski distance=2 of the data (numerical columns) into two dimensions. Visualize the resulting observations in Plotly as a scatter plot in which observations are colored by League. Does it seem to exist a difference between the leagues according to the plot? Which of the MDS components seem to provide the best differentiation between the Leagues? Which baseball teams seem to be outliers?
+
+There seems to be a difference between Leagues, but it's not that clear. It's visible that most of the teams (66.6%) that belong to the AL League are on the positive axis of *V2* while the teams from the NL League are more spread across this axis. So there might be some differences between both leagues, but they are not that pronounced.
+
+The component that seems that helps more differentiate between Leagues is the *V2* as stated above.
+
+```{r echo=FALSE, message=FALSE}
+library(plotly)
+library(MASS)
+
+# Preparing only the numeric variables.
+df_numeric = scale(df[, 3:dim(df)[2]])
+
+# Doing MDS.
+d = dist(df_numeric, method="minkowski", p=2)  # Distance matrix.
+df_mds = isoMDS(d, k=2)  # Reducing the dimensions.
+df_mds = df_mds$points  # Reduced data set.
+
+# Generating the scatter plot.
+g = plot_ly(x=df_mds[, 1], 
+            y=df_mds[, 2], 
+            type="scatter", 
+            mode="markers", 
+            color=df$League, 
+            text=df$Team) %>% 
+  layout(xaxis=list(title="V1"), yaxis=list(title="V2"))
+
+suppressWarnings(g)
+```
+
+
+The teams that seem to be outliers are:
+
+- Chicago Cubs
+- Boston Red Sox
+- Colorado Rockies
+
+3. Use Plotly to create a Shepard plot for the MDS performed and comment about how successful the MDS was. Which observation pairs were hard for the MDS to map successfully?
+
+It looks like the MDS performance was average, taking into account that a perfect encoding of dissimilarities would yield a 1 to 1 relationship between variables. There were a few observations that looks like outliers that were pretty difficult for the MDN algorithm to map. Below is presented some of those points that were hard for the algorithm.
+
+- $(4.32, 5.812)$
+- $(8.11, 2.06)$
+- $(6.48, 0.91)$
+
+```{r echo=FALSE}
+# coords = df_mds
+sh = Shepard(d, df_mds)
+delta = as.numeric(d)  # Dissimilarity of the whole data set.
+D = as.numeric(dist(df_mds))  # Dissimilarity of the reduced dimension data.
+
+n = nrow(df_mds)  # Number of observations.
+index = matrix(1:n, nrow=n, ncol=n)
+index1 = as.numeric(index[lower.tri(index)])
+
+index = matrix(1:n, nrow=n, ncol=n, byrow=T)
+index2 = as.numeric(index[lower.tri(index)])
+
+plot_ly()%>%
+  add_markers(x=~delta, y=~D, name="Dissimilarity",
+        text = ~paste('Obj1: ', rownames(df_numeric)[index1],
+                      '<br> Obj 2: ', rownames(df_numeric)[index2]))%>%
+  # If nonmetric MDS inolved.
+  add_lines(x=~sh$x, y=~sh$yf, name="Estimated dissimilarity")
+  
+
+```
+
+4. Produce series of scatterplots in which you plot the MDS variable that was the best in the differentiation between the leagues in step 2 against all other numerical variables of the data. Pick up two scatterplots that seem to show the strongest (postivie or negative) connection between the variables and include them into your report. Find some information about these variables in Google - do they appear to be important in scoring the baseball teams? Provide some interpretation for the chosen MDS variable.
+
+The best two variables that separate both leagues are `SH` and `IBB`. Both variables refers to the number that a certain play is made. For `SH` the play is called *sacrifice hits* and for `IBB` the play is called *intentional bases on balls*. They are abbreviations for offensive plays. Which could lead to believe that the variable `V2` obtained from the MDS is related in some way with defensive plays. The direction to which defense grows will depend on whether the `NL` League is more defensive than the `AL` League.
+
+```{r echo=FALSE}
+ggplot() + 
+  geom_point(aes(y=df_mds[, 2], x=df[, "SH"], colour=df$League)) + 
+  labs(x="SH", y="V2", colour="League")
+
+ggplot() + 
+  geom_point(aes(y=df_mds[, 2], x=df[, "IBB"], colour=df$League)) + 
+  labs(x="IBB", y="V2", colour="League")
+```

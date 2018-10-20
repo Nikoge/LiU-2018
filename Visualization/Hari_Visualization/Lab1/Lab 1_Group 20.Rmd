@@ -1,0 +1,301 @@
+---
+title: "732A98: Visualization - Laboratory 1 Report"
+author: "Hariprasath Govindarajan (hargo729), Lakshidaa Saigiridharan (laksa656)"
+date: "13 September 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<!-- Whitespace -->
+<div style="margin-bottom:100px;">
+</div>
+
+### Contributions
+Both of us discussed together and completed the assignment tasks together and compiled the report since many of the tasks were sequential.
+
+# Assignment 1
+
+(Note: The PDF viewer appears when opened in the browser but does not appear when opened in Rstudio viewer window)
+
+The given tree was edited using Inkscape to produce the below publication quality graph:
+```{r, out.height="900px", out.width="800px", echo=FALSE}
+
+#ASSIGNMENT 1
+
+#Task 1.1
+
+# Displaying PDF image
+knitr::include_graphics("Modified_tree.pdf")
+```
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+# Loading required R packages
+library(ggplot2)
+library(plotly)
+library(shiny)
+library(gridExtra)
+```
+
+# Assignment 2
+
+## Task 2.1
+
+Data from SENIC.txt is read into a data frame. For sample, the top 3 rows are shown below:
+
+```{r, echo=FALSE}
+
+#------------------------------------------------------------------------------
+  
+# ASSIGNMENT 2
+
+# Task 2.1
+
+# Reading data from SENIC.txt into a data frame
+```
+```{r read_senic_data}
+senic_data = read.table("SENIC.txt", 
+                  col.names = c("Identification_Number", "Length_of_Stay", "Age",
+                                "Infection_Risk", "Routine_Culturing_Ratio", 
+                                "Routine_Chest_X_ray_Ratio", "Number_of_Beds",
+                                "Medical_School_Affiliation", "Region", 
+                                "Average_Daily_Census", "Number_of_Nurses",
+                                "Available_Facilities_and_Services"))
+head(senic_data, 3)
+```
+
+## Task 2.2
+
+A function is created to compute the first and third quantiles and return the indices of the outlying observations (observations with X-values greater than Q3+1.5(Q3-Q1) or less than Q1-1.5(Q3-Q1).
+```{r, echo=FALSE}
+
+#-----------------------------------------------------------------------
+
+# Task 2.2
+
+# Function to identify outliers in a variable
+```
+```{r get_outliers_function}
+get_outliers <- function(x){
+  quantile_values = quantile(x, probs = c(0.25, 0.75))
+  q1 = quantile_values["25%"]
+  q3 = quantile_values["75%"]
+  
+  return(c(which((x > (q3+1.5*(q3-q1)))), which(x < (q1-1.5*(q3-q1)))))
+}
+```
+
+## Task 2.3
+
+Density plot of infection risk where outliers are plotted with a diamond symbol.
+
+```{r densityplot, echo=FALSE}
+
+#-----------------------------------------------------------------------
+
+#Task 2.3
+
+#Density plot of Infection Risk
+
+density_plot_infection_risk = ggplot(senic_data) + 
+  ggtitle("Density plot of Infection_Risk")  + 
+  geom_density(aes(x=Infection_Risk), fill = "lightblue") + 
+  geom_point(data=senic_data[get_outliers(senic_data$Infection_Risk),],
+             aes(x=Infection_Risk, y=0, colour="Outliers"), 
+             shape=23, size=2, fill="red") +
+  scale_color_manual(values = c("darkblue","black")) + 
+  labs(colour="Legend") +
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "right")
+
+density_plot_infection_risk
+
+```
+
+This graph is used to represent the density plot of Infection Risk. The graph resembles a normal distribution and the peak of Infection Risk value is at about 4.5. The outliers are represented by diamonds in the graph. From the graph it can be seen that there are 2 outliers at the lower extreme of the Infection Risk and 3 at the higher extreme.
+
+## Task 2.4
+
+Density graphs of all variables in the SENIC data are plotted and their outliers are denoted using diamond symbols.
+
+```{r, echo=FALSE, fig.width = 9, fig.height = 10}
+
+#-----------------------------------------------------------------------
+
+#Task 2.4
+
+#Density graphs of all variables
+
+plot_density_with_outliers <- function(var_data, col_name){
+  p <- NULL
+  df_data = setNames(data.frame(var_data),col_name)
+  if(length(get_outliers(df_data[[col_name]])) > 0){
+    p <- ggplot(df_data) + 
+      geom_density(aes_string(x=col_name), fill = "lightblue", color = "darkblue") + 
+      geom_point(data=df_data[get_outliers(df_data[[col_name]]),,drop=FALSE],
+                 aes_string(x=col_name), y=0, shape=23, size=2, colour="black", fill="red")
+  }
+  else{
+    p <- ggplot(df_data) + 
+      ggtitle(paste("")) + 
+      theme(plot.title = element_text(hjust = 0.5)) +
+      geom_density(aes_string(x=col_name), fill = "lightblue", color = "darkblue")
+  }
+  
+  return(p)
+}
+
+categorical_columns = c("Medical_School_Affiliation", "Region")
+ID_columns = c("Identification_Number")
+quantitative_columns = setdiff(colnames(senic_data), c(categorical_columns, ID_columns))
+
+plot_list = mapply(plot_density_with_outliers, senic_data[, quantitative_columns], 
+                   colnames(senic_data[, quantitative_columns]), SIMPLIFY = FALSE)
+plot_matrix <- arrangeGrob(grobs = plot_list, ncol = 2)
+grid.arrange(plot_matrix, respect=TRUE, top="Density plots of SENIC data variables")
+```
+
+From keen analysis of the graphs obtained for all the quantitative variables in the data, many observations could be made. 
+
+Firstly, several of the graphs were skewed right while the rest were mostly symmetric (having normal distributions). Length of stay, routine culturing ratio, number of beds, average daily census and number of nurses were those quantitative variables that were observed to be skewed right having their outliers only at the higher extreme. Whereas, the remaining quantitative variables from the data such as age, infection risk, routine chest x-ray ratio and available facilities & services are symmetric and resemble a normal distribution.
+
+The outliers of the normally distributed graphs do not show a similar pattern as compared to those graphs which are skewed right. The density plots of age and infection risk have outliers on the lower and higher extremes of data points. Whereas, the density plot graph of routine chest x-ray ratio shows only one outlier at the higher extreme of the data. On the other hand, the graph for available facilities & services is seen to have no outliers in its data.
+
+## Task 2.5
+
+Scatterplot showing the dependence of infection risk on the number of nurses where color is used to differentiate the "Number of beds"
+
+```{r, echo=FALSE}
+
+#-----------------------------------------------------------------------
+
+#Task 2.5
+
+#Scatterplot showing the dependence of infection risk on the number of nurses
+```
+```{r}
+ggplot(senic_data) + 
+  geom_point(aes(x=Number_of_Nurses, y=Infection_Risk, color=Number_of_Beds)) + 
+  ggtitle("Scatterplot of Infection_Risk vs Number_of_Nurses") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+In the density plots in step 4, we observed the nature of distribution of the variables and the location of the outliers in - Infection risk, Number of nurses and Number of beds. But, we were not able to observe the relationship between the variables. From this scatterplot, we observe that majority of hospitals have number of nurses in the range of 0-200. There is very high variance in infection risk at the lower range of number of nurses (0-100). As the number of nurses increase, the minimum infection risk observed also increases. Also, the higher values of number of nurses correspond to the higher values of number of beds. This possibly indicates larger hospitals.
+
+A possible danger of having such a color scale occurs when the distribution of the variable is skewed. The extreme values in the data set could skew the color scale and make it difficult to observe the difference in colors in the range where most of the data lies. Number of beds is skewed to the right due to the presence of outliers in the higher extreme. While we are able to identify the extreme values (in light blue), it is difficult to observe the variation in number of beds in the majority of observations which have a dark blue color. 
+
+## Task 2.6
+
+Density plot using Plotly of infection risk where outliers are plotted with a diamond symbol.
+
+```{r, echo=FALSE}
+
+#-----------------------------------------------------------------------
+
+#Task 2.6
+
+#Density plot  of infection risk using Plotly
+```
+```{r}
+ggplotly(p=density_plot_infection_risk)
+```
+
+After converting the density plot from ggplot to Plotly, we have obtained the functionality of being able to view details about the plot by mouse-hovering over the plot. The hover info shows the value of infection risk and the corresponding density. Of particular use is the ability to see the value of an outlier by mouse-hovering over it (marked by diamonds in the plot). Compared to the previous graph, we can more precisely identify the values of the outliers. The outlier values of infection risk are 1.3, 1.4, 7.6, 7.7 and 7.8. The peak appears to occur closer to value of 4.4. 
+
+## Task 2.7
+
+Histogram of Infection Risk with outliers highlighted in diamond symbol.
+
+```{r, echo=FALSE}
+
+#-----------------------------------------------------------------------
+
+#Task 2.7
+
+#Histogram of Infection Risk
+
+outliers = senic_data[get_outliers(senic_data$Infection_Risk),c("Infection_Risk")]
+senic_data$zero = 0
+```
+```{r}
+plot_ly(senic_data, x=~Infection_Risk) %>% 
+  add_histogram(name="Histogram count") %>% 
+  filter(is.element(Infection_Risk, outliers)) %>% 
+  add_markers(x=~Infection_Risk,y=~zero, name="Outliers", 
+              marker=list(symbol="diamond", size=10, line = list(color="black", width=1))) %>%
+  layout(title="Histogram of Infection_Risk", yaxis=list(title="Count"))
+```
+```{r, echo=FALSE}
+senic_data$zero = NULL
+```
+
+## Task 2.8
+
+Shiny application that allows the user to interactively enable/disable density plots for variables in SENIC data along with option to select value for bandwidth parameter in density estimation.
+
+```{r, echo=FALSE}
+
+#-----------------------------------------------------------------------
+
+#Task 2.8
+
+#Shiny Application
+
+#UI component
+ui <- fluidPage(
+  sliderInput(inputId="bw_value", label="Choose bandwidth size", value=4.5, min=0.1, max=80),
+  checkboxGroupInput("selected_variables", "Variables to show: ", quantitative_columns, inline=TRUE),
+  plotOutput("densPlot", height = "650px")
+)
+
+plot_density_with_outliers_shiny <- function(df_data, col_name, bw){
+  p <- NULL
+  if(length(get_outliers(senic_data[[col_name]])) > 0){
+    p <- ggplot(df_data) + 
+      ggtitle(paste("Density plot of ", col_name)) + 
+      theme(plot.title = element_text(hjust = 0.5)) + 
+      geom_density(aes_string(x=col_name), fill = "lightblue", color = "darkblue", bw=bw) +
+      geom_point(data=df_data[get_outliers(df_data[[col_name]]),],
+                 aes_string(x=col_name, y=0), shape=23, size=2, colour="black", fill="red")
+  }
+  else{
+    p <- ggplot(df_data) + 
+      ggtitle(paste("Density plot of ", col_name)) + 
+      theme(plot.title = element_text(hjust = 0.5)) + 
+      geom_density(aes_string(x=col_name), fill = "lightblue", color = "darkblue", bw=bw)
+  }
+  
+  return(p)
+}
+
+# Server component
+server <- function(input, output) {
+  
+  output$densPlot <- renderPlot({
+    
+    selected_columns = input$selected_variables
+    plot_list = vector("list", length(selected_columns))
+    
+    if(length(selected_columns) > 0){
+      for(i in 1:length(selected_columns)){
+        plot_list[[i]] = plot_density_with_outliers_shiny(senic_data, selected_columns[i], 
+                                                    bw = input$bw_value)
+      }
+      plot_matrix <- arrangeGrob(grobs = plot_list, ncol = 2)
+      grid.arrange(plot_matrix)
+    }
+    
+  })
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server, options = list(width="800px", height="900px"))
+
+```
+
+We observe that increasing the bandwidth makes the plots smoother. We cannot state an optimal value of bandwidth that applies for all the 9 density plots. Number of beds, Number of nurses and avarage daily census have much higher data values (order of 0-800) and range compared to the other variables and require a much higher optimal bandwidth (bandwidth = 65). At such a bandwidth, the other plots are reduced to almost straight lines. On the other hand, the infection risk variable has very low data values (order of 8) and range and requires a much lower bandwidth for optimal viewing (bandwidth = 0.5). At such a bandwidth many other plots are still chunky and not smooth. For the other variables, an optimal bandwidth can be set at 4.5. 
+
+# Appendix
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+```

@@ -1,0 +1,512 @@
+ls.str("package:base")[1:5]
+length("asd")
+env()
+.packages(TRUE)
+# 1.5.2 * where().
+where = function(fun)
+{
+if (length(fun) != 1)
+{
+stop()
+}
+pkgs = .packages(TRUE)
+for (pkg in pkgs)
+{
+path = paste("package:", pkg, sep="")
+if (fun %in% lsf.str(path))
+{
+return(path)
+}
+}
+return("[fun] not found!")
+}
+where(fun = "sd")
+help(".packages")
+where = function(fun)
+{
+if (length(fun) != 1)
+{
+stop()
+}
+pkgs = .packages()
+for (pkg in pkgs)
+{
+path = paste("package:", pkg, sep="")
+if (fun %in% lsf.str(path))
+{
+return(path)
+}
+}
+return("[fun] not found!")
+}
+where(fun = "sd")
+where(fun = "read.table")
+where(fun = "non_existant_function")
+k = head(iris)
+k
+k["Sepal.Length"]
+c = "Sepal.Length"
+k[c]
+k[[c]]
+help(lapply)
+help(apply)
+help(rapply)
+help(lapply(list, function))
+help(lapply)
+lapply(iris[1:4], function(x) sd(x) / mean(x))
+moment = function(i)
+{
+function(vec, i)
+{
+return(vec + i)
+}
+}
+m = moment(1)
+m(2)
+moment = function(i)
+{
+function(vec)
+{
+return(vec + i)
+}
+}
+m = moment(1)
+m(2)
+moment = function(i)
+{
+function(vec)
+{
+m = sum((vec ^ i) * (1 / length(vec)))
+return(m)
+}
+}
+m1 <- moment(i=1)
+m2 <- moment(i=2)
+m1(1:100)
+m2(1:100)
+# 1.7.1 moment().
+moment = function(i)
+{
+function(vec)
+{
+m = sum(((vec - mean(vec) ^ i) * (1 / length(vec))))
+return(m)
+}
+}
+m1 <- moment(i=1)
+m2 <- moment(i=2)
+m1(1:100)
+m2(1:100)
+moment = function(i)
+{
+function(vec)
+{
+m = sum(((vec - mean(vec)) ^ i) * (1 / length(vec)))
+return(m)
+}
+}
+m1 <- moment(i=1)
+m2 <- moment(i=2)
+m1(1:100)
+m2(1:100)
+a = matrix(1:9, 3,3)
+a
+nrow(a)
+library(markmyassignment)
+lab_path = "https://raw.githubusercontent.com/STIMALiU/AdvRCourse/master/Labs/Tests/lab1.yml"
+set_assignment(lab_path)
+name = "Héctor Plata"
+liuid = "hecpl268"
+# 1.1 Vectors.
+# 1.1.1 my_num_vector.
+my_num_vector = function()
+{
+x1 = log10(11)
+x2 = cos(pi / 5)
+x3 = exp(pi / 3)
+x4 = (1173 %% 7) / 19
+return(c(x1, x2, x3, x4))
+}
+# 1.1.2 filter_my_vector(x, leq).
+filter_my_vector = function(x, leq)
+{
+x[x >= leq] = NA
+return(x)
+}
+# 1.1.3 dot_prod(a, b).
+dot_prod = function(a, b)
+{
+r = a * b
+r = sum(r)
+return(r)
+}
+# 1.1.4 approx_e(N).
+approx_e = function(N)
+{
+series = 0:N
+series = factorial(series)
+e = sum(1 / series)
+return(e)
+}
+# 1.2 Matrices.
+# 1.2.1 my_magic_matrix().
+# The magic is that the sum of all rows/columns is equal to 15.
+my_magic_matrix = function()
+{
+m = matrix(c(4, 9, 2, 3, 5, 7, 8, 1, 6), 3, 3, TRUE)
+return(m)
+}
+# 1.2.2 calculate_elements(A)
+calculate_elements = function(A)
+{
+return(length(A))
+}
+# 1.2.3 row_to_zero(A, i).
+row_to_zero = function(A, i)
+{
+A[i, ] = 0
+return(A)
+}
+# 1.2.4 add_elements_to_matrix(A, x, i, j).
+add_elements_to_matrix = function(A, x, i, j)
+{
+A[i, j] = A[i, j] + x
+return(A)
+}
+# Lists.
+# 1.3.1 my_magic_list().
+my_magic_list = function()
+{
+magic_list = list(
+info="my own list",
+my_num_vector(),
+my_magic_matrix())
+return(magic_list)
+}
+# 1.3.2 change_info(x, text).
+change_info = function(x, text)
+{
+x$info = text
+return(x)
+}
+# 1.3.3 add_note(x, note).
+add_note = function(x, note)
+{
+x$note = note
+return(x)
+}
+# 1.3.4 sum_numeric_parts(X).
+sum_numeric_parts = function(x)
+{
+# Variable for summation.
+sum_numeric = 0
+# Looping through every element of the list
+# and checking if it is numeric in order to
+# add it to the overall sum.
+for(element in x)
+{
+if(is.numeric(element))
+{
+sum_numeric = sum_numeric + sum(element)
+}
+}
+return(sum_numeric)
+}
+# 1.4 data.frames.
+# 1.4.1 my_data.frame().
+my_data.frame = function()
+{
+df = data.frame(list(
+id=c(1, 2, 3),
+name=c("John", "Lisa", "Azra"),
+income=c(7.30, 0.00, 15.21),
+rich=c(FALSE, FALSE, TRUE)))
+return(df)
+}
+# 1.4.2 sort_head(df, var.name, n).
+sort_head = function(df, var.name, n)
+{
+idxs = order(df[var.name], decreasing=TRUE)
+df = df[idxs, ]
+df = df[1:n,]
+return(df)
+}
+# 1.4.3 add_median_variable(df, j).
+add_median_variable = function(df, j)
+{
+# Getting the median value of the column.
+col_median = median(df[[j]])
+# Creating a new column using the filter.
+df["compared_to_median"] = apply(
+df,
+j,
+function(x) if(col_median > x[1]) "Smaller" else if(col_median == x[1]) "Median" else "Greater")
+return(df)
+}
+# 1.4.4 analyze_columns(df, j).
+analyze_columns = function(df, j)
+{
+data_summary = list()
+for(col in j)
+{
+col_name = names(df)[[col]]
+data_summary[[col_name]] = c(
+mean=mean(df[[col]]),
+median=median(df[[col]]),
+sd=sd(df[[col]]))
+}
+data_summary[["correlation_matrix"]] = cor(df[j])
+return(data_summary)
+}
+mark_my_assignment()
+formals(moemnt)
+formals(moment)
+body(f)
+body(moment)
+environment(f)
+environment(moment)
+help(c)
+help(c())
+help(vector)
+c(NA)
+is.numeric(NA)
+help(NA)
+c(NA, 3)
+ls()
+1+1
+getwd()
+setwd("Drive/h4pZ/liu/2018_02/advanced_academic_studies/paper/")
+getwd()
+1 %% 5
+5 %% 1
+10 %% 6
+a = c(1,2,3)
+b = 4
+cbind(a, b)
+c(a, b)
+help("cbind")
+cbind(a, b, 1)
+cbind(a, b, 2)
+help("median")
+# 1.2.1 my_moving_median(x, n, na.rm=FALSE).
+my_moving_median = function(x, n, ...)
+{
+# Check if the vector and the variable n are numeric.
+if (!(is.numeric(x) & is.numeric(n)))
+{
+stop()
+}
+# Empty vector to store the moving median.
+moving_median = c()
+for (i in 1:(length(x) - n))
+{
+moving_median = c(moving_median, median(x[i: (i + n)], na.rm=...))
+}
+return(moving_median)
+}
+my_moving_median(1:10, 2, 3)
+my_moving_median(1:10, 2, "asd")
+1+1
+getwd()
+setwd("Drive/h4pZ/liu/2018_02/visualization/labs/viz_liu/05/")
+ls
+getwd()
+knitr::opts_chunk$set(echo = TRUE)
+# Importing libraries.
+library(plotly)
+# Importing libraries.
+library(plotly)
+library(crosstalk)
+# Loading the data.
+df = read.csv("olive.csv")
+# Creating a shared data.frame.
+df_shared = SharedData$new(df)
+# Creating the scatter plot and plotting it.
+scatter_olive = plot_ly(x=df_shared$data()$linoleic,
+y=df_shared$data()$eicosenoic) %>%
+layout(xaxis=list(title="linoleic"),
+yaxis=list(title="eicosenoic"))
+scatter_olive
+library(plotly)
+library(crosstalk)
+library(tidyr)
+crabs<- read.csv("codes/australian-crabs.csv")
+d <- SharedData$new(crabs)
+#Bar-scatter
+scatterCrab <- plot_ly(d, x = ~CL, y = ~RW) %>%
+add_markers(color = I("black"))
+barCrab <-plot_ly(d, x=~sex)%>%add_histogram()%>%layout(barmode="overlay")
+subplot(scatterCrab,barCrab)%>%
+highlight(on="plotly_select", dynamic=T, persistent = T, opacityDim = I(1))%>%hide_legend()
+scatterCrab2 <- plot_ly(d, x = ~CL, y = ~BD) %>%
+add_markers(color = I("black"))
+subplot(scatterCrab,scatterCrab2)%>%
+highlight(on="plotly_select", dynamic=T, persistent=T, opacityDim = I(1))%>%hide_legend()
+library(GGally)
+p<-ggparcoord(crabs, columns = c(4:6))
+install.packages("GGally")
+library(GGally)
+p<-ggparcoord(crabs, columns = c(4:6))
+d<-plotly_data(ggplotly(p))%>%group_by(.ID)
+d1<-SharedData$new(d, ~.ID, group="crab")
+p1<-plot_ly(d1, x=~variable, y=~value)%>%
+add_lines(line=list(width=0.3))%>%
+add_markers(marker=list(size=0.3),
+text=~.ID, hoverinfo="text")
+crabs2=crabs
+crabs2$.ID=1:nrow(crabs)
+d2<-SharedData$new(crabs2, ~.ID, group="crab")
+p2<-plot_ly(d2, x=~factor(sex) )%>%add_histogram()%>%layout(barmode="stack")
+ps<-htmltools::tagList(p1%>%
+highlight(on="plotly_select", dynamic=T, persistent = T, opacityDim = I(1))%>%
+hide_legend(),
+p2%>%
+highlight(on="plotly_select", dynamic=T, persistent = T, opacityDim = I(1))%>%
+hide_legend()
+)
+htmltools::browsable(ps)
+#3D-plot and parcoord
+df=read.csv("flea.csv")
+d2<-SharedData$new(df)
+p<-ggparcoord(flea, columns = c(6,7,2))
+d<-plotly_data(ggplotly(p))%>%group_by(.ID)
+d1<-SharedData$new(d, ~.ID, group="flea")
+p1<-plot_ly(d1, x=~variable, y=~value)%>%
+add_lines(line=list(width=0.3))%>%
+add_markers(marker=list(size=0.3),
+text=~.ID, hoverinfo="text")
+flea2=flea[, c("tars1", "aede2", "aede3")]
+flea2$.ID=1:nrow(flea)
+d2<-SharedData$new(flea2, ~.ID, group="flea")
+p3<-plot_ly(d2,x=~tars1,y=~aede2,z=~aede3)%>%add_markers()
+bscols(p1%>%highlight(on="plotly_select", dynamic=T, persistent = T, opacityDim = I(1))%>%
+hide_legend(),
+p3%>%highlight(on="plotly_click", dynamic=T, persistent = T)%>%hide_legend())
+d <- SharedData$new(crabs)
+scatterCrab <- plot_ly(d, x = ~CL, y = ~RW) %>%
+add_markers(color = I("black"))
+barCrab <-plot_ly(d, x=~sex)%>%add_histogram()%>%layout(barmode="overlay")
+bscols(widths=c(2, NA),filter_slider("FL", "Frontal Lobe", d, ~FL)
+,subplot(scatterCrab,barCrab)%>%
+highlight(on="plotly_select", dynamic=T, persistent = T, opacityDim = I(1))%>%hide_legend())
+df$Region
+bar_olive = plot_ly(df_shared,
+y=~Region)
+bar_olive
+bar_olive = plot_ly(df_shared,
+y=~Region,
+type="bar")
+bar_olive
+bar_olive = plot_ly(df_shared,
+x=c("1", "2", "3")
+y=~Region,
+bar_olive = plot_ly(df_shared,
+x=c("1", "2", "3"),
+y=~Region,
+type="bar")
+bar_olive
+bar_olive = plot_ly(df_shared,
+~Region,
+type="bar")
+bar_olive
+bar_olive = plot_ly(df_shared,
+x=~Region,
+type="bar")
+bar_olive
+lapply(df, class)
+class(df_shared$data()$region)
+class(df_shared$data()$Region)
+factor(df$Region)
+df_shared$data()$Region = factor(df_shared$data()$Region)
+# Importing libraries.
+library(plotly)
+library(crosstalk)
+# Loading the data.
+df = read.csv("olive.csv")
+# Transforming the region into a factor.
+df$Region = factor(df$Region)
+# Creating a shared data.frame.
+df_shared = SharedData$new(df)
+# Creating the scatter plot and plotting it.
+scatter_olive = plot_ly(df_shared,
+x=~linoleic,
+y=~eicosenoic) %>%
+layout(xaxis=list(title="linoleic"),
+yaxis=list(title="eicosenoic"))
+scatter_olive
+bar_olive = plot_ly(df_shared,
+x=~Region,
+type="bar")
+bar_olive
+df$Region
+levels(df$Region)
+bar_olive = plot_ly(df_shared,
+x=levels(df$Region),
+y=~Region
+type="bar")
+bar_olive = plot_ly(df_shared,
+y=~Region
+type="vbar")
+bar_olive
+bar_olive = plot_ly(df_shared,
+y=~Region
+type="hbar")
+bar_olive
+bar_olive = plot_ly(df_shared,
+y=~Region) %>%
+add_histogram()
+bar_olive
+bar_olive = plot_ly(df_shared,
+y=~Region) %>%
+add_histogram() %>%
+layout(barmode="overlay")
+bar_olive
+bar_olive = plot_ly(df_shared,
+x=~Region) %>%
+add_histogram() %>%
+layout(barmode="overlay")
+bar_olive
+help(bscols)
+help(filter_slider)
+help(bscols)
+help(filter_slider)
+d <- SharedData$new(crabs)
+scatterCrab <- plot_ly(d, x = ~CL, y = ~RW) %>%
+add_markers(color = I("black"))
+barCrab <-plot_ly(d, x=~sex)%>%add_histogram()%>%layout(barmode="overlay")
+bscols(widths=c(2, NA),filter_slider("FL", "Frontal Lobe", d, ~FL)
+,subplot(scatterCrab,barCrab)%>%
+highlight(on="plotly_select", dynamic=T, persistent = T, opacityDim = I(1))%>%hide_legend())
+df$stearic
+head(subplot)
+help(subplot)
+help(highlight)
+I(1)
+1
+help(I)
+# Creating the bar chart for the region.
+bar_olive = plot_ly(df_shared,
+x=~Region) %>%
+add_histogram() %>%
+layout(barmode="overlay")
+# Creating the whole linked plot.
+bscols(widths=c(2, NA),
+filter_slider("stearic",
+"Stearic",
+df_shared,
+~stearic),
+subplot(scatter_olive,
+bar_olive) %>%
+highlight(on="plotly_select",
+dynamic=TRUE,
+persistent=TRUE,
+opacityDim=I(1)) %>%
+hide_legend())
+min(df$stearic)
+max(df$stearic)
+getwd()
+df$linolenic
+df$arachidic
+help(bscols)
+colnames(df)
+head(df)
