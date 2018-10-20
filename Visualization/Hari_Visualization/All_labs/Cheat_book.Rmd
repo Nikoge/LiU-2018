@@ -4,7 +4,7 @@ author: "Anubhav Dikshit (anudi287)"
 date: "02 Nov 2018"
 output: 
   html_document:
-   theme: cosmo
+   theme: readable
    toc: true
    number_sections: true
    # toc_float:
@@ -49,7 +49,6 @@ aegypti_data = read.csv("aegypti_albopictus.csv")
 
 # Data Mugging
 ### Quantile Computation
-
 ```{r get_outliers_function}
 get_outliers <- function(x){
   quantile_values = quantile(x, probs = c(0.25, 0.75))
@@ -59,6 +58,7 @@ get_outliers <- function(x){
   return(c(which((x > (q3+1.5*(q3-q1)))), which(x < (q1-1.5*(q3-q1)))))
 }
 ```
+
 ### Scaling the Data
 ```{r}
 baseball_scaled <- scale(baseball_data[,3:length(baseball_data)])
@@ -80,11 +80,9 @@ baseball_data_with_mds$MDS_V2 <- coords_mds$V2
 
 ```
 
-
 # Single Plots
 ## Density Plot
 ### Density Plot with Outlier Highlight using GGplot2
-
 ```{r densityplot}
 
 density_plot_infection_risk = ggplot(senic_data) + 
@@ -114,18 +112,15 @@ x
 outliers = senic_data[get_outliers(senic_data$Infection_Risk),c("Infection_Risk")]
 senic_data$zero = 0
 
-p <- plot_ly(senic_data, x=~Infection_Risk) %>% 
+plot_ly(senic_data, x=~Infection_Risk) %>% 
   add_histogram(name="Histogram count") %>% 
   filter(is.element(Infection_Risk, outliers)) %>% 
   add_markers(x=~Infection_Risk,y=~zero, name="Outliers", 
               marker=list(symbol="diamond", size=10, line = list(color="black", width=1))) %>%
   layout(title="Histogram of Infection_Risk", yaxis=list(title="Count"))
-
-p
 ```
 
 ## Scatter Plot  
-
 ### Simple scatter plot with colour
 ```{r}
 ggplot(senic_data) + geom_point(aes(x=Number_of_Nurses, y=Infection_Risk, color=Number_of_Beds)) + 
@@ -262,6 +257,63 @@ plot_ly(olive_data,labels=~Area,type='pie',textinfo = "none") %>%
 ggplot(olive_data)+geom_density_2d(aes(x=eicosenoic, y=linoleic)) +
   ggtitle("Contour plot of Linoleic vs Eicosenoic") +
   theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+## Dot Map Plots (World Map)
+### Dot Map (Map with scatter plots)
+```{r, out.width="100%", warning=FALSE}
+# 2004
+plot_mapbox(aegypti_data[aegypti_data$YEAR == 2004,], lat = ~Y, lon = ~X) %>% 
+  add_markers(color = ~VECTOR, hoverinfo = "text",
+              text = ~paste(COUNTRY), alpha = 0.7) %>%
+  layout(title = "Dot map of mosquito distribution in the world (2004)")
+
+```
+
+## Choropleth Map
+### Chorpleth Map with Equirectangular Projection
+```{r}
+
+# Data aggregation
+country_aggregate = aggregate(aegypti_data[,c("COUNTRY", "COUNTRY_ID")], 
+                              by = list(aegypti_data$COUNTRY, aegypti_data$COUNTRY_ID), FUN=length)
+country_aggregate$COUNTRY = NULL
+colnames(country_aggregate) = c("COUNTRY", "COUNTRY_ID", "Count")
+
+plot_geo(country_aggregate) %>% add_trace(
+    z = ~Count,
+    text = ~COUNTRY, locations = ~COUNTRY_ID) %>%
+  layout(title = "Choropleth plot of number of mosquitoes",
+    geo = list(projection = list(type = "equirectangular")))
+
+```
+
+### Choropleth plot with Equirectangular Projection and log
+```{r}
+
+plot_geo(country_aggregate) %>%
+  add_trace(
+    z = ~log(Count) ,
+    text = ~paste(COUNTRY, "\n Count: ", Count), locations = ~COUNTRY_ID,
+    hoverinfo = "text"
+  ) %>%
+  layout(
+    title = "Choropleth plot of number of mosquitoes",
+    geo = list(projection = list(type = "equirectangular")))
+
+```
+
+### Choropleth plot with Conic Area Projection and log
+```{r, out.width="100%"}
+plot_geo(country_aggregate) %>%
+  add_trace(
+    z = ~log(Count) ,
+    text = ~paste(COUNTRY, "\n Count: ", Count), locations = ~COUNTRY_ID
+  ) %>%
+  layout(
+    title = "Choropleth plot of number of mosquitoes",
+    geo = list(projection = list(type = "conic equal area")))
 
 ```
 
