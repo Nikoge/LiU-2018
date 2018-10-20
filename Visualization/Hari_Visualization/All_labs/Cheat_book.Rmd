@@ -178,7 +178,7 @@ grid.arrange(plot_matrix, respect=TRUE, top="Density plots of SENIC data variabl
 ```
 
 # Shiny
-```{r}
+```{r eval=FALSE}
 #UI component
 ui <- fluidPage(
   sliderInput(inputId="bw_value", label="Choose bandwidth size", value=4.5, min=0.1, max=80),
