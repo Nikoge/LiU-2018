@@ -28,6 +28,20 @@ library(xlsx)
 library(MASS)
 library(sf)
 library(akima)
+library(scales)
+library(seriation)
+library(dplyr)
+library(crosstalk)
+library(GGally)
+library(tm)
+library(wordcloud)
+library(RColorBrewer)
+library(htmltools)
+library(tourr)
+library(reshape)
+library(ggraph)
+library(igraph)
+library(visNetwork)
 
 Sys.setenv('MAPBOX_TOKEN' = 'pk.eyJ1IjoibGFrc2hpZGFhIiwiYSI6ImNqbWIyOHN2NTRlZ3kzam10aTljeGNybWgifQ.8EG9Y6r024e-TGk79f7GpA')
 ```
@@ -45,6 +59,25 @@ senic_data = read.table("SENIC.txt",
 olive_data <- read.csv("olive.csv")
 baseball_data = read.xlsx("baseball-2016.xlsx", sheetName = "Sheet1")
 aegypti_data = read.csv("aegypti_albopictus.csv")
+swe_data = read.csv("000000KD.csv")
+ubs_data = read.delim("prices-and-earnings.txt", header = TRUE)
+ubs_data = ubs_data[, c(1,2,5,6,7,9,10,16,17,18,19)]
+rownames(ubs_data) = ubs_data[[1]]
+ubs_data[1] = NULL
+
+adult_data = read.csv("adult.csv", header = FALSE)
+
+colnames(adult_data) = c("age", "workclass", "fnlwgt", "education", "education_num", 
+                         "marital_status", "occupation", "relationship", "race",
+                         "sex", "capital_gain", "capital_loss", "hours_per_week",
+                         "native_country", "income_level")
+
+positive_data<-read.table("Five.txt",header=F, sep='\n') 
+negative_data<-read.table("OneTwo.txt",header=F, sep='\n') 
+
+links <- read.table("trainData.dat", as.is=T)
+nodes <- as.data.frame(read.table("trainMeta.dat", as.is=T))
+
 ```
 
 # Data Mugging
@@ -66,7 +99,7 @@ baseball_scaled <- scale(baseball_data[,3:length(baseball_data)])
 
 ### Distance Matrix between rows
 ```{r}
-distance_matrix <- dist(baseball_scaled)
+distance_matrix <- dist(baseball_scaled, method = "euclidean")
 ```
 
 ### Non-metric MDS
@@ -188,7 +221,7 @@ ggplot(olive_data)+
 baseball_scaled <- scale(baseball_data[,3:length(baseball_data)])
 
 ### Distance Matrix between rows
-distance_matrix <- dist(baseball_scaled)
+distance_matrix <- dist(baseball_scaled, method = "euclidean")
 
 ### Non-metric MDS
 mds_result <- isoMDS(distance_matrix, k=2, p=2)
@@ -213,13 +246,13 @@ plot_ly(baseball_data_with_mds, x=~MDS_V1, y=~MDS_V2) %>%
 baseball_scaled <- scale(baseball_data[,3:length(baseball_data)])
 
 ### Distance Matrix between rows
-distance_matrix <- dist(baseball_scaled)
+distance_matrix <- dist(baseball_scaled, method = "euclidean")
 mds_result <- isoMDS(distance_matrix, k=2, p=2)
 coords <- mds_result$points
 
 shp <- Shepard(distance_matrix, coords)
 delta <- as.numeric(distance_matrix)
-D <- as.numeric(dist(coords))
+D <- as.numeric(dist(coords, method = "euclidean"))
 
 n <- nrow(coords)
 index <- matrix(1:n, nrow=n, ncol=n)
@@ -263,7 +296,6 @@ ggplot(olive_data)+geom_density_2d(aes(x=eicosenoic, y=linoleic)) +
 ## Dot Map Plots (World Map)
 ### Dot Map (Map with scatter plots)
 ```{r, out.width="100%", warning=FALSE}
-# 2004
 plot_mapbox(aegypti_data[aegypti_data$YEAR == 2004,], lat = ~Y, lon = ~X) %>% 
   add_markers(color = ~VECTOR, hoverinfo = "text",
               text = ~paste(COUNTRY), alpha = 0.7) %>%
@@ -306,6 +338,7 @@ plot_geo(country_aggregate) %>%
 
 ### Choropleth plot with Conic Area Projection and log
 ```{r, out.width="100%"}
+
 plot_geo(country_aggregate) %>%
   add_trace(
     z = ~log(Count) ,
@@ -317,6 +350,572 @@ plot_geo(country_aggregate) %>%
 
 ```
 
+### Choropleth plot using custom shape files(sf file)
+```{r, warning=FALSE, message=FALSE}
+
+swe_data = read.csv("000000KD.csv")
+
+swe_data_processed = data.frame(region = unique(swe_data$region))
+swe_data_split = split(swe_data, swe_data$age)
+for (i in seq_along(swe_data_split)) { 
+  swe_data_processed[[names(swe_data_split)[i]]] = merge(swe_data_split[[i]], 
+                                                         swe_data_processed$region, 
+                                                         by.x = 'region', 
+                                                         by.y = 1, all = T)$X2016 
+}
+
+colnames(swe_data_processed) = c("region", "Young", "Adult", "Senior")
+swe_data_processed$region = gsub(" county", "", swe_data_processed$region)
+swe_data_processed$region = gsub("\\d{2} ", "", swe_data_processed$region)
+swe_data_processed$region = gsub("Örebro", "Orebro", swe_data_processed$region)
+rownames(swe_data_processed) = swe_data_processed$region
+rds = readRDS('gadm36_SWE_1_sf.rds')
+
+rds$Young = swe_data_processed[rds$NAME_1, "Young"]
+plot_ly() %>% add_sf(data = rds, split = ~NAME_1, 
+                     color = ~Young, showlegend = F, alpha = 1) %>%
+  layout(title = "Choropleth plot of mean income of Young age group")
+
+```
+
+### Choropleth plot with a custom maker
+
+```{r, warning=FALSE, message=FALSE}
+
+rds$Young = swe_data_processed[rds$NAME_1, "Young"]
+plot_ly() %>% add_sf(data = rds, split = ~NAME_1, color = ~Young, 
+                     showlegend = F, alpha = 1) %>%
+  add_markers(x = 15.621373, y = 58.410809, color = "red", 
+              hoverinfo = "text", text = "We are here!") %>%
+  layout(title = "Choropleth plot of mean income of Young age group")
+
+```
+
+## Violin Plots
+### Violin Plot Simple 2 variable (one cateogrical and one numeric)
+```{r}
+swe_data_processed = data.frame(region = unique(swe_data$region))
+
+swe_data_split = split(swe_data, swe_data$age)
+for (i in seq_along(swe_data_split)) { 
+  swe_data_processed[[names(swe_data_split)[i]]] = merge(swe_data_split[[i]], 
+                                                         swe_data_processed$region, 
+                                                         by.x = 'region', 
+                                                         by.y = 1, all = T)$X2016 
+}
+
+colnames(swe_data_processed) = c("region", "Young", "Adult", "Senior")
+swe_data_processed$region = gsub(" county", "", swe_data_processed$region)
+swe_data_processed$region = gsub("\\d{2} ", "", swe_data_processed$region)
+swe_data_processed$region = gsub("Örebro", "Orebro", swe_data_processed$region)
+rownames(swe_data_processed) = swe_data_processed$region
+
+
+ggplot(swe_data) + 
+  geom_violin(aes(x = age, y = X2016), 
+              draw_quantiles = c(0.25, 0.5, 0.75), fill = "#A982F7")  + 
+  scale_x_discrete(labels=c("18_29" = "Young", 
+                            "30_49" = "Adult", 
+                            "50_69" = "Senior"), 
+                   name = "Age Group") + 
+  ylab("Mean Income (SEK thousands)") +
+  ggtitle("Distribution of mean incomes in different age groups")
+
+```
+
+## 3D surface plots
+### 3D surface plots using plotly
+```{r, out.width="100%"}
+s = interp(swe_data_processed$Young, swe_data_processed$Adult, 
+           swe_data_processed$Senior, duplicate = "mean")
+plot_ly(x=~s$x, y=~s$y, z=~s$z, type="surface") %>% layout(
+  scene=list(
+  xaxis = list(title = "Young"),
+  yaxis = list(title = "Adult"),
+  zaxis = list(title = "Senior")),
+  title = "3D surface plot of income distribution")
+```
+
+## Heat Map
+### Heat Map without reordering
+```{r, out.width="100%"}
+ubs_scaled = scale(ubs_data)
+plot_ly(x = colnames(ubs_scaled), y = rownames(ubs_scaled), 
+        z = ubs_scaled, type = "heatmap", 
+        colors = colorRamp(c("yellow", "red"))) %>%
+  layout(title = "Heatmap of Column variables vs Cities")
+
+```
+
+### Heat Map with ordering using Hiearchical Clustering (HC) using Euclidean distance
+```{r}
+
+ubs_scaled = scale(ubs_data)
+row_dist_euc = dist(ubs_scaled, method = "euclidean")
+col_dist_euc = dist(t(ubs_scaled), method = "euclidean")
+
+seriate_row_euc = seriate(row_dist_euc, "HC")
+seriate_col_euc = seriate(col_dist_euc, "HC")
+ord_row_euc = get_order(seriate_row_euc)
+ord_col_euc = get_order(seriate_col_euc)
+
+ubs_reordered_euc = ubs_scaled[rev(ord_row_euc),ord_col_euc]
+
+plot_ly(x = colnames(ubs_reordered_euc), 
+        y = rownames(ubs_reordered_euc), 
+        z = ubs_reordered_euc, type = "heatmap", 
+        colors = colorRamp(c("yellow", "red"))) %>%
+  layout(title = "Heatmap of Column variables vs Cities")
+```
+
+### Heat Map with ordering using Corellation using Euclidean distance
+```{r}
+row_dist_cor = as.dist(1 - cor(t(ubs_scaled)))
+col_dist_cor = as.dist(1 - cor(ubs_scaled))
+
+seriate_row_cor = seriate(row_dist_cor, method = "HC")
+seriate_col_cor = seriate(col_dist_cor, method = "HC")
+ord_row_cor = get_order(seriate_row_cor)
+ord_col_cor = get_order(seriate_col_cor)
+
+ubs_reordered_cor = ubs_scaled[rev(ord_row_cor), ord_col_cor]
+
+plot_ly(x = colnames(ubs_reordered_cor), 
+        y = rownames(ubs_reordered_cor), 
+        z = ubs_reordered_cor, type = "heatmap", 
+        colors = colorRamp(c("yellow", "red"))) %>%
+  layout(title = "Heatmap of Column variables vs Cities")
+```
+
+### Heat Map with ordering using Hamiltonian Path Length using Traveling Salesman Problem (TSP)
+```{r}
+seriate_row_tsp = seriate(row_dist_euc, "TSP")
+seriate_col_tsp = seriate(col_dist_euc, "TSP")
+ord_row_tsp = get_order(seriate_row_tsp)
+ord_col_tsp = get_order(seriate_col_tsp)
+
+ubs_reordered_tsp = ubs_scaled[rev(ord_row_tsp), ord_col_tsp]
+
+plot_ly(x = colnames(ubs_reordered_tsp), 
+        y = rownames(ubs_reordered_tsp), 
+        z = ubs_reordered_tsp, type="heatmap", 
+        colors = colorRamp(c("yellow", "red"))) %>%
+  layout(title = "Heatmap of Column variables vs Cities 
+         (reordered by TSP/Hamiltonian Path Length/Euclidean Distance)")
+```
+
+### Comparison of two solvers for heatmap
+
+```{r}
+#Hamiltonian Path Length
+ord_tsp = seriate(row_dist_euc, "TSP")
+ham_tsp = criterion(row_dist_euc, order = ord_row_tsp, "Path_length")
+paste("Hamiltonian Path Length : ", ham_tsp)
+
+#Gradient Measure
+gm_tsp = criterion(row_dist_euc, order=ord_tsp, "Gradient_raw")
+paste("Gradient Measure : ", gm_tsp)
+
+#Hamiltonian Path Length
+ord_hc = seriate(row_dist_euc, "HC")
+ham_hc = criterion(row_dist_euc, order = ord_hc, "Path_length")
+paste("Hamiltonian Path Length : ", ham_hc)
+
+#Gradient Measure
+gm_hc = criterion(row_dist_euc, order = ord_hc, "Gradient_raw")
+paste("Gradient Measure : ", gm_hc)
+```
+
+### Heat Map using Adjacency
+```{r}
+colnames(links) <- c("from","to","strength")
+links <- links[order(links$from, links$to),]
+nodes$id <- 1:70
+rownames(links) <- NULL
+
+colnames(nodes)[2] <- "BombingGrp"
+
+#Size of links based on "strength of links"
+links$width <- links$strength*3
+
+#Nodes colored based on Bombing Group
+nodes$label <- nodes$V1
+nodes$group <- nodes$BombingGrp
+
+#Size of nodes proportional to the number of connections
+graph <- graph.data.frame(links, directed = F)
+strength_value <- strength(graph)
+nodes$value <- strength_value[match(nodes$id, names(strength_value))]
+
+
+for(i in 1:nrow(links)){
+  links$from_name[i] <- nodes$V1[links$from[i]]
+  links$to_name[i] <- nodes$V1[links$to[i]]
+}
+
+links <- links[,c("from_name","to_name","from","to","strength","width")]
+nodes1 <- nodes
+net <- graph_from_data_frame(d=links, vertices=nodes, directed=F)
+ceb <- cluster_edge_betweenness(net) 
+nodes1$group <- ceb$membership
+
+
+netm <- get.adjacency(net, attr="strength", sparse=F)
+colnames(netm) <- V(net)$name
+rownames(netm) <- V(net)$name
+
+rowdist<-dist(netm)
+
+order1<-seriate(rowdist, "HC")
+ord1<-get_order(order1)
+
+reordmatr<-netm[ord1,ord1]
+
+plot_ly(z=~reordmatr, x=~colnames(reordmatr), 
+        y=~rownames(reordmatr), type="heatmap")
+
+```
+
+
+## Parallel Plot
+### Parallel Plot using Plotly
+```{r}
+# Function to create dimension list based on given variable order
+get_dimension_list <- function(df, col_order){
+  dim_list = list()
+  i = 1
+  for (col in col_order){
+    dim_list[[i]] = list(label = col, values = df[[col]])
+    i = i + 1
+  }
+  
+  return(dim_list)
+}
+
+# Create dimension list for unordered data
+unord_dim_list = get_dimension_list(ubs_data, colnames(ubs_data))
+
+# Create dimension list for reordered data
+var_order = c("Cloting.Index", "Wage.Net", "Goods.and.Services...", "Food.Costs...", 
+              "Vacation.Days", "iPhone.4S.hr.", "Big.Mac.min.", 
+              "Bread.kg.in.min.", "Rice.kg.in.min.", "Hours.Worked")
+
+reord_dim_list = get_dimension_list(ubs_data, var_order)
+
+# Brush different clusters with different colors
+ubs_data$cluster = 1
+ubs_data[ubs_data$Wage.Net < 24 , "cluster"] = 2
+
+plot_ly(data = ubs_data, type = 'parcoords', 
+        dimensions = unord_dim_list) %>%
+  layout(title = "")
+```
+
+### Parallel Plot using Plotly and highlight one line
+```{r}
+plot_ly(data = ubs_data, type = 'parcoords', 
+        line = list(color = ~cluster, colorscale = list(c(0,"red"), c(1,"blue"))),
+        dimensions = reord_dim_list) %>%
+  layout(title = "")
+```
+
+## Radar Plots
+### Radar Plots using Scatterpolar
+```{r}
+ubs_reordered_euc <- as.data.frame(ubs_reordered_euc)
+ubs_reordered_euc$City = rownames(ubs_reordered_euc)
+
+ubs_reordered_euc <- ubs_reordered_euc%>%tidyr::gather(variable, value, -City, factor_key=T)%>%arrange(City)
+
+first_col_order <- rownames(ubs_reordered_euc)
+second_col_order <- unique(ubs_reordered_euc$variable)
+
+ubs_reordered_euc$City <- factor(ubs_reordered_euc$City , levels = first_col_order)
+ubs_reordered_euc$variable <- factor(ubs_reordered_euc$variable , levels = second_col_order)
+
+ubs_reordered_euc <- ubs_reordered_euc[order(ubs_reordered_euc$City, ubs_reordered_euc$variable),]
+
+radar_plot <- ubs_reordered_euc %>% ggplot(aes(x=variable, y=value, group=City)) + geom_polygon(fill="blue") + coord_polar() + theme_bw() + facet_wrap(~ City) + theme(axis.text.x = element_text(size = 5))
+ 
+ggsave("radar_plot.png", width = 40, height = 60, units = "cm")
+```
+
+## Trellis Plots
+### Trellis Plots using ggplot2
+```{r}
+ggplot(adult_data) + 
+  geom_point(aes(x = age, y = hours_per_week, color = income_level)) +
+  ggtitle("Relationship between Age, Hours per week and Income level")
+```
+
+### Trellis Plots with facet/condition on a variable
+```{r, out.width="100%"}
+ggplot(adult_data) + 
+  geom_point(aes(x = age, y = hours_per_week, color = income_level)) +
+  facet_grid(income_level~.) +
+  ggtitle("Relationship between Age, Hours per week for each Income level")
+
+```
+
+### Trellis Plot with raster-type-2d-density plot 
+```{r}
+
+capital_loss_data = adult_data[adult_data$capital_loss != 0,]
+
+ggplot(capital_loss_data) +
+  stat_density_2d(geom = "raster", 
+                  aes(x = education_num, y = capital_loss, 
+                      fill = stat(density)), contour = FALSE) +
+  scale_fill_distiller(palette = "Spectral") +
+  facet_grid(cols = vars(cut_number(age, 6)))
+```
+
+### Trellis Plot with raster-type-2d-density plot with discreetization(cut_number) 
+```{r, out.width="100%"}
+ggplot(capital_loss_data) +
+  geom_point(aes(x = education_num, y = capital_loss)) +
+  facet_grid(vars(cut_number(age, 4))) +
+  ggtitle("Capital loss vs Education num for each age interval") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+### Trellis Plot with Shingles
+```{r}
+age_ranges = lattice::equal.count(capital_loss_data$age, number = 4, overlap = 0.1)
+
+age_range_matrix = matrix(unlist(levels(age_ranges)), ncol=2, byrow = T)
+age_range_df = data.frame(Lower = age_range_matrix[,1],
+                          Upper = age_range_matrix[,2], 
+                          Interval = factor(1:nrow(age_range_matrix)))
+
+index = c()
+age_interval = c()
+for(i in 1:nrow(age_range_df)){
+  interval_name = paste("[", age_range_df$Lower[i], ",", 
+                        age_range_df$Upper[i], "]", sep="")
+  indices_in_interval = which(capital_loss_data$age >= age_range_df$Lower[i] & 
+                                capital_loss_data$age <= age_range_df$Upper[i])
+  index = c(index, indices_in_interval)
+  age_interval = c(age_interval, rep(interval_name, length(indices_in_interval)))
+}
+
+shingles_df = capital_loss_data[index,]
+shingles_df = cbind(shingles_df, age_interval)
+
+ggplot(shingles_df) +
+  geom_point(aes(x = education_num, y = capital_loss)) +
+  facet_grid(vars(age_interval)) +
+  ggtitle("Capital loss vs Education num for each age interval (with shingles)") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+## Word Clouds
+### Word Clouds using tm
+```{r, warning=FALSE, error=FALSE, out.width="100%"}
+set.seed(1)
+par(mfrow=c(1,2))
+#Word cloud for positive reviews
+positive_data$doc_id=1:nrow(positive_data)
+colnames(positive_data)[1]<-"text"
+
+#Here we interpret each line in the document as separate document
+mycorpus <- Corpus(DataframeSource(positive_data)) #Creating corpus (collection of text data)
+mycorpus <- tm_map(mycorpus, removePunctuation)
+mycorpus <- tm_map(mycorpus, function(x) removeWords(x, stopwords("english")))
+tdm <- TermDocumentMatrix(mycorpus) #Creating term-document matrix
+m <- as.matrix(tdm)
+
+#here we merge all rows
+v1 <- sort(rowSums(m),decreasing=TRUE) #Sum up the frequencies of each word
+v2 <- v1[-1]
+
+d1 <- data.frame(word = names(v1),freq=v1) #Create one column=names, second=frequences
+pal1 <- brewer.pal(8,"Dark2")
+pal1 <- pal1[-(1:2)] #Create palette of colors
+wordcloud(d1$word,d1$freq, scale=c(5,.3),min.freq=2,max.words=100, random.order=F, rot.per=.15, colors=pal1, vfont=c("sans serif","plain"))
+
+d2 <- data.frame(word = names(v2),freq=v2) #Create one column=names, second=frequences
+pal2 <- brewer.pal(8,"Dark2")
+pal2 <- pal2[-(1:2)] #Create palette of colors
+wordcloud(d2$word,d2$freq, scale=c(2,.3),min.freq=2,max.words=100, random.order=F, rot.per=.15, colors=pal2, vfont=c("sans serif","plain"))
+
+```
+
+# Linked Plots
+## Bar chart and Scatter Plot 
+### Bar chart and scatter plot shared using crosstalk
+```{r}
+olive_data = read.csv("olive.csv")
+
+olive_data$Region_category <- "Sardinia Island"
+olive_data[olive_data$Region == 1, c("Region_category")] <- "North"
+olive_data[olive_data$Region == 2, c("Region_category")] <- "South"
+
+ct_olive_2 = SharedData$new(olive_data)
+
+scatter_eico_lino = plot_ly(ct_olive_2, x = ~linoleic, y = ~eicosenoic) %>%
+  add_markers(color = I("black"))
+
+bar_region <-plot_ly(ct_olive_2, x = ~Region_category) %>% 
+  add_histogram() %>% layout(barmode = "overlay")
+
+plots = subplot(scatter_eico_lino, bar_region, titleX = TRUE, titleY = TRUE) %>%
+  highlight(on = "plotly_select", dynamic = T, persistent = T, opacityDim = I(1)) %>% 
+  hide_legend() %>%
+  layout(title = "Scatterplot: Eicosenoic vs Linoleic, Histogram: Region")
+
+bscols(widths = c(12), list(tags$h2("Analysis of variable relationships"),
+                            tags$h4("(Eicosenoic, Linoleic, Region, Stearic)"),
+                            filter_slider("stearic", "Stearic", ct_olive_2, ~stearic), plots))
+
+```
+
+### Scatter plot shared using crosstalk
+```{r, warning=FALSE, message=FALSE}
+ct_olive_3 = SharedData$new(olive_data)
+
+sctr_eico_lino = plot_ly(ct_olive_3, x = ~linoleic, y = ~eicosenoic) %>%
+  add_markers(color = I("black"))
+
+sctr_arac_lino = plot_ly(ct_olive_3, x = ~linolenic, y = ~arachidic) %>%
+  add_markers(color = I("black"))
+
+subplot(sctr_eico_lino, sctr_arac_lino, titleX = TRUE, titleY = TRUE) %>%
+  highlight(on = "plotly_select", dynamic = T, persistent = T, opacityDim = I(1)) %>% 
+  hide_legend() %>%
+  layout(title = "Scatterplots: Eicosenoic vs Linoleic, Arachidic vs Linolenic")
+```
+
+### Parallel Chord/Trellis Plot Scatter plot and Bar chart
+```{r, warning=FALSE, error=FALSE, message=FALSE}
+
+var_order = c("palmitic", "palmitoleic", "linoleic", "stearic", 
+              "oleic", "linolenic", "arachidic", "eicosenoic")
+
+par_plot = ggparcoord(olive_data[var_order], columns = 1:8)
+
+plot_data = plotly_data(ggplotly(par_plot)) %>% group_by(.ID)
+ct_olive_4 = SharedData$new(plot_data, ~.ID, group = "olive")
+par_coord_plot = plot_ly(ct_olive_4, x = ~variable, y = ~value) %>% 
+  add_lines(line = list(width = 0.3))%>%
+  add_markers(marker = list(size = 0.3),
+              text = ~.ID, hoverinfo = "text") %>%
+  layout(title = "Parallel Coordinate Plots")
+
+ct_olive = SharedData$new(olive_data, group = "olive")
+
+get_buttons = function(df, axis){
+  buttons = list()
+  i = 1
+  for(col in colnames(df)){
+    buttons[[i]] = list(method = "restyle",
+                        args = list(axis, list(olive_data[[col]])),
+                        label = paste(axis , ": ", col, sep=""))
+    i = i + 1
+  }
+  
+  return(buttons)
+}
+
+buttons_x = get_buttons(olive_data[, 4:11], "x")
+buttons_y = get_buttons(olive_data[, 4:11], "y")
+buttons_z = get_buttons(olive_data[, 4:11], "z")
+
+annot = list(list(text = "X", x=-0.6, y = 0.78, xref = 'paper', yref = 'paper', showarrow = FALSE),
+             list(text = "Y", x=-0.6, y = 0.55, xref = 'paper', yref = 'paper', showarrow = FALSE),
+             list(text = "Z", x=-0.6, y = 0.34, xref = 'paper', yref = 'paper', showarrow = FALSE))
+
+scatter_plot_3d = plot_ly(ct_olive, x = ~palmitic, y = ~palmitoleic, z = ~stearic) %>% 
+  add_markers(marker = list(size=4), opacity = 0.5) %>%
+  layout(scene = list(xaxis = list(title = "X"), 
+                      yaxis = list(title = "Y"), 
+                      zaxis = list(title = "Z")),
+         title = "3D Scatterplot",
+         # annotations = annot,
+         updatemenus = list(
+           list(y = 0.4, buttons = buttons_x, text = "X", active = 0),
+           list(y = 0.6, buttons = buttons_y, text = "Y", active = 1),
+           list(y = 0.8, buttons = buttons_z, text = "Z", active = 2)))
+
+bar_chart = plot_ly(ct_olive, x = ~Region_category) %>% 
+  add_histogram() %>% layout(title = "Histogram: Region", barmode = "overlay")
+
+bscols(widths = c(12, 12,6,6), 
+  tags$h2("Interactive plots to analyze relationships between variables"),
+       par_coord_plot %>% 
+         highlight(on = "plotly_select", dynamic = T, persistent = T, opacityDim = I(1)) %>%
+         hide_legend(), 
+       scatter_plot_3d %>% 
+         highlight(on = "plotly_click", dynamic = T, persistent = T) %>% hide_legend(),
+       bar_chart %>% 
+         highlight(on = "plotly_click", dynamic = T, persistent = T) %>% hide_legend())
+```
+
+# Network Graphs
+## Network Graph using visNetwork
+### Replusion Optimzed Network Graph
+
+```{r}
+links <- read.table("trainData.dat", as.is=T)
+nodes <- as.data.frame(read.table("trainMeta.dat", as.is=T))
+
+colnames(links) <- c("from","to","strength")
+links <- links[order(links$from, links$to),]
+nodes$id <- 1:70
+rownames(links) <- NULL
+
+colnames(nodes)[2] <- "BombingGrp"
+
+#Size of links based on "strength of links"
+links$width <- links$strength*3
+
+#Nodes colored based on Bombing Group
+nodes$label <- nodes$V1
+nodes$group <- nodes$BombingGrp
+
+#Size of nodes proportional to the number of connections
+graph <- graph.data.frame(links, directed = F)
+strength_value <- strength(graph)
+nodes$value <- strength_value[match(nodes$id, names(strength_value))]
+
+visNetwork(nodes, links) %>% 
+  visLegend() %>% 
+  visLayout(randomSeed = 8) %>% 
+  visPhysics(solver="repulsion") %>% 
+  visOptions(highlightNearest = list(enabled = T, degree = 1, hover = T))
+```
+
+### Replusion Optimzed Network Graph with highlights
+```{r}
+visNetwork(nodes, links) %>% 
+  visLegend() %>% 
+  visLayout(randomSeed = 12) %>% 
+  visPhysics(solver="repulsion") %>% 
+  visOptions(highlightNearest = list(enabled = T, degree = 2, hover = T))
+```
+
+### Edge Between Optimizing Network Graph
+```{r}
+for(i in 1:nrow(links)){
+  links$from_name[i] <- nodes$V1[links$from[i]]
+  links$to_name[i] <- nodes$V1[links$to[i]]
+}
+
+links <- links[,c("from_name","to_name","from","to","strength","width")]
+nodes1 <- nodes
+net <- graph_from_data_frame(d=links, vertices=nodes, directed=F)
+ceb <- cluster_edge_betweenness(net) 
+nodes1$group <- ceb$membership
+
+visNetwork(nodes1,links) %>% 
+  visIgraphLayout() %>% 
+  visOptions(highlightNearest = list(enabled = T, degree = 2, hover = T))
+
+```
+
+# Animated Plots
+##
 
 # Multiple Plots
 ## Density Plots
@@ -405,3 +1004,7 @@ server <- function(input, output) {
 shinyApp(ui = ui, server = server, options = list(width="800px", height="900px"))
 
 ```
+
+# Appendix Code
+#```{r, ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+#```
