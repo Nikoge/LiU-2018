@@ -1,16 +1,21 @@
 ---
-title: "732A98: Visualization - Cheatbook"
+title: '732A98: Visualization - Cheatbook'
 author: "Anubhav Dikshit (anudi287)"
 date: "02 Nov 2018"
-output: 
+output:
+  pdf_document:
+    fig_caption: yes
+    toc: yes
   html_document:
-   theme: readable
-   toc: true
-   number_sections: true
-   # toc_float:
-   #    collapsed: false
-   #    smooth_scroll: false
+    number_sections: yes
+    theme: readable
+    toc: yes
 always_allow_html: yes
+header-includes:
+  - \usepackage{booktabs} 
+  - \usepackage{sectsty} \sectionfont{\centering}
+  - \renewcommand{\contentsname}{}\vspace{-2cm} 
+  - \usepackage{pdfpages}
 ---
 
 ```{r setup, include=FALSE, warning=FALSE}
@@ -42,6 +47,9 @@ library(reshape)
 library(ggraph)
 library(igraph)
 library(visNetwork)
+library(data.table)
+library(reshape2)
+library(tibble)
 
 Sys.setenv('MAPBOX_TOKEN' = 'pk.eyJ1IjoibGFrc2hpZGFhIiwiYSI6ImNqbWIyOHN2NTRlZ3kzam10aTljeGNybWgifQ.8EG9Y6r024e-TGk79f7GpA')
 ```
@@ -60,6 +68,13 @@ olive_data <- read.csv("olive.csv")
 baseball_data = read.xlsx("baseball-2016.xlsx", sheetName = "Sheet1")
 aegypti_data = read.csv("aegypti_albopictus.csv")
 swe_data = read.csv("000000KD.csv")
+income_data <- read.csv("000000KD.csv")
+rds <- readRDS("gadm36_SWE_1_sf.rds")
+price_data <- read.delim("prices-and-earnings.txt")
+price_data <- price_data[,c(1,2,5,6,7,9,10,16,17,18,19)]
+
+
+
 ubs_data = read.delim("prices-and-earnings.txt", header = TRUE)
 ubs_data = ubs_data[, c(1,2,5,6,7,9,10,16,17,18,19)]
 rownames(ubs_data) = ubs_data[[1]]
@@ -81,7 +96,7 @@ nodes <- as.data.frame(read.table("trainMeta.dat", as.is=T))
 ```
 
 # Data Mugging
-### Quantile Computation
+## Quantile Computation
 ```{r get_outliers_function}
 get_outliers <- function(x){
   quantile_values = quantile(x, probs = c(0.25, 0.75))
@@ -92,17 +107,17 @@ get_outliers <- function(x){
 }
 ```
 
-### Scaling the Data
+## Scaling the Data
 ```{r}
 baseball_scaled <- scale(baseball_data[,3:length(baseball_data)])
 ```
 
-### Distance Matrix between rows
+## Distance Matrix between rows
 ```{r}
 distance_matrix <- dist(baseball_scaled, method = "euclidean")
 ```
 
-### Non-metric MDS
+## Non-metric MDS
 ```{r}
 mds_result <- isoMDS(distance_matrix, k=2, p=2)
 coords <- mds_result$points
@@ -110,6 +125,107 @@ coords_mds <- as.data.frame(coords)
 baseball_data_with_mds <- baseball_data
 baseball_data_with_mds$MDS_V1 <- coords_mds$V1
 baseball_data_with_mds$MDS_V2 <- coords_mds$V2
+
+```
+
+## Principle Component Analysis
+```{r}
+mtcars.pca <- prcomp(mtcars[,c(1:7,10,11)], center = TRUE,scale. = TRUE)
+biplot(mtcars.pca, scale = 0)
+```
+
+## Types of Projection
+```{r}
+#projection = list(type = "mercator"))
+#projection = list(type = "albers usa"))
+#projection = list(type = "equirectangular"))
+#projection = list(type = "conic equal area"))
+#projection = list(type = "azimuthal equal area"))
+#projection = list(type = "equirectangular"))
+#projection = list(type = "orthographic"))
+
+```
+
+## Types of easing
+```{r}
+#animation_opts(500, easing = 'linear', redraw = F)
+# animation_opts(500, easing = 'quad', redraw = F)
+# animation_opts(500, easing = 'cubic', redraw = F)
+# animation_opts(500, easing = 'sin', redraw = F)
+# animation_opts(500, easing = 'exp', redraw = F)
+# animation_opts(500, easing = 'circle', redraw = F)
+# animation_opts(500, easing = 'elastic', redraw = F)
+# animation_opts(500, easing = 'back', redraw = F)
+# animation_opts(500, easing = 'bounce', redraw = F)
+# animation_opts(500, easing = 'linear-in', redraw = F)
+# animation_opts(500, easing = 'quad-in', redraw = F)
+# animation_opts(500, easing = 'cubic-in', redraw = F)
+# animation_opts(500, easing = 'sin-in', redraw = F)
+# animation_opts(500, easing = 'exp-in', redraw = F)
+# animation_opts(500, easing = 'circle-in', redraw = F)
+# animation_opts(500, easing = 'elastic-in', redraw = F)
+# animation_opts(500, easing = 'back-in', redraw = F)
+# animation_opts(500, easing = 'bounce-in', redraw = F)
+# animation_opts(500, easing = 'linear-out', redraw = F)
+# animation_opts(500, easing = 'quad-out', redraw = F)
+# animation_opts(500, easing = 'cubic-out', redraw = F)
+# animation_opts(500, easing = 'sin-out', redraw = F)
+# animation_opts(500, easing = 'exp-out', redraw = F)
+# animation_opts(500, easing = 'circle-out', redraw = F)
+# animation_opts(500, easing = 'elastic-out', redraw = F)
+# animation_opts(500, easing = 'back-out', redraw = F)
+# animation_opts(500, easing = 'bounce-out', redraw = F)
+# animation_opts(500, easing = 'linear-in-out', redraw = F)
+# animation_opts(500, easing = 'quad-in-out', redraw = F)
+# animation_opts(500, easing = 'cubic-in-out', redraw = F)
+# animation_opts(500, easing = 'sin-in-out', redraw = F)
+# animation_opts(500, easing = 'exp-in-out', redraw = F)
+# animation_opts(500, easing = 'circle-in-out', redraw = F)
+# animation_opts(500, easing = 'elastic-in-out', redraw = F)
+# animation_opts(500, easing = 'back-in-out', redraw = F)
+# animation_opts(500, easing = 'bounce-in-out', redraw = F)
+```
+
+## Sorting dataset
+```{r}
+mtcars <- as.data.table(mtcars)
+mtcars <- mtcars[order(-mpg, cyl)]
+
+head(mtcars, 10)
+```
+
+## Colour selection palette
+```{r}
+# The palette with grey:
+default_colors <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", 
+                    "#0072B2", "#D55E00", "#CC79A7")
+
+# ggplot2
+ggplot(data=iris, aes(x= Sepal.Length, y = Petal.Length, color = Species)) + geom_point() + scale_fill_manual(values=default_colors) + ggtitle("Custom Color for ggplot2")
+
+
+# plotly
+x <- plot_ly(data = iris, x = ~Sepal.Length, y = ~Petal.Length, color = ~Species, colors = default_colors) %>% layout(title = "Custom color for plotly")
+
+```
+
+### Adding custom colours without palette
+```{r}
+
+# ggplot2
+ggplot(olive_data) + 
+  geom_point(aes(x = oleic, y = palmitic, color=cut_interval(olive_data$linolenic, n = 4))) +
+  ggtitle("Dependence of Palmitic vs Oleic vs Linolenic") + 
+  scale_colour_manual(values=c("brown", "azure", "green", "red"))
+
+# plotly
+x <- plot_ly(iris, x = ~Petal.Length, y = ~Petal.Width,  
+        type="scatter", mode = "markers" , color = ~Species, 
+        colors = c("grey50", "blue", "red"), marker=list( size=20 , opacity=0.5))
+
+knitr::include_graphics('./plotly_custom_color.png')
+```
+
 
 ```
 
@@ -134,9 +250,9 @@ density_plot_infection_risk
 ### Density Plot with Outlier Highlight using Plotly (converting from ggplot2)
 ```{r, eval=TRUE}
 x <- ggplotly(p=density_plot_infection_risk)
-
-x
+knitr::include_graphics('./3.1.2.png')
 ```
+
 
 ## Histogram Plot 
 ### Histogram plot with Outlier Highlight using Plotly
@@ -145,12 +261,14 @@ x
 outliers = senic_data[get_outliers(senic_data$Infection_Risk),c("Infection_Risk")]
 senic_data$zero = 0
 
-plot_ly(senic_data, x=~Infection_Risk) %>% 
+x <- plot_ly(senic_data, x=~Infection_Risk) %>% 
   add_histogram(name="Histogram count") %>% 
   filter(is.element(Infection_Risk, outliers)) %>% 
   add_markers(x=~Infection_Risk,y=~zero, name="Outliers", 
               marker=list(symbol="diamond", size=10, line = list(color="black", width=1))) %>%
   layout(title="Histogram of Infection_Risk", yaxis=list(title="Count"))
+
+knitr::include_graphics('./3.2.1.png')  
 ```
 
 ## Scatter Plot  
@@ -160,6 +278,7 @@ ggplot(senic_data) + geom_point(aes(x=Number_of_Nurses, y=Infection_Risk, color=
   ggtitle("Scatterplot of Infection_Risk vs Number_of_Nurses") + 
   theme(plot.title = element_text(hjust = 0.5))
 ```
+
 
 ### Scatter Plot with Discreetization (split a variable into classes)
 ```{r binned_linolenic}
@@ -233,11 +352,15 @@ baseball_data_with_mds$MDS_V2 <- coords_mds$V2
 
 
 
-plot_ly(baseball_data_with_mds, x=~MDS_V1, y=~MDS_V2) %>% 
+x <- plot_ly(baseball_data_with_mds, x=~MDS_V1, y=~MDS_V2) %>% 
   add_markers(color=~League, colors = c("blue", "red"), 
               text=baseball_data_with_mds$Team, hoverinfo="text") %>%
   layout(title="Scatterplot of the 2 MDS variables")
+
+knitr::include_graphics('./3.3.6.png') 
 ```
+
+
 
 ## Shepard Plot
 ### Shepard plot shows the fit of MDS, the distance in original dataset vs. distance in reordered dataset should be similar
@@ -263,7 +386,7 @@ index <- matrix(1:n, nrow=n, ncol=n, byrow = T)
 index2 <- as.numeric(index[lower.tri(index)])
 
 
-plot_ly()%>%
+x <- plot_ly()%>%
   add_markers(x=~delta, y=~D, name="Observation pairs", hoverinfo = 'text', 
               text = ~paste('Obj 1: ', 
                             rownames(baseball_data_with_mds)[index1], 
@@ -271,37 +394,80 @@ plot_ly()%>%
                             rownames(baseball_data_with_mds)[index2])) %>%
   add_lines(x=~shp$x, y=~shp$yf, name="Isotonic regression line") %>%
   layout(title="Shepard's plot of MDS operation")
+
+knitr::include_graphics('./3.4.1.png')  
 ```
+
 
 
 ## Pie Charts
 ### Simple pie chart
 ```{r piechart_oils}
 
-plot_ly(olive_data,labels=~Area,type='pie',textinfo = "none") %>%
+x <- plot_ly(olive_data,labels=~Area,type='pie',textinfo = "none") %>%
   layout(title = "Pie chart of proportion of oils coming from different areas")
 
+knitr::include_graphics('./3.5.1.png')   
 ```
+
+
 
 ## 2D density contour plot
 ### Simple 2D plot using ggplot2
 ```{r contour_plot}
 
-ggplot(olive_data)+geom_density_2d(aes(x=eicosenoic, y=linoleic)) +
+ggplot(olive_data)+geom_density_2d(aes(x=eicosenoic, y=linoleic, colour=as.factor(Region))) +
   ggtitle("Contour plot of Linoleic vs Eicosenoic") +
   theme(plot.title = element_text(hjust = 0.5))
-
 ```
 
 ## Dot Map Plots (World Map)
 ### Dot Map (Map with scatter plots)
-```{r, out.width="100%", warning=FALSE}
-plot_mapbox(aegypti_data[aegypti_data$YEAR == 2004,], lat = ~Y, lon = ~X) %>% 
+```{r, warning=FALSE}
+x <- plot_mapbox(aegypti_data[aegypti_data$YEAR == 2004,], lat = ~Y, lon = ~X) %>% 
   add_markers(color = ~VECTOR, hoverinfo = "text",
               text = ~paste(COUNTRY), alpha = 0.7) %>%
   layout(title = "Dot map of mosquito distribution in the world (2004)")
 
+knitr::include_graphics('./3.7.1.png')   
 ```
+
+
+## Draw line between two places
+### Plotly between two places
+```{r}
+x <- plot_geo(lat = c(40.7127, 51.5072), lon = c(-74.0059, 0.1275)) %>%
+  add_lines(color = I("blue"), size = I(2)) %>%
+  layout(
+    title = 'London to NYC Great Circle',
+    showlegend = FALSE,
+    geo = list(
+      resolution = 50,
+      showland = TRUE,
+      showlakes = TRUE,
+      landcolor = toRGB("grey80"),
+      countrycolor = toRGB("grey80"),
+      lakecolor = toRGB("white"),
+      projection = list(type = "equirectangular"),
+      coastlinewidth = 2,
+      lataxis = list(
+        range = c(20, 60),
+        showgrid = TRUE,
+        tickmode = "linear",
+        dtick = 10
+      ),
+      lonaxis = list(
+        range = c(-100, 20),
+        showgrid = TRUE,
+        tickmode = "linear",
+        dtick = 20
+      )
+    )
+  )
+
+knitr::include_graphics('./world_map.png')   
+```
+
 
 ## Choropleth Map
 ### Chorpleth Map with Equirectangular Projection
@@ -313,18 +479,19 @@ country_aggregate = aggregate(aegypti_data[,c("COUNTRY", "COUNTRY_ID")],
 country_aggregate$COUNTRY = NULL
 colnames(country_aggregate) = c("COUNTRY", "COUNTRY_ID", "Count")
 
-plot_geo(country_aggregate) %>% add_trace(
+x <- plot_geo(country_aggregate) %>% add_trace(
     z = ~Count,
     text = ~COUNTRY, locations = ~COUNTRY_ID) %>%
   layout(title = "Choropleth plot of number of mosquitoes",
     geo = list(projection = list(type = "equirectangular")))
 
+knitr::include_graphics('./3.8.1.png')   
 ```
 
 ### Choropleth plot with Equirectangular Projection and log
 ```{r}
 
-plot_geo(country_aggregate) %>%
+x <- plot_geo(country_aggregate) %>%
   add_trace(
     z = ~log(Count) ,
     text = ~paste(COUNTRY, "\n Count: ", Count), locations = ~COUNTRY_ID,
@@ -334,12 +501,15 @@ plot_geo(country_aggregate) %>%
     title = "Choropleth plot of number of mosquitoes",
     geo = list(projection = list(type = "equirectangular")))
 
+knitr::include_graphics('./3.8.2.png')    
 ```
 
-### Choropleth plot with Conic Area Projection and log
-```{r, out.width="100%"}
 
-plot_geo(country_aggregate) %>%
+
+### Choropleth plot with Conic Area Projection and log
+```{r}
+
+x <- plot_geo(country_aggregate) %>%
   add_trace(
     z = ~log(Count) ,
     text = ~paste(COUNTRY, "\n Count: ", Count), locations = ~COUNTRY_ID
@@ -348,7 +518,11 @@ plot_geo(country_aggregate) %>%
     title = "Choropleth plot of number of mosquitoes",
     geo = list(projection = list(type = "conic equal area")))
 
+knitr::include_graphics('./3.8.3.png')    
 ```
+
+
+
 
 ### Choropleth plot using custom shape files(sf file)
 ```{r, warning=FALSE, message=FALSE}
@@ -372,24 +546,30 @@ rownames(swe_data_processed) = swe_data_processed$region
 rds = readRDS('gadm36_SWE_1_sf.rds')
 
 rds$Young = swe_data_processed[rds$NAME_1, "Young"]
-plot_ly() %>% add_sf(data = rds, split = ~NAME_1, 
+
+x <- plot_ly() %>% add_sf(data = rds, split = ~NAME_1, 
                      color = ~Young, showlegend = F, alpha = 1) %>%
   layout(title = "Choropleth plot of mean income of Young age group")
 
+knitr::include_graphics('./3.8.4.png')
 ```
+
 
 ### Choropleth plot with a custom maker
 
 ```{r, warning=FALSE, message=FALSE}
 
 rds$Young = swe_data_processed[rds$NAME_1, "Young"]
-plot_ly() %>% add_sf(data = rds, split = ~NAME_1, color = ~Young, 
+
+x <- plot_ly() %>% add_sf(data = rds, split = ~NAME_1, color = ~Young, 
                      showlegend = F, alpha = 1) %>%
   add_markers(x = 15.621373, y = 58.410809, color = "red", 
               hoverinfo = "text", text = "We are here!") %>%
   layout(title = "Choropleth plot of mean income of Young age group")
 
+knitr::include_graphics('./3.8.5.png')
 ```
+
 
 ## Violin Plots
 ### Violin Plot Simple 2 variable (one cateogrical and one numeric)
@@ -410,42 +590,65 @@ swe_data_processed$region = gsub("\\d{2} ", "", swe_data_processed$region)
 swe_data_processed$region = gsub("Örebro", "Orebro", swe_data_processed$region)
 rownames(swe_data_processed) = swe_data_processed$region
 
+swe_data$age_group <- ifelse(swe_data$age == "18-29 years", "Young", ifelse(swe_data$age == "30-49 years", "Adult","Senior"))
+                                
 
 ggplot(swe_data) + 
-  geom_violin(aes(x = age, y = X2016), 
-              draw_quantiles = c(0.25, 0.5, 0.75), fill = "#A982F7")  + 
+  geom_violin(aes(x = age, y = X2016, fill = age_group), 
+              draw_quantiles = c(0.25, 0.5, 0.75)) + 
   scale_x_discrete(labels=c("18_29" = "Young", 
                             "30_49" = "Adult", 
                             "50_69" = "Senior"), 
                    name = "Age Group") + 
   ylab("Mean Income (SEK thousands)") +
   ggtitle("Distribution of mean incomes in different age groups")
+```
 
+
+
+
+### Violing using plotly
+```{r}
+income_data_recasted <- dcast(income_data, region~age, value.var = "X2016")
+setnames(income_data_recasted, old=c("18-29 years", "30-49 years", "50-64 years" ), new=c("Young", "Adult", "Senior"))
+
+income_data$age_group <- ifelse(income_data$age == "18-29 years", "Young",
+                                ifelse(income_data$age == "30-49 years", "Adult","Senior"))
+
+x <- income_data %>% plot_ly(x =~age_group ,y = ~X2016, type = 'violin', split = ~age_group, box = list(visible = T), meanline = list(visible = T)) %>% layout(yaxis = list(title = "income Distribution", zeroline = F), xaxis = list(title = "Age Group"), title = "Income Distribution vs. Age Group in Sweden 2016")
+
+knitr::include_graphics('./3.9.1.png')
 ```
 
 ## 3D surface plots
 ### 3D surface plots using plotly
-```{r, out.width="100%"}
+```{r}
 s = interp(swe_data_processed$Young, swe_data_processed$Adult, 
            swe_data_processed$Senior, duplicate = "mean")
-plot_ly(x=~s$x, y=~s$y, z=~s$z, type="surface") %>% layout(
+
+x <- plot_ly(x=~s$x, y=~s$y, z=~s$z, type="surface") %>% layout(
   scene=list(
   xaxis = list(title = "Young"),
   yaxis = list(title = "Adult"),
   zaxis = list(title = "Senior")),
   title = "3D surface plot of income distribution")
+
+knitr::include_graphics('./3.10.1.png')
 ```
 
 ## Heat Map
 ### Heat Map without reordering
-```{r, out.width="100%"}
+```{r}
 ubs_scaled = scale(ubs_data)
-plot_ly(x = colnames(ubs_scaled), y = rownames(ubs_scaled), 
+
+x <- plot_ly(x = colnames(ubs_scaled), y = rownames(ubs_scaled), 
         z = ubs_scaled, type = "heatmap", 
         colors = colorRamp(c("yellow", "red"))) %>%
   layout(title = "Heatmap of Column variables vs Cities")
 
+knitr::include_graphics('./3.11.1.png')
 ```
+
 
 ### Heat Map with ordering using Hiearchical Clustering (HC) using Euclidean distance
 ```{r}
@@ -461,12 +664,15 @@ ord_col_euc = get_order(seriate_col_euc)
 
 ubs_reordered_euc = ubs_scaled[rev(ord_row_euc),ord_col_euc]
 
-plot_ly(x = colnames(ubs_reordered_euc), 
+x <- plot_ly(x = colnames(ubs_reordered_euc), 
         y = rownames(ubs_reordered_euc), 
         z = ubs_reordered_euc, type = "heatmap", 
         colors = colorRamp(c("yellow", "red"))) %>%
   layout(title = "Heatmap of Column variables vs Cities")
+
+knitr::include_graphics('./3.11.2.png')
 ```
+
 
 ### Heat Map with ordering using Corellation using Euclidean distance
 ```{r}
@@ -480,12 +686,15 @@ ord_col_cor = get_order(seriate_col_cor)
 
 ubs_reordered_cor = ubs_scaled[rev(ord_row_cor), ord_col_cor]
 
-plot_ly(x = colnames(ubs_reordered_cor), 
+x <- plot_ly(x = colnames(ubs_reordered_cor), 
         y = rownames(ubs_reordered_cor), 
         z = ubs_reordered_cor, type = "heatmap", 
         colors = colorRamp(c("yellow", "red"))) %>%
   layout(title = "Heatmap of Column variables vs Cities")
+
+knitr::include_graphics('./3.11.3.png')
 ```
+
 
 ### Heat Map with ordering using Hamiltonian Path Length using Traveling Salesman Problem (TSP)
 ```{r}
@@ -496,13 +705,23 @@ ord_col_tsp = get_order(seriate_col_tsp)
 
 ubs_reordered_tsp = ubs_scaled[rev(ord_row_tsp), ord_col_tsp]
 
-plot_ly(x = colnames(ubs_reordered_tsp), 
+x <- plot_ly(x = colnames(ubs_reordered_tsp), 
         y = rownames(ubs_reordered_tsp), 
         z = ubs_reordered_tsp, type="heatmap", 
         colors = colorRamp(c("yellow", "red"))) %>%
   layout(title = "Heatmap of Column variables vs Cities 
          (reordered by TSP/Hamiltonian Path Length/Euclidean Distance)")
+
+knitr::include_graphics('./3.11.4.png')
 ```
+
+### HeatMap QC and cluster information
+```{r}
+library(heatmaply)
+x <- heatmaply(ubs_reordered_tsp)
+knitr::include_graphics('./heatmap_qc.png')
+```
+
 
 ### Comparison of two solvers for heatmap
 
@@ -571,11 +790,12 @@ ord1<-get_order(order1)
 
 reordmatr<-netm[ord1,ord1]
 
-plot_ly(z=~reordmatr, x=~colnames(reordmatr), 
-        y=~rownames(reordmatr), type="heatmap")
+x <- plot_ly(z=~reordmatr, x=~colnames(reordmatr), 
+        y=~rownames(reordmatr), type="heatmap") %>%   
+layout(title = "Heatmap of of adjucancy of bombing suspects")
 
+knitr::include_graphics('./3.11.6.png')
 ```
-
 
 ## Parallel Plot
 ### Parallel Plot using Plotly
@@ -606,38 +826,97 @@ reord_dim_list = get_dimension_list(ubs_data, var_order)
 ubs_data$cluster = 1
 ubs_data[ubs_data$Wage.Net < 24 , "cluster"] = 2
 
-plot_ly(data = ubs_data, type = 'parcoords', 
+x <- plot_ly(data = ubs_data, type = 'parcoords', 
         dimensions = unord_dim_list) %>%
-  layout(title = "")
+  layout(title = "Parallel Plots of Price data")
+
+knitr::include_graphics('./3.12.1.png')
 ```
+
+### QC of Parallel plots
+```{r}
+
+df = read.delim("prices-and-earnings.txt", header = TRUE)
+df = df[, c(2,5,6,7,9,10,16,17,18,19)]
+
+df = scale(df)
+
+temp <- kmeans(x = df, centers = 2, iter.max = 10)
+
+
+df <- as.data.frame(df)
+df2 <- df
+
+df$cluster <- as.numeric(temp$cluster)
+df$cluster <- as.factor(df$cluster)
+
+temp2 <- C50::C5.0(x = df2 , y=df$cluster, rules = FALSE)
+
+plot(temp2)
+
+```
+
+
 
 ### Parallel Plot using Plotly and highlight one line
 ```{r}
-plot_ly(data = ubs_data, type = 'parcoords', 
+x <- plot_ly(data = ubs_data, type = 'parcoords', 
         line = list(color = ~cluster, colorscale = list(c(0,"red"), c(1,"blue"))),
         dimensions = reord_dim_list) %>%
-  layout(title = "")
+  layout(title = "Parallel Plot with one highlight")
+
+knitr::include_graphics('./3.12.2.png')
 ```
 
 ## Radar Plots
 ### Radar Plots using Scatterpolar
 ```{r}
-ubs_reordered_euc <- as.data.frame(ubs_reordered_euc)
-ubs_reordered_euc$City = rownames(ubs_reordered_euc)
 
-ubs_reordered_euc <- ubs_reordered_euc%>%tidyr::gather(variable, value, -City, factor_key=T)%>%arrange(City)
+price_data_scale <- scale(price_data[,-1])
 
-first_col_order <- rownames(ubs_reordered_euc)
-second_col_order <- unique(ubs_reordered_euc$variable)
+price_row_dist <- dist(x=price_data_scale, method = "euclidean", diag = TRUE)
+price_col_dist <- dist(x=t(price_data_scale), method = "euclidean", diag = TRUE)
 
-ubs_reordered_euc$City <- factor(ubs_reordered_euc$City , levels = first_col_order)
-ubs_reordered_euc$variable <- factor(ubs_reordered_euc$variable , levels = second_col_order)
 
-ubs_reordered_euc <- ubs_reordered_euc[order(ubs_reordered_euc$City, ubs_reordered_euc$variable),]
+order1 <- seriate(price_row_dist, "OLO")
+order2 <- seriate(price_col_dist, "OLO")
+ord1 <- get_order(order1)
+ord2 <- get_order(order2)
 
-radar_plot <- ubs_reordered_euc %>% ggplot(aes(x=variable, y=value, group=City)) + geom_polygon(fill="blue") + coord_polar() + theme_bw() + facet_wrap(~ City) + theme(axis.text.x = element_text(size = 5))
- 
+reordmatr <- price_data_scale[rev(ord1),ord2]
+reordmatr <- as.data.frame(reordmatr)
+reordmatr$City = price_data$City
+
+reordmatr_transformed <- reordmatr%>%tidyr::gather(variable, value, -City, factor_key=T)%>%arrange(City)
+
+radar_plot <- reordmatr_transformed %>% ggplot(aes(x=variable, y=value, group=City)) + geom_polygon(fill="blue") + coord_polar() + theme_bw() + facet_wrap(~ City) + theme(axis.text.x = element_text(size = 5))
+
 ggsave("radar_plot.png", width = 40, height = 60, units = "cm")
+
+knitr::include_graphics('./radar_plot.png')
+```
+
+### Radar plot using simple options
+```{r}
+
+#{r}
+
+df <- as.matrix(mtcars)
+df2 <- rescale(df)
+df2 <- as.data.frame(df2)
+df2$car <- rownames(df2)
+
+df3 <- melt(df2 ,id.vars=c('car'), measure.vars=colnames(df2))
+
+radar_plot2 <- df3 %>%
+ ggplot(aes(x=variable, y=value, group=car, color=car)) + 
+ geom_polygon(fill=NA) + 
+ coord_polar() + theme_bw() + facet_wrap(~ car, ncol = 3)
+```
+
+```{r out.width = "100%"}
+
+radar_plot2
 ```
 
 ## Trellis Plots
@@ -649,7 +928,7 @@ ggplot(adult_data) +
 ```
 
 ### Trellis Plots with facet/condition on a variable
-```{r, out.width="100%"}
+```{r}
 ggplot(adult_data) + 
   geom_point(aes(x = age, y = hours_per_week, color = income_level)) +
   facet_grid(income_level~.) +
@@ -671,7 +950,7 @@ ggplot(capital_loss_data) +
 ```
 
 ### Trellis Plot with raster-type-2d-density plot with discreetization(cut_number) 
-```{r, out.width="100%"}
+```{r}
 ggplot(capital_loss_data) +
   geom_point(aes(x = education_num, y = capital_loss)) +
   facet_grid(vars(cut_number(age, 4))) +
@@ -712,7 +991,7 @@ ggplot(shingles_df) +
 
 ## Word Clouds
 ### Word Clouds using tm
-```{r, warning=FALSE, error=FALSE, out.width="100%"}
+```{r, warning=FALSE, error=FALSE}
 set.seed(1)
 par(mfrow=c(1,2))
 #Word cloud for positive reviews
@@ -765,10 +1044,11 @@ plots = subplot(scatter_eico_lino, bar_region, titleX = TRUE, titleY = TRUE) %>%
   hide_legend() %>%
   layout(title = "Scatterplot: Eicosenoic vs Linoleic, Histogram: Region")
 
-bscols(widths = c(12), list(tags$h2("Analysis of variable relationships"),
+x <- bscols(widths = c(12), list(tags$h2("Analysis of variable relationships"),
                             tags$h4("(Eicosenoic, Linoleic, Region, Stearic)"),
                             filter_slider("stearic", "Stearic", ct_olive_2, ~stearic), plots))
 
+knitr::include_graphics('./4.1.1.png')
 ```
 
 ### Scatter plot shared using crosstalk
@@ -781,10 +1061,12 @@ sctr_eico_lino = plot_ly(ct_olive_3, x = ~linoleic, y = ~eicosenoic) %>%
 sctr_arac_lino = plot_ly(ct_olive_3, x = ~linolenic, y = ~arachidic) %>%
   add_markers(color = I("black"))
 
-subplot(sctr_eico_lino, sctr_arac_lino, titleX = TRUE, titleY = TRUE) %>%
+x <- subplot(sctr_eico_lino, sctr_arac_lino, titleX = TRUE, titleY = TRUE) %>%
   highlight(on = "plotly_select", dynamic = T, persistent = T, opacityDim = I(1)) %>% 
   hide_legend() %>%
   layout(title = "Scatterplots: Eicosenoic vs Linoleic, Arachidic vs Linolenic")
+
+knitr::include_graphics('./4.1.2.png')
 ```
 
 ### Parallel Chord/Trellis Plot Scatter plot and Bar chart
@@ -841,7 +1123,7 @@ scatter_plot_3d = plot_ly(ct_olive, x = ~palmitic, y = ~palmitoleic, z = ~steari
 bar_chart = plot_ly(ct_olive, x = ~Region_category) %>% 
   add_histogram() %>% layout(title = "Histogram: Region", barmode = "overlay")
 
-bscols(widths = c(12, 12,6,6), 
+x <- bscols(widths = c(12, 12,6,6), 
   tags$h2("Interactive plots to analyze relationships between variables"),
        par_coord_plot %>% 
          highlight(on = "plotly_select", dynamic = T, persistent = T, opacityDim = I(1)) %>%
@@ -850,6 +1132,8 @@ bscols(widths = c(12, 12,6,6),
          highlight(on = "plotly_click", dynamic = T, persistent = T) %>% hide_legend(),
        bar_chart %>% 
          highlight(on = "plotly_click", dynamic = T, persistent = T) %>% hide_legend())
+
+knitr::include_graphics('./4.1.3.png')
 ```
 
 # Network Graphs
@@ -879,20 +1163,25 @@ graph <- graph.data.frame(links, directed = F)
 strength_value <- strength(graph)
 nodes$value <- strength_value[match(nodes$id, names(strength_value))]
 
-visNetwork(nodes, links, main = "Network of people invloved in Madrid Bombing") %>% 
+x <- visNetwork(nodes, links, main = "Network of people invloved in Madrid Bombing") %>% 
   visLegend() %>% 
   visLayout(randomSeed = 8) %>% 
   visPhysics(solver="repulsion") %>% 
   visOptions(highlightNearest = list(enabled = T, degree = 1, hover = T))
+
+knitr::include_graphics('./5.1.1.png')
 ```
 
 ### Replusion Optimzed Network Graph with highlights
 ```{r}
-visNetwork(nodes, links, main = "Network of people invloved in Madrid Bombing") %>% 
+
+x <- visNetwork(nodes, links, main = "Network of people invloved in Madrid Bombing") %>% 
   visLegend() %>% 
   visLayout(randomSeed = 12) %>% 
   visPhysics(solver="repulsion") %>% 
   visOptions(highlightNearest = list(enabled = T, degree = 2, hover = T))
+
+knitr::include_graphics('./5.1.2.png')
 ```
 
 ### Edge Between Optimizing Network Graph
@@ -908,10 +1197,11 @@ net <- graph_from_data_frame(d=links, vertices=nodes, directed=F)
 ceb <- cluster_edge_betweenness(net) 
 nodes1$group <- ceb$membership
 
-visNetwork(nodes1,links, main = "Network of people invloved in Madrid Bombing") %>% 
+x <- visNetwork(nodes1,links, main = "Network of people invloved in Madrid Bombing") %>% 
   visIgraphLayout() %>% 
   visOptions(highlightNearest = list(enabled = T, degree = 2, hover = T))
 
+knitr::include_graphics('./5.1.3.png')
 ```
 
 # Animated Plots
@@ -920,10 +1210,12 @@ visNetwork(nodes1,links, main = "Network of people invloved in Madrid Bombing") 
 ```{r, warning=FALSE, message=FALSE}
 oc_data = read.csv2("Oilcoal.csv")
 
-plot_ly(oc_data, x= ~Oil, y= ~Coal, frame = ~Year, color = ~Country) %>% 
+x <- plot_ly(oc_data, x= ~Oil, y= ~Coal, frame = ~Year, color = ~Country) %>% 
   add_markers(size = ~Marker.size, marker = list(sizemin = 5)) %>% 
   animation_opts(500, easing = "cubic", redraw = F) %>% 
   layout(title = "Animated Bubble Chart - Coal vs Oil (in million tonnes)")
+
+knitr::include_graphics('./6.1.1.png')
 ```
 
 ## Bar Chart
@@ -934,10 +1226,12 @@ oc_data_zero = oc_data
 oc_data_zero$oil_prop = 0
 oc_line_anim_data = rbind(oc_data, oc_data_zero)
 
-plot_ly(oc_line_anim_data, x = ~oil_prop, y = ~Country, frame = ~Year) %>% 
+x <- plot_ly(oc_line_anim_data, x = ~oil_prop, y = ~Country, frame = ~Year) %>% 
   add_lines(split = ~Country, line = list(width = 10)) %>% 
   animation_opts(500, easing = "elastic", redraw = F) %>% 
   layout(title = "Animated Bar Chart - Percentage Fuel Consumption of Oil")
+
+knitr::include_graphics('./6.2.1.png')
 ```
 
 # Tour and Projection
@@ -1002,16 +1296,28 @@ tour_dat <- highlight_key(tour_dat, ~state, group = "A")
 ```
 
 ```{r}
-proj_dat %>%
+x <- proj_dat %>%
   plot_ly(x = ~x, y = ~y, frame = ~step, color = I("black")) %>%
   add_segments(xend = 0, yend = 0, color = I("gray80")) %>%
   add_text(text = ~variable) %>%
   add_markers(data = tour_dat, text = ~state, ids = ~state, hoverinfo = "text") %>%
   layout(xaxis = ax, yaxis = ax, title = "Guided 2D tour visualizing coal consumption of countries")
 
+knitr::include_graphics('./7.1.1.png')
 ```
 
 # Multiple Plots
+
+## QC Scatter Matrix Plots using GGally library
+```{r}
+
+ggpairs(mtcars, columns = c("mpg", "wt", "hp"), 
+        title = "Pair wise cars data vs. cluster(cyl)",
+        ggplot2::aes(colour=as.factor(cyl)))
+
+```
+
+
 ## Density Plots
 ### Density Plot with Outlier Highlight
 
@@ -1044,6 +1350,23 @@ plot_list = mapply(plot_density_with_outliers, senic_data[, quantitative_columns
                    colnames(senic_data[, quantitative_columns]), SIMPLIFY = FALSE)
 plot_matrix <- arrangeGrob(grobs = plot_list, ncol = 2)
 grid.arrange(plot_matrix, respect=TRUE, top="Density plots of SENIC data variables")
+```
+
+# GGplot2 cheat sheet
+\includepdf[pages={-}]{ggplot2_cheatsheet.pdf}
+
+# Plotly cheat sheet
+\includepdf[pages={-}]{plotly_cheatsheet.pdf}
+
+# Shiny Cheatsheet
+\includepdf[pages={-}]{shiny_cheatsheet.pdf}
+
+# Tidyr and Dplyr cheatsheet
+\includepdf[pages={-}]{data-wrangling-cheatsheet.pdf}
+
+# Demo of plotly
+```{r}
+#Demo(package="plotly")
 ```
 
 # Shiny
@@ -1099,6 +1422,249 @@ shinyApp(ui = ui, server = server, options = list(width="800px", height="900px")
 
 ```
 
+# Shiny Oleg examples
+```{r eval=FALSE}
+
+library(shiny)
+
+
+ui <- fluidPage(
+   sliderInput(inputId="ws", label="Choose bandwidth size", value=0.01, min=0.1, max=1),
+   plotOutput("densPlot")
+)
+
+server <- function(input, output) {
+   
+   output$densPlot <- renderPlot({
+     ggplot(iris, aes(x=Sepal.Length,fill=Species))+
+       stat_density(alpha=0.8, bw=input$ws, position="identity")
+   })
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
+```
+
+# Shiny adding graph example
+```{r eval=FALSE}
+
+library(shiny)
+
+
+ui <- fluidPage(
+   actionButton(inputId = "add",label = "Add one class"),
+   actionButton(inputId = "rem",label = "Remove one class"),
+   plotOutput("densPlot")
+)
+
+server <- function(input, output) {
+  nclass <- reactiveValues(n=1)
+  observeEvent(input$add, {nclass$n <- nclass$n+1})
+  observeEvent(input$rem, {nclass$n <- nclass$n-1})
+   
+   output$densPlot <- renderPlot({
+     iris1=iris[as.numeric(iris$Species)<=nclass$n,]
+     ggplot(iris1, aes(x=Sepal.Length,fill=Species))+
+       stat_density()
+   })
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
+
+```
+
+# Shiny widget
+```{r eval=FALSE}
+
+
+library(shiny)
+
+# Define UI for dataset viewer app ----
+ui <- fluidPage(
+
+  # App title ----
+  titlePanel("More Widgets"),
+
+  # Sidebar layout with input and output definitions ----
+  sidebarLayout(
+
+    # Sidebar panel for inputs ----
+    sidebarPanel(
+
+      # Input: Select a dataset ----
+      selectInput("dataset", "Choose a dataset:",
+                  choices = c("rock", "pressure", "cars")),
+
+      # Input: Specify the number of observations to view ----
+      numericInput("obs", "Number of observations to view:", 10),
+
+      # Include clarifying text ----
+      helpText("Note: while the data view will show only the specified",
+               "number of observations, the summary will still be based",
+               "on the full dataset."),
+
+      # Input: actionButton() to defer the rendering of output ----
+      # until the user explicitly clicks the button (rather than
+      # doing it immediately when inputs change). This is useful if
+      # the computations required to render output are inordinately
+      # time-consuming.
+      actionButton("update", "Update View")
+
+    ),
+
+    # Main panel for displaying outputs ----
+    mainPanel(
+
+      # Output: Header + summary of distribution ----
+      h4("Summary"),
+      verbatimTextOutput("summary"),
+
+      # Output: Header + table of distribution ----
+      h4("Observations"),
+      tableOutput("view")
+    )
+
+  )
+)
+
+# Define server logic to summarize and view selected dataset ----
+server <- function(input, output) {
+
+  # Return the requested dataset ----
+  # Note that we use eventReactive() here, which depends on
+  # input$update (the action button), so that the output is only
+  # updated when the user clicks the button
+  datasetInput <- eventReactive(input$update, {
+    switch(input$dataset,
+           "rock" = rock,
+           "pressure" = pressure,
+           "cars" = cars)
+  }, ignoreNULL = FALSE)
+
+  # Generate a summary of the dataset ----
+  output$summary <- renderPrint({
+    dataset <- datasetInput()
+    summary(dataset)
+  })
+
+  # Show the first "n" observations ----
+  # The use of isolate() is necessary because we don't want the table
+  # to update whenever input$obs changes (only when the user clicks
+  # the action button)
+  output$view <- renderTable({
+    head(datasetInput(), n = isolate(input$obs))
+  })
+
+}
+
+# Create Shiny app ----
+shinyApp(ui, server)
+
+
+```
+
+# Good header for knitr
+```{r}
+
+# include this to add pdf to your document
+
+# title: '732A98: Visualization - Cheatbook'
+# author: "Anubhav Dikshit (anudi287)"
+# date: "02 Nov 2018"
+# output:
+#   pdf_document:
+#     fig_caption: yes
+#     toc: yes
+#   html_document:
+#     number_sections: yes
+#     theme: readable
+#     toc: yes
+# always_allow_html: yes
+# header-includes:
+#   - \usepackage{booktabs} 
+#   - \usepackage{sectsty} \sectionfont{\centering}
+#   - \renewcommand{\contentsname}{}\vspace{-2cm} 
+#   - \usepackage{pdfpages}
+
+#\includepdf[pages={-}]{oleg_lectures_combined.pdf}
+```
+
+
 # Appendix Code
-#```{r, ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
-#```
+```{r}
+# ```{r, ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+# ```
+```
+
+# Oleg Lectures Compilation
+
+# Lecture Notes
+
+##Interaction Operators
+* **Navigation:** user controls for altering the position of the camera and
+for scaling the view (what gets mapped to the screen) such as panning,
+rotating, and zooming.
+*  **Selection:** user controls for identifying an object, a collection of objects,
+or regions of interest to be the subject of some operation, such
+as highlighting, deleting, and modifying.
+* **Filtering:** User controls for reducing the size of the data being mapped
+to the screen, either by eliminating records, dimensions, or both.
+* **Reconfiguring:** User controls for changing the way data is mapped to
+graphical entities or attributes, such as reordering the data or layouts,
+thereby providing a different way of viewing a data subset.
+* **Encoding:** User controls for changing the graphical attributes, such as
+point size or line color, to potentially reveal different features.
+* **Connecting:** User controls for linking different views or objects to show
+related items.
+* **Abstracting/elaborating**: User controls for modifying the level of detail.
+
+##Interaction Operands
+1. **Screen Space(Pixels):** Screen space consists of the pixels of the display
+    + **Navigation**: Navigation in screen space
+            typically consists of actions such as panning, zooming, and rotation. 
+            Note that in each case, no new data is used;
+    + **Selection**: The selection can be performed on individual pixels,
+           rectangles or circles of pixels, or on arbitrarily shaped regions that 
+           the user specifies. 
+    + **Abstraction**: Distortion of image (fisheye)   
+    + **Filtering**: Removing some pixels   
+    
+2. **Data Value Space (Multivariate Data Values):** Operations on data space are applied directly to the data, rather than to the screen.
+    +  **Navigation**: Using the data values as a mechanism for view specification.
+    The analogous operations for panning and zooming would be to change the data 
+    values being displayed; panning would shift the start of the value range to be
+    shown, while zooming would decrease the size of this range.
+    + **Selection**: This can be performed via direct manipulation, as in the data-driven           brushing reported in or via sliders or other query specification mechanisms
+    Selection may involve a single value, or one or more ranges of values.
+    + **Filtering**: Sample the data, sample dimensions
+    + **Reconfiguring**: Sorting observations, dimensions, nonlinear transformations.
+3. **Data structure space**: Data can be structured in a number of ways, such as lists,
+tables, grids,hierarchies, and graphs. For each structure, one can develop interaction
+mechanisms to indicate what portions of the structure will be manipulated,
+and how this manipulation will be manifested.
+    + **Navigation**:Navigation in data structurespace involves moving the view 
+    specification along the structure, as in showing sequential groups of records,
+    or moving down or up a hierarchical structure
+    + **Selection**: Selection in data structure space generally involves displaying the           structure and allowing the user to identify regions of interest within it
+    + **Filtering**: Filtering is often performed in data structure space to reduce
+    the amount of information on the display.
+    + **Abstraction/Elaboration**: histogram with zooming - recompute bars?
+4. **Attribute Space (Components of Graphical Entities)**: In attribute space, operators 
+are focused on one or more of the attributes associated with the graphical entity being
+used to convey information. Such attributes could include color, size, shape, or any
+other of the eight visual variables.
+    + **Navigation**: change range of aesthetics to certain interval (show certain range of            colors)
+    + **Encoding operator**: change shapes of symbols, non-linear color mapping
+    + **Selection**: highlight certain ranges of aesthetics (highlight stars)
+5. **Visualization Structure Space**: A visualization consists of a structure that is relatively independent of the values, attributes, and structure of data.
+    + **Navigation**: Navigation in visualization structure space might include
+moving through pages in a spreadsheet-style visualization tool or zooming
+in on an individual plot in a scatterplot matrix.
+    + **Selection**: For selection, typical operations would include choosing
+    components to hide, move, or rearrange. For example, one might select an axis
+    in parallel coordinates and drag it to a new location to discover different
+    relationships among the data dimensions.
+
+
+\includepdf[pages={-}]{oleg_lectures_combined.pdf}
