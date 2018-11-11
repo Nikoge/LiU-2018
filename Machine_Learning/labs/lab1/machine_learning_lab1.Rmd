@@ -16,7 +16,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(xlsx, glmnet, MASS, jtools, huxtable, ggplot2, 
-               ggthemes, gridExtra, ROCR, broom, caret, e1071, kknn)
+               ggthemes, gridExtra, ROCR, broom, caret, e1071,
+               kknn, tidyr, dplyr)
 
 options("jtools-digits" = 2, scipen = 999)
 
@@ -194,77 +195,64 @@ Analysis:
 
 ```{r}
 
-temp <- NULL
-df <- swiss
-for(i in 1:NCOL(df)){
-combs <- as.data.frame(gtools::combinations(NCOL(df), r=i, v=colnames(df), repeats.allowed=FALSE))
-combs <- tidyr::unite(combs, "V1", sep = ",")
-temp <- rbind(combs, temp)
-}
-
-
-
 subset_function <- function(X,Y,N){
 
 X = swiss[,1:5]
 Y = swiss[,6:6]
 N = 5
+
 df <- cbind(X,Y)
   
  temp <- NULL
 for(i in 1:NCOL(X)){
 combs <- as.data.frame(gtools::combinations(NCOL(X), r=i, v=colnames(X), repeats.allowed=FALSE))
-combs <- tidyr::unite(combs, "V1", sep = ",")
+combs <- tidyr::unite(combs, "formula", sep = "+")
 temp <- rbind(combs, temp)
 }  
   
-  
-  
-  
-
-  
-
-  set.seed(12345)
-  df2 <- df[sample(nrow(df)),]
-  df2$k_fold <- sample(N, size = nrow(df), replace = TRUE)
+set.seed(12345)
+df2 <- df[sample(nrow(df)),]
+df2$k_fold <- sample(N, size = nrow(df), replace = TRUE)
  
-
-
 result <- NULL 
-    # Getting the p-values
-for (j in 1:5)
+
+
+for (j in 1:NROW(temp))
 {
-  
   for(i in 1:N){
     
 train = df2[df2$k_fold != i,]
 test = df2[df2$k_fold == i,]
 
-df3 <- train[,1:j, drop=FALSE]
-df4 <- cbind(df3, Y = train$Y)
-df4 <- as.data.frame(df4)
+model_forumla = paste("Y ~ ", temp[j,],sep = "")
 
-df5 <- test[,1:j, drop=FALSE]
-df6 <- cbind(df5, Y = test$Y)
-df6 <- as.data.frame(df6)
-    
-model <- lm(Y~., data = df4)
-predicted <- predict(model, df6)
+model <- lm(formula = model_forumla, data = train)
+predicted <- predict(model, newdata = test)
 
-RMSE <- sqrt(mean((predicted - df6$Y)^2))
-data <- cbind(i,j, RMSE)
+RMSE <- sqrt(mean((predicted - test$Y)^2))
+data <- cbind(i,temp[j,], RMSE)
 result <- rbind(data, result)
 
 }
 }
-  
-colnames(result) <- c("kfold", "last_column_index", "RMSE")
-return(result)  
-  
+
+result <- as.data.frame(result)
+
+colnames(result) <- c("kfold", "variables", "rmse")
+
+result$rmse <- as.numeric(result$rmse)
+result$no_variables <- nchar(as.character(result$variables)) - nchar(gsub('\\+', "", result$variables)) + 1
+
+variable_performance <- result %>% group_by(kfold, no_variables) %>% summarise(RMSE = mean(rmse, na.rm = TRUE))
+
+
+myplot <- ggplot(data = result, aes(x = avriables, y = rmse, color=kfold)) + 
+geom_bar(stat="identity") + coord_flip()
+
+return(myplot)  
 }
 
-subset_function(X = swiss[,1:5], Y = swiss[,6], N = 5)
-
+temp <- subset_function(X = swiss[,1:5], Y = swiss[,6], N = 5)
 
 ```
 
