@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(xlsx, glmnet, MASS, jtools, huxtable, ggplot2, 
                ggthemes, gridExtra, ROCR, broom, caret, e1071,
-               kknn, tidyr, dplyr)
+               kknn, tidyr, dplyr,reshape2)
 
 options("jtools-digits" = 2, scipen = 999)
 
@@ -29,7 +29,6 @@ spam_data <- read.xlsx("spambase.xlsx", sheetName = "spambase_data")
 spam_data$Spam <- as.factor(spam_data$Spam)
 
 tecator_data <- read.xlsx("tecator.xlsx", sheetName = "data")
-
 ```
 
 ## 1.1 Import the data into R and divide it into training and test sets (50%/50%) by using the following code
@@ -241,20 +240,127 @@ result <- as.data.frame(result)
 colnames(result) <- c("kfold", "variables", "rmse")
 
 result$rmse <- as.numeric(result$rmse)
-result$no_variables <- nchar(as.character(result$variables)) - nchar(gsub('\\+', "", result$variables)) + 1
+result$no_variables <- nchar(as.character(result$variables)) 
+- nchar(gsub('\\+', "", result$variables)) + 1
 
-variable_performance <- result %>% group_by(kfold, no_variables) %>% summarise(RMSE = mean(rmse, na.rm = TRUE))
+variable_performance <- result %>% 
+  group_by(kfold, no_variables) %>% 
+  summarise(RMSE = mean(rmse, na.rm = TRUE))
 
+myplot <- ggplot(data = variable_performance, aes(x = no_variables, y = RMSE, color=kfold)) + 
+geom_line() + ggtitle("Plot of RMSE vs. Number of variables by folds")
 
-myplot <- ggplot(data = result, aes(x = avriables, y = rmse, color=kfold)) + 
-geom_bar(stat="identity") + coord_flip()
+myplot2 <- ggplot(data = result, aes(x = variables, y = rmse, color=kfold)) + 
+geom_bar(stat="identity") + ggtitle("Plot of RMSE vs. Features by folds") + coord_flip() 
 
-return(myplot)  
+return(list(myplot, myplot2))
 }
+```
 
-temp <- subset_function(X = swiss[,1:5], Y = swiss[,6], N = 5)
+
+## 2.2 Test your function on data set swiss available in the standard R repository:
+```{r}
+subset_function(X = swiss[,1:5], Y = swiss[,6], N = 5)
+```
+Analysis:
+
+# Assignment 3 Linear regression and regularization
+
+## 3.1 Import data to R and create a plot of Moisture versus Protein. Do you think that these data are described well by linear model.
+```{r}
+ggplot(data = tecator_data, aes(x = Protein, y = Moisture)) + 
+  geom_point() + 
+  geom_smooth() +
+  ggtitle("Plot of Moisture vs. Protein")
+```
+Analysis: The data seems fairly linear in nature however there are many outliers. As we can see that data is fairly distributed around the line drawn (above and below) thus there is little bias.
+
+## 3.2 Multiple Models of varying degree.
+```{r}
+#Creating Protein function (increasing degree)
+
+final_data <- tecator_data
+
+final_data$Protein_2_power <- (final_data$Protein)^2 
+final_data$Protein_3_power <- (final_data$Protein)^3 
+final_data$Protein_4_power <- (final_data$Protein)^4 
+final_data$Protein_5_power <- (final_data$Protein)^5 
+final_data$Protein_6_power <- (final_data$Protein)^6 
+```
+Analysis:
+
+## 3.3 Validation of the Model
+```{r}
+set.seed(12345)
+
+n =  NROW(final_data)
+id = sample(1:n, floor(n*0.5))
+train = final_data[id,]
+test = final_data[-id,]
+
+# model building
+M_1 <- lm(data = train, Moisture~Protein)
+M_2 <- lm(data = train, Moisture~Protein+Protein_2_power)
+M_3 <- lm(data = train, Moisture~Protein+Protein_2_power+Protein_3_power)
+M_4 <- lm(data = train, Moisture~Protein+Protein_2_power+Protein_3_power+
+            Protein_4_power)
+M_5 <- lm(data = train, Moisture~Protein+Protein_2_power+Protein_3_power+
+            Protein_4_power+Protein_5_power)
+M_6 <- lm(data = train, Moisture~Protein+Protein_2_power+Protein_3_power+
+            Protein_4_power+Protein_5_power+Protein_6_power)
+
+train$type <- "train"
+test$type <- "test"
+
+final_data <- rbind(test, train)
+
+# predicting new values
+M_1_predicted <- predict(M_1, newdata = final_data)
+M_2_predicted <- predict(M_2, newdata = final_data)
+M_3_predicted <- predict(M_3, newdata = final_data)
+M_4_predicted <- predict(M_4, newdata = final_data)
+M_5_predicted <- predict(M_5, newdata = final_data)
+M_6_predicted <- predict(M_6, newdata = final_data)
+
+# calculating the MSE
+final_data$M_1_error <- (final_data$Moisture - M_1_predicted)^2
+final_data$M_2_error <- (final_data$Moisture - M_2_predicted)^2
+final_data$M_3_error <- (final_data$Moisture - M_3_predicted)^2
+final_data$M_4_error <- (final_data$Moisture - M_4_predicted)^2
+final_data$M_5_error <- (final_data$Moisture - M_5_predicted)^2
+final_data$M_6_error <- (final_data$Moisture - M_6_predicted)^2
+
+# Chainning like Chainsaw
+final_error_data <- final_data %>% select(type, M_1_error, M_2_error, M_3_error, 
+                                          M_4_error, M_5_error, M_6_error) %>% 
+  gather(variable, value, -type) %>% 
+  separate(variable, c("model", "power", "error"), "_") %>% 
+  group_by(type, power) %>% 
+  summarise(MSE = mean(value, na.rm=TRUE))
+
+ggplot(final_error_data, aes(x = power, y = MSE, color=type)) + geom_point() + 
+  ggtitle("Mean squared error vs. model complexitiy by dataset type")
 
 ```
+Analysis: As evident from the plot above, we see that as we increase the model complexitiy (higher powers of the 'protein'), the trainning error reduces however the model becomes too biased towards the trainning set (overfits) and misses the test datasets prediction by larger margins in higher powers. 
+
+The best model is M1, that is Moisture~Protein as evident from the least test error (MSE).
+
+The above is a classical case of bias-varience trade-off, which is as follows, as one makes the model fit the trainning dataset better the model becomes more biased and its ability to handle variation to new dataset decreases(varience), thus one should also maintain a good trade off between these two.
+
+## 3.4 Perform variable selection of a linear model in which Fat is response and Channel1:Channel100 are predicted by using stepAIC.
+```{r, results='hide', message=FALSE, warning=FALSE, echo=TRUE, include=TRUE}
+min.model1 = lm(Fat ~ 1, data=tecator_data[,-1])
+biggest1 <- formula(lm(Fat ~.,  data=tecator_data[,-1]))
+
+full.model1 <- lm(Fat ~., data=tecator_data[,-1])
+step.model1 <- stepAIC(min.model1, direction ='forward', scope=biggest1)
+```
+
+```{r}
+summary(step.model1)
+```
+Analysis: 29 variables were choose out of 107. Even among these there are many which have very low p values thus statistically it is a practice to remove variables which are above 0.0005 p values, thus the true variables may not even include these many.
 
 
 
