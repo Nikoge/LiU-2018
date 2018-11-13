@@ -223,11 +223,19 @@ train = df2[df2$k_fold != i,]
 test = df2[df2$k_fold == i,]
 y_train = train[,c("Y")] 
 
-vec <- paste()
-train = train[temp[,j]]
+vec <- temp[j,]
+train = lapply(strsplit(as.character(vec), ","), function(x) train[x])[[1]]
+test = lapply(strsplit(as.character(vec), ","), function(x) test[x])[[1]]
 
-  
-betas = solve(t(train) %*% train) %*% t(test) %*% y_train
+train = as.matrix(train)
+test = as.matrix(test)
+y_train = as.matrix(y_train) 
+
+
+t_train =  t(train) 
+t_test =  t(test) 
+
+betas = solve(t_train %*% train) %*% t_test %*% y_train
 y_hat_val = X_val %*% betas
 mse = mean((y_val - y_hat_val) ^ 2)
      
