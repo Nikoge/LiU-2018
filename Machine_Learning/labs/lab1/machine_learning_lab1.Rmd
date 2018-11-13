@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(xlsx, glmnet, MASS, jtools, huxtable, ggplot2, 
                ggthemes, gridExtra, ROCR, broom, caret, e1071,
-               kknn, tidyr, dplyr,reshape2)
+               kknn, tidyr, dplyr,reshape2, glmnet)
 
 options("jtools-digits" = 2, scipen = 999)
 
@@ -42,13 +42,12 @@ test = spam_data[-id,]
 ```
 
 ## 1.2 Use logistic regression (functions glm(), predict()) to classify the training and test data by the classification principles
-```{r, results='hide', message=FALSE, warning=FALSE, echo=TRUE, include=TRUE}
+```{r, message=FALSE, warning=FALSE}
 
 min.model = glm(Spam ~ 1, family=binomial, data=train)
 biggest <- formula(glm(Spam ~., family=binomial, data=train))
 
-full.model <- glm(Spam ~., family=binomial, data=train)
-step.model <- step(min.model, direction='forward', scope=biggest)
+step.model <- step(min.model, direction='forward', scope=biggest, trace = FALSE)
 summary(step.model)
 ```
 
@@ -57,9 +56,6 @@ summary(step.model)
 best_model <- glm(formula = Spam ~ Word35 + Word46 + Word42 + Word44 + Word33 + 
     Word45 + Word39 + Word48 + Word30 + Word43 + Word37 + 
     Word36 + Word31, family = binomial, data = train)
-
-#export_summs(step.model, best_model, 
-#model.names = c("Model using Step","Model Manually Tunned"))
 ```
 
 ###  Prediction for probability greater than 50% and 90%
@@ -73,7 +69,6 @@ test$prediction_class_50 <- ifelse(test$prediction_prob > 0.50, 1, 0)
 
 train$prediction_class_90 <- ifelse(train$prediction_prob > 0.90, 1, 0)
 test$prediction_class_90 <- ifelse(test$prediction_prob > 0.90, 1, 0)
-
 ```
 
 ### Assessing the Model
@@ -105,8 +100,7 @@ confusionMatrix(conf_test)
 ```
 Analysis: Distribution of the prediction score grouped by known outcome given that our model's final objective is to classify new instances into one of two categories (spam vs. non-spam). We will want the model to give high scores to positive instances (1: spam) and low scores (0 : not spam) otherwise.Ideally you want the distribution of scores to be separated, with the score of the negative instances to be on the left and the score of the positive instance to be on the right.
 
-From the confusion matrix it is apparent that Accuracy on train and test dataset when cutoff=50% is about 83%.
-
+From the confusion matrix it is apparent that Accuracy on train and test dataset when cutoff=50% is about 83%, thus the misclassification rate is 17% on the train and test dataset.
 
 ## 1.3 Assessing the Fit on train dataset for 90%
 ```{r}
@@ -147,7 +141,10 @@ Analysis: Our small detour suggests that the cutoff value of 50% was the best fo
 
 From the confusion matrix it is evident that the model becomes a trivial model(predicts all cases as one class) and thus the prediction is no better than tossing a coin. This should be the absoutely the worst case that we should avoid.
 
+The missclassication rate is about 31% for both the trainning dataset and test dataset.
+
 ## 1.4 Use standard classifier kknn() with K=30 from package kknn, report the the misclassification rates for the training and test data and compare the results with step 1.2.
+
 ```{r}
 knn_model30 <- train.kknn(Spam ~ Word35 + Word46 + Word42 + Word44 + Word33 + 
     Word45 + Word39 + Word48 + Word30 + Word43 + Word37 + 
@@ -165,8 +162,9 @@ names(dimnames(conf_test2)) <- c("Actual Test", "Predicted Test")
 confusionMatrix(conf_test2)
 ```
 
-Analysis: Using KKNN with K = 30, increased our trainning accuracy to 90%, however using trainning error/accuracyis a bad 83%
+Analysis: Using KKNN with K = 30, we increased our trainning accuracy to 90%, thus misclassification is 10%, however for the test dataset misclassification rate is about 15%.
 
+Thus compared to using logisitc model the misclassification error for the trainning dataset decreased by 7% to just 10%, while for the test dataset the misclassification error decreased only by 2% to 15%. 
 
 ## 1.5 Repeat step 4 for K=1 and compare the results with step 4. What effect does the decrease of K lead to and why?
 ```{r}
@@ -185,8 +183,10 @@ conf_test2 <- table(test$Spam, test$knn_prediction_class)
 names(dimnames(conf_test2)) <- c("Actual Test", "Predicted Test")
 confusionMatrix(conf_test2)
 ```
-Analysis: 
 
+Analysis: Using KKNN with K = 1, we increased our trainning accuracy to 96%, thus misclassification is 4%, however for the test dataset accuracy is 83% thus misclassification rate is about 17%, thus we improved on the trainning accuracy but did bad on the test case, thus this is an example of overfitting more bias.
+
+Explaination: The KKNN works in the following way,  An object is classified by a majority vote of its neighbors, with the object being assigned to the class most common among its k nearest neighbors. If k = 1, then the object is simply assigned to the class of that single nearest neighbor. Thus K=1, makes the seperation boundary to be very complex and locally optimised (lots of local clusters), while as K goes higher, the decision boundary becomes more linear/simple.
 
 # Assignment 2 Feature selection by cross-validation in a linear model
 
@@ -201,11 +201,11 @@ Y = swiss[,6:6]
 N = 5
 
 df <- cbind(X,Y)
-  
- temp <- NULL
+temp <- NULL
+ 
 for(i in 1:NCOL(X)){
 combs <- as.data.frame(gtools::combinations(NCOL(X), r=i, v=colnames(X), repeats.allowed=FALSE))
-combs <- tidyr::unite(combs, "formula", sep = "+")
+combs <- tidyr::unite(combs, "formula", sep = ",")
 temp <- rbind(combs, temp)
 }  
   
@@ -215,21 +215,32 @@ df2$k_fold <- sample(N, size = nrow(df), replace = TRUE)
  
 result <- NULL 
 
-
 for (j in 1:NROW(temp))
 {
   for(i in 1:N){
-    
+
 train = df2[df2$k_fold != i,]
 test = df2[df2$k_fold == i,]
+y_train = train[,c("Y")] 
 
-model_forumla = paste("Y ~ ", temp[j,],sep = "")
+vec <- paste()
+train = train[temp[,j]]
+
+  
+betas = solve(t(train) %*% train) %*% t(test) %*% y_train
+y_hat_val = X_val %*% betas
+mse = mean((y_val - y_hat_val) ^ 2)
+     
+}
+
+
+
 
 model <- lm(formula = model_forumla, data = train)
 predicted <- predict(model, newdata = test)
 
 RMSE <- sqrt(mean((predicted - test$Y)^2))
-data <- cbind(i,temp[j,], RMSE)
+data <- cbind(i, temp[j,], RMSE)
 result <- rbind(data, result)
 
 }
@@ -260,7 +271,7 @@ return(list(myplot, myplot2))
 
 ## 2.2 Test your function on data set swiss available in the standard R repository:
 ```{r}
-subset_function(X = swiss[,1:5], Y = swiss[,6], N = 5)
+#subset_function(X = swiss[,1:5], Y = swiss[,6], N = 5)
 ```
 Analysis:
 
@@ -276,23 +287,51 @@ ggplot(data = tecator_data, aes(x = Protein, y = Moisture)) +
 Analysis: The data seems fairly linear in nature however there are many outliers. As we can see that data is fairly distributed around the line drawn (above and below) thus there is little bias.
 
 ## 3.2 Multiple Models of varying degree.
-```{r}
-#Creating Protein function (increasing degree)
 
-final_data <- tecator_data
+$$ M_i = \sum_{i=0}^{p} X^{i}{Protein} * \beta{i} + \epsilon$$ 
 
-final_data$Protein_2_power <- (final_data$Protein)^2 
-final_data$Protein_3_power <- (final_data$Protein)^3 
-final_data$Protein_4_power <- (final_data$Protein)^4 
-final_data$Protein_5_power <- (final_data$Protein)^5 
-final_data$Protein_6_power <- (final_data$Protein)^6 
-```
-Analysis:
+$$\epsilon \sim N\left(0, \sigma^{2} \right)$$
+
+$$\epsilon = M_i - \sum_{i=0}^{p} X^{i}{Protein} * \beta{i}$$
+
+$$ M_i \sim N\left(\sum_{i=0}^{p} X^{i}{Protein} * \beta{i},   \sigma_{M}^{2}\right) $$
+
+$$\text{or}$$
+
+$$P \left(M_i | X_{Protein}, \vec{\beta} \right) = N\left(\sum_{i=0}^{p} X^{i}{Protein} * \beta{i},   \sigma_{M}^{2}\right)$$ 
+
+$$Where,$$
+
+$$\sigma_{M}^{2}: \text{variance of Moisture}$$
+
+$$p: \text{degree of the polynomial}$$
+
+Analysis: Thus the model that fits the Mositure is normally distributed with mean of 63.2044 and standard distribution of 9.87
 
 ## 3.3 Validation of the Model
 ```{r}
-set.seed(12345)
 
+final_data <- tecator_data
+
+magic_function <- function(df, N)
+{
+df2 <- df  
+for(i in 2:N) 
+{
+  df2[paste("Protein_",i,"_power", sep="")] <- (df2$Protein)^i
+  }
+
+df2 <- df2[c("Protein_2_power", "Protein_3_power", 
+             "Protein_4_power", "Protein_5_power", 
+             "Protein_6_power")]
+
+df <- cbind(df,df2)  
+return(df)
+}
+
+final_data <- magic_function(final_data, 6)
+
+set.seed(12345)
 n =  NROW(final_data)
 id = sample(1:n, floor(n*0.5))
 train = final_data[id,]
@@ -353,15 +392,31 @@ The above is a classical case of bias-varience trade-off, which is as follows, a
 min.model1 = lm(Fat ~ 1, data=tecator_data[,-1])
 biggest1 <- formula(lm(Fat ~.,  data=tecator_data[,-1]))
 
-full.model1 <- lm(Fat ~., data=tecator_data[,-1])
-step.model1 <- stepAIC(min.model1, direction ='forward', scope=biggest1)
+step.model1 <- stepAIC(min.model1, direction ='forward', scope=biggest1, trace = FALSE)
 ```
 
 ```{r}
 summary(step.model1)
+
 ```
 Analysis: 29 variables were choose out of 107. Even among these there are many which have very low p values thus statistically it is a practice to remove variables which are above 0.0005 p values, thus the true variables may not even include these many.
 
+## 3.5 Fit a Ridge regression model with the same predictor and response 
+
+```{r}
+y <- tecator_data$Fat
+x <- tecator_data %>% data.matrix()
+lambdas <- 10^seq(3, -2, by = -.1)
+
+ridge_fit <- cv.glmnet(x, y, alpha = 0, lambda = lambdas)
+dim(coef(ridge_fit))
+plot(ridge_fit)
+
+
+opt_lambda <- ridge_fit$lambda.min
+best_ridge <- ridge_fit$glmnet.fit
+
+```
 
 
 # Apendix
