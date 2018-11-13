@@ -13,7 +13,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Loading The Libraries
 ```{r, message=FALSE, echo = FALSE}
-
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(xlsx, glmnet, MASS, jtools, huxtable, ggplot2, 
                ggthemes, gridExtra, ROCR, broom, caret, e1071,
@@ -196,12 +195,13 @@ Explaination: The KKNN works in the following way,  An object is classified by a
 
 subset_function <- function(X,Y,N){
 
-X = swiss[,1:5]
-Y = swiss[,6:6]
-N = 5
+# X = swiss[,1:5]
+# Y = swiss[,6:6]
+# N = 5
 
 df <- cbind(X,Y)
 temp <- NULL
+final <- NULL
  
 for(i in 1:NCOL(X)){
 combs <- as.data.frame(gtools::combinations(NCOL(X), r=i, v=colnames(X), repeats.allowed=FALSE))
@@ -221,55 +221,55 @@ for (j in 1:NROW(temp))
 
 train = df2[df2$k_fold != i,]
 test = df2[df2$k_fold == i,]
-y_train = train[,c("Y")] 
-
+              
 vec <- temp[j,]
-train = lapply(strsplit(as.character(vec), ","), function(x) train[x])[[1]]
-test = lapply(strsplit(as.character(vec), ","), function(x) test[x])[[1]]
+train_trimmed = lapply(strsplit(as.character(vec), ","), function(x) train[x])[[1]]
+test_trimmed = lapply(strsplit(as.character(vec), ","), function(x) test[x])[[1]]
 
-train = as.matrix(train)
-test = as.matrix(test)
+y_train = train[,c("Y"), drop = FALSE]
+y_test = test[,c("Y"), drop = FALSE]
+
+train_trimmed = as.matrix(train_trimmed)
+test_trimmed = as.matrix(test_trimmed)
+y_test = as.matrix(y_test) 
 y_train = as.matrix(y_train) 
 
+t_train =  as.matrix(t(train_trimmed)) 
+t_test =  as.matrix(t(test_trimmed)) 
 
-t_train =  t(train) 
-t_test =  t(test) 
+betas = solve(t_train %*% train_trimmed) %*% (t_train %*% y_train)
 
-betas = solve(t_train %*% train) %*% t_test %*% y_train
-y_hat_val = X_val %*% betas
-mse = mean((y_val - y_hat_val) ^ 2)
-     
-}
+train_trimmed = as.data.frame(train_trimmed)
+test_trimmed = as.data.frame(test_trimmed)
 
-
+train_trimmed$type = "train"
+test_trimmed$type = "test"
+final <- rbind(train_trimmed, test_trimmed)
 
 
-model <- lm(formula = model_forumla, data = train)
-predicted <- predict(model, newdata = test)
+y_hat_val = as.matrix(final[,1:(ncol(final)-1)]) %*% betas
+mse = (Y - y_hat_val)^ 2
 
-RMSE <- sqrt(mean((predicted - test$Y)^2))
-data <- cbind(i, temp[j,], RMSE)
+data <- cbind(i, vec, mse, type = final$type)
 result <- rbind(data, result)
-
+     
 }
 }
 
 result <- as.data.frame(result)
 
-colnames(result) <- c("kfold", "variables", "rmse")
+colnames(result) <- c("kfold", "variables", "mse", "type")
 
-result$rmse <- as.numeric(result$rmse)
-result$no_variables <- nchar(as.character(result$variables)) 
-- nchar(gsub('\\+', "", result$variables)) + 1
+result$mse <- as.numeric(result$mse)
+result$no_variables <- nchar(as.character(result$variables)) - nchar(gsub('\\,', "", result$variables)) + 1
 
-variable_performance <- result %>% 
-  group_by(kfold, no_variables) %>% 
-  summarise(RMSE = mean(rmse, na.rm = TRUE))
+variable_performance <- result %>% group_by(kfold, no_variables) %>% 
+  summarise(MSE = mean(mse, na.rm = TRUE))
 
-myplot <- ggplot(data = variable_performance, aes(x = no_variables, y = RMSE, color=kfold)) + 
-geom_line() + ggtitle("Plot of RMSE vs. Number of variables by folds")
+myplot <- ggplot(data = variable_performance, aes(x = no_variables, y = MSE, color=kfold)) + 
+geom_line() + ggtitle("Plot of MSE vs. Number of variables by folds")
 
-myplot2 <- ggplot(data = result, aes(x = variables, y = rmse, color=kfold)) + 
+myplot2 <- ggplot(data = result, aes(x = variables, y = mse, color=kfold)) + 
 geom_bar(stat="identity") + ggtitle("Plot of RMSE vs. Features by folds") + coord_flip() 
 
 return(list(myplot, myplot2))
@@ -279,7 +279,7 @@ return(list(myplot, myplot2))
 
 ## 2.2 Test your function on data set swiss available in the standard R repository:
 ```{r}
-#subset_function(X = swiss[,1:5], Y = swiss[,6], N = 5)
+subset_function(X = swiss[,1:5], Y = swiss[,6], N = 5)
 ```
 Analysis:
 
