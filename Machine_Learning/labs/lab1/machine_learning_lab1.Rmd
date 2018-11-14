@@ -28,6 +28,7 @@ spam_data <- read.xlsx("spambase.xlsx", sheetName = "spambase_data")
 spam_data$Spam <- as.factor(spam_data$Spam)
 
 tecator_data <- read.xlsx("tecator.xlsx", sheetName = "data")
+tecator_data <- tecator_data[,2:NCOL(tecator_data)] # removing sample column
 ```
 
 ## 1.1 Import the data into R and divide it into training and test sets (50%/50%) by using the following code
@@ -41,20 +42,11 @@ test = spam_data[-id,]
 ```
 
 ## 1.2 Use logistic regression (functions glm(), predict()) to classify the training and test data by the classification principles
-```{r, message=FALSE, warning=FALSE}
-
-min.model = glm(Spam ~ 1, family=binomial, data=train)
-biggest <- formula(glm(Spam ~., family=binomial, data=train))
-
-step.model <- step(min.model, direction='forward', scope=biggest, trace = FALSE)
-summary(step.model)
-```
 
 ### Manual Feature Selection
 ```{r, warning=FALSE}
-best_model <- glm(formula = Spam ~ Word35 + Word46 + Word42 + Word44 + Word33 + 
-    Word45 + Word39 + Word48 + Word30 + Word43 + Word37 + 
-    Word36 + Word31, family = binomial, data = train)
+best_model <- glm(formula = Spam ~., family = binomial, data = train)
+summ(best_model)
 ```
 
 ###  Prediction for probability greater than 50% and 90%
@@ -97,9 +89,10 @@ conf_test <- table(test$Spam, test$prediction_class_50)
 names(dimnames(conf_test)) <- c("Actual Test", "Predicted Test")
 confusionMatrix(conf_test)
 ```
+
 Analysis: Distribution of the prediction score grouped by known outcome given that our model's final objective is to classify new instances into one of two categories (spam vs. non-spam). We will want the model to give high scores to positive instances (1: spam) and low scores (0 : not spam) otherwise.Ideally you want the distribution of scores to be separated, with the score of the negative instances to be on the left and the score of the positive instance to be on the right.
 
-From the confusion matrix it is apparent that Accuracy on train and test dataset when cutoff=50% is about 83%, thus the misclassification rate is 17% on the train and test dataset.
+From the confusion matrix it is apparent that Accuracy on train and test dataset when cutoff=50% is about ~84% for train and ~82% for test, thus the misclassification rate is ~16 and ~18% for the train and test dataset.
 
 ## 1.3 Assessing the Fit on train dataset for 90%
 ```{r}
@@ -115,7 +108,7 @@ conf_test1
 
 ```
 
-Analysis: Strange, the model only predicts one class!! We know that the prediction of a logistic regression model is a probability, thus in order to use it as a classifier, we'll have to choose a cutoff value, or threshold (cutoff). Where scores above this value will classified as positive, those below as negative. Lets us find this optimum value.
+Analysis: Strange, the model almost only predicts one class!! We know that the prediction of a logistic regression model is a probability, thus in order to use it as a classifier, we'll have to choose a cutoff value, or threshold (cutoff). Where scores above this value will classified as positive, those below as negative. Lets us find this optimum value.
 
 ### Choosing the best cutoff for test
 ```{r}
@@ -136,18 +129,16 @@ ggplot(data = cutoff_data, aes(x = cutoffs, y = accuracy)) +
 
 ```
 
-Analysis: Our small detour suggests that the cutoff value of 50% was the best for our purpose and going higher than this leads to worse results, at 0.8 and above the accuracy drastically reduces which is what we see when we make cutoff as 0.9.
+Analysis: Our small detour suggests that the cutoff value of ~60% was the best for our purpose and going higher than this leads to worse results, at 70% and above the accuracy drastically reduces which is what we see when we make cutoff as 90%.
 
-From the confusion matrix it is evident that the model becomes a trivial model(predicts all cases as one class) and thus the prediction is no better than tossing a coin. This should be the absoutely the worst case that we should avoid.
+From the confusion matrix it is evident that the model becomes a trivial model(predicts all cases as one class) and thus the prediction is worse than just tossing a coin. This should be the absoutely the worst case that we should avoid.
 
 The missclassication rate is about 31% for both the trainning dataset and test dataset.
 
 ## 1.4 Use standard classifier kknn() with K=30 from package kknn, report the the misclassification rates for the training and test data and compare the results with step 1.2.
 
 ```{r}
-knn_model30 <- train.kknn(Spam ~ Word35 + Word46 + Word42 + Word44 + Word33 + 
-    Word45 + Word39 + Word48 + Word30 + Word43 + Word37 + 
-    Word36 + Word31, data = train, kmax = 30)
+knn_model30 <- train.kknn(Spam ~., data = train, kmax = 30)
 
 train$knn_prediction_class <- predict(knn_model30, train)
 test$knn_prediction_class <- predict(knn_model30, test)
@@ -161,15 +152,13 @@ names(dimnames(conf_test2)) <- c("Actual Test", "Predicted Test")
 confusionMatrix(conf_test2)
 ```
 
-Analysis: Using KKNN with K = 30, we increased our trainning accuracy to 90%, thus misclassification is 10%, however for the test dataset misclassification rate is about 15%.
+Analysis: Using KKNN with K = 30, we increased our trainning accuracy to 86%, thus misclassification is 14%, however for the test dataset misclassification rate is about ~20%.
 
-Thus compared to using logisitc model the misclassification error for the trainning dataset decreased by 7% to just 10%, while for the test dataset the misclassification error decreased only by 2% to 15%. 
+Thus compared to using logisitc model the misclassification error for the trainning dataset decreased by 2% to 14%, while for the test dataset the misclassification error increased by 2% to 20%. 
 
 ## 1.5 Repeat step 4 for K=1 and compare the results with step 4. What effect does the decrease of K lead to and why?
 ```{r}
-knn_model1 <- train.kknn(Spam ~ Word35 + Word46 + Word42 + Word44 + Word33 + 
-    Word45 + Word39 + Word48 + Word30 + Word43 + Word37 + 
-    Word36 + Word31, data = train, kmax = 1)
+knn_model1 <- train.kknn(Spam ~., data = train, kmax = 1)
 
 train$knn_prediction_class <- predict(knn_model1, train)
 test$knn_prediction_class <- predict(knn_model1, test)
@@ -183,7 +172,7 @@ names(dimnames(conf_test2)) <- c("Actual Test", "Predicted Test")
 confusionMatrix(conf_test2)
 ```
 
-Analysis: Using KKNN with K = 1, we increased our trainning accuracy to 96%, thus misclassification is 4%, however for the test dataset accuracy is 83% thus misclassification rate is about 17%, thus we improved on the trainning accuracy but did bad on the test case, thus this is an example of overfitting more bias.
+Analysis: Using KKNN with K = 1, we increased our trainning accuracy to 100%, thus misclassification is 0%, however for the test dataset accuracy is ~75% thus misclassification rate is about ~25%, thus we improved on the trainning accuracy but did bad on the test case, thus this is an example of overfitting leading to more varience.
 
 Explaination: The KKNN works in the following way,  An object is classified by a majority vote of its neighbors, with the object being assigned to the class most common among its k nearest neighbors. If k = 1, then the object is simply assigned to the class of that single nearest neighbor. Thus K=1, makes the seperation boundary to be very complex and locally optimised (lots of local clusters), while as K goes higher, the decision boundary becomes more linear/simple.
 
@@ -289,7 +278,7 @@ Analysis:
 ```{r}
 ggplot(data = tecator_data, aes(x = Protein, y = Moisture)) + 
   geom_point() + 
-  geom_smooth() +
+  geom_smooth( method = 'loess') +
   ggtitle("Plot of Moisture vs. Protein")
 ```
 Analysis: The data seems fairly linear in nature however there are many outliers. As we can see that data is fairly distributed around the line drawn (above and below) thus there is little bias.
@@ -313,8 +302,6 @@ $$Where,$$
 $$\sigma_{M}^{2}: \text{variance of Moisture}$$
 
 $$p: \text{degree of the polynomial}$$
-
-Analysis: Thus the model that fits the Mositure is normally distributed with mean of 63.2044 and standard distribution of 9.87
 
 ## 3.3 Validation of the Model
 ```{r}
@@ -396,33 +383,46 @@ The best model is M1, that is Moisture~Protein as evident from the least test er
 The above is a classical case of bias-varience trade-off, which is as follows, as one makes the model fit the trainning dataset better the model becomes more biased and its ability to handle variation to new dataset decreases(varience), thus one should also maintain a good trade off between these two.
 
 ## 3.4 Perform variable selection of a linear model in which Fat is response and Channel1:Channel100 are predicted by using stepAIC.
-```{r, results='hide', message=FALSE, warning=FALSE, echo=TRUE, include=TRUE}
+```{r warning=FALSE}
 min.model1 = lm(Fat ~ 1, data=tecator_data[,-1])
 biggest1 <- formula(lm(Fat ~.,  data=tecator_data[,-1]))
 
 step.model1 <- stepAIC(min.model1, direction ='forward', scope=biggest1, trace = FALSE)
+summ(step.model1)
 ```
 
-```{r}
-summary(step.model1)
-
-```
 Analysis: 29 variables were choose out of 107. Even among these there are many which have very low p values thus statistically it is a practice to remove variables which are above 0.0005 p values, thus the true variables may not even include these many.
 
 ## 3.5 Fit a Ridge regression model with the same predictor and response 
 
 ```{r}
-y <- tecator_data$Fat
-x <- tecator_data %>% data.matrix()
-lambdas <- 10^seq(3, -2, by = -.1)
+y <- tecator_data %>% select(Fat) %>% data.matrix()
+x <- tecator_data %>% select(-c(Fat)) %>% data.matrix()
 
-ridge_fit <- cv.glmnet(x, y, alpha = 0, lambda = lambdas)
-dim(coef(ridge_fit))
-plot(ridge_fit)
+ridge_fit <- glmnet(x, y, alpha = 0, family = "gaussian")
+plot(ridge_fit, xvar = "lambda", label = TRUE, main = "Plot showing shrinkage of coefficents with increase in log of lambda")
 
 
-opt_lambda <- ridge_fit$lambda.min
-best_ridge <- ridge_fit$glmnet.fit
+result <- NULL
+for(i in 1:100){
+temp <- coef(ridge_fit, i) %>% as.matrix()
+result <- rbind(temp, result)
+}
+
+```
+
+
+
+
+
+
+
+## 3.6 Fit a Lasso regression model with the same predictor and response 
+
+```{r}
+
+lasso_fit <- glmnet(x, y, alpha = 1, family = "gaussian")
+plot(lasso_fit, xvar = "lambda", label = TRUE, main = "Plot showing shrinkage of coefficents with increase in log of lambda")
 
 ```
 
