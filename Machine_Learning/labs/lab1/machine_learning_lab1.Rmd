@@ -46,7 +46,7 @@ test = spam_data[-id,]
 ### Manual Feature Selection
 ```{r, warning=FALSE}
 best_model <- glm(formula = Spam ~., family = binomial, data = train)
-summ(best_model)
+summary(best_model)
 ```
 
 ###  Prediction for probability greater than 50% and 90%
@@ -180,12 +180,12 @@ Explaination: The KKNN works in the following way,  An object is classified by a
 
 ## 2.1 Implement an R function that performs feature selection (best subset selection) in linear regression by using k-fold cross-validation without using any specialized function like lm() (use only basic R functions)
 
-```{r}
+```{r, warning=FALSE}
 
 subset_function <- function(X,Y,N){
 
-# X = swiss[,1:5]
-# Y = swiss[,6:6]
+# X = swiss[,2:6]
+# Y = swiss[,1:1]
 # N = 5
 
 df <- cbind(X,Y)
@@ -259,18 +259,42 @@ myplot <- ggplot(data = variable_performance, aes(x = no_variables, y = MSE, col
 geom_line() + ggtitle("Plot of MSE vs. Number of variables by folds")
 
 myplot2 <- ggplot(data = result, aes(x = variables, y = mse, color=kfold)) + 
-geom_bar(stat="identity") + ggtitle("Plot of RMSE vs. Features by folds") + coord_flip() 
+geom_bar(stat="identity") + ggtitle("Plot of MSE vs. Features by folds") + coord_flip() 
 
-return(list(myplot, myplot2))
+best_variables <- result %>% group_by(type, variables) %>% filter(type == "test") %>% 
+  summarise(MSE = mean(mse, na.rm = TRUE)) %>% arrange(MSE) %>% select(variables) %>% slice(1) %>% as.vector()
+
+return(list(myplot, myplot2, best_variables))
 }
 ```
 
 
 ## 2.2 Test your function on data set swiss available in the standard R repository:
-```{r}
-subset_function(X = swiss[,1:5], Y = swiss[,6], N = 5)
+```{r, warning=FALSE, message=FALSE}
+subset_function(X = swiss[,2:6], Y = swiss[,1:1], N = 5)
+
+# Using pairs on swiss dataset
+GGally::ggpairs(swiss)
 ```
-Analysis:
+
+Analysis: Swiss dataset is a dataset which represents fertility measure and socio-economic indicators for each of 47 French speaking provinces of Switzerland. 
+
+From the dataset we have the following information:
+
+Fertility 	-> 'common standardized fertility measure'
+Agriculture	-> % of males involved in agriculture as occupation
+Examination	-> % draftees receiving highest mark on army examination
+Education 	-> % education beyond primary school for draftees.
+Catholic 	-> % 'catholic' (as opposed to 'protestant').
+Infant.Mortality ->	live births who live less than 1 year. 
+
+From the graph we can see that there is correleation between Fertility and other variables, for variable 'Catholic'and 'Education', the relationship is not strong, while other variable do exhibit a reasonable correleation.
+
+From our model we can see that the models with 2 features gives us the least mean squared error across most folds. Implies our best model is a function of 2 variables.
+
+Our model predicts that variable 'Examination' and 'Agriculture' are the strongest predictors of 'Fertility', these results makes sense but from the graph it could be seen that even 'Infant.Mortality' might have a strong predictor.
+
+Logically speaking infant mortality cannot be direct estimator of fertility, higher infant mortility could be responsible in population decrease but not in reduction in fertility.
 
 # Assignment 3 Linear regression and regularization
 
@@ -302,6 +326,14 @@ $$Where,$$
 $$\sigma_{M}^{2}: \text{variance of Moisture}$$
 
 $$p: \text{degree of the polynomial}$$
+```{r}
+ggplot(data = tecator_data, aes(x = Moisture)) + 
+  geom_density() +
+  ggtitle("Density Plot of Moisture")
+```
+
+Analysis: In this case we are given that mositure is normally distributed, thus the loss function to minimize had to be (actual-predicted)^2, if we were to minimize the absoulte value, then this would assume a Laplace distribution.
+
 
 ## 3.3 Validation of the Model
 ```{r}
@@ -411,7 +443,7 @@ plot(ridge_fit, xvar = "lambda", label = TRUE,
      main = "Plot showing shrinkage of coefficents with rise in log of lambda")
 
 
-## Chnage of coefficent with respect to lambda
+## Change of coefficent with respect to lambda
 result <- NULL
 for(i in lambda){
 temp <- t(coef(ridge_fit, i)) %>% as.matrix()
@@ -422,7 +454,9 @@ result <- result %>% as.data.frame() %>% arrange(lambda)
 ```
 
 ```{r echo=TRUE, results='asis'}
-table_cofe <- head(result, 10) %>% select(Channel18, Channel78, Channel84, Channel62, Channel53, Channel75, Channel57,Protein, lambda)
+table_cofe <- head(result, 10) %>% select(Channel18, Channel78, Channel84, Channel62, 
+                                          Channel53, Channel75, Channel57,Protein, 
+                                          lambda)
 
 knitr::kable(table_cofe, caption = "Coefficent of Ridge Regression vs. Lambda")
 ```
@@ -438,17 +472,36 @@ plot(lasso_fit, xvar = "lambda", label = TRUE,
      main = "Plot showing shrinkage of coefficents with rise in log of lambda")
 
 ```
-## 3.7 Use cross-validation to find the optimal LASSO model, report the optimal 𝜆𝜆 and how many variables were chosen by the model and make conclusions
+## 3.7 Use cross-validation to find the optimal LASSO model, report the optimal and how many variables were chosen by the model and make conclusions
 
 ```{r}
-#find the best lambda from our list via cross-validation
-lambda <- seq(from = 0, to = 100, length.out = 101)
-lass_cv <- cv.glmnet(x,y, alpha=1, lambda = lambda, type.measure="mse")
-best_lasso_lamda <- lasso_cv$lambda.min
-plot(lass_cv)
+# #find the best lambda from our list via cross-validation
+lambda_lasso <- 10^seq(10, -2, length = 100)
+lambda_lasso[101] <- 0
+lasso_cv <- cv.glmnet(x,y, alpha=1, lambda = lambda_lasso, type.measure="mse")
+plot(lasso_cv)
+coef(lasso_cv, lambda = lasso_cv$lambda.min)
 
-`coef(lass_cv, lambda=lass_cv$lambda.1se)
-``
+lowest_lambda = lasso_cv$lambda.min
+  
+## Change of coefficent with respect to lambda
+result_lasso <- NULL
+for(i in 1:length(lambda_lasso)){
+temp <- lasso_cv$cvm[i] %>% as.matrix()
+temp <- cbind(CVM_error = temp, lambda = lasso_cv$lambda[i])
+result_lasso <- rbind(temp, result_lasso)
+}
+```
+
+```{r echo=TRUE, results='asis'}
+result_lasso <- result_lasso %>% as.data.frame() %>% arrange(lambda)
+colnames(result_lasso) <- c("Cross_Mean_Error", "Lambda")
+
+knitr::kable(head(result_lasso,10), caption = "Cross Validation Error vs. Lambda")
+```
+
+Analysis: The minimum value of lambda was 0, implies zero penalisation. The variables selected are: Mositure, Protein, Channel 100, Channel41 along with intercept.
+
 # Apendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
 ```
