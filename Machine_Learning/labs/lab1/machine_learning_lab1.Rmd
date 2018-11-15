@@ -397,36 +397,58 @@ Analysis: 29 variables were choose out of 107. Even among these there are many w
 
 ```{r}
 y <- tecator_data %>% select(Fat) %>% data.matrix()
-x <- tecator_data %>% select(-c(Fat)) %>% data.matrix()
+x <- tecator_data %>% select(Moisture, Protein, Channel100, Channel41,
+Channel7, Channel48, Channel42, Channel50, Channel45,
+Channel66, Channel56, Channel90, Channel60, Channel70,
+Channel67, Channel59, Channel65, Channel58, Channel44,
+Channel18, Channel78, Channel84, Channel62, Channel53,
+Channel75, Channel57, Channel63, Channel24, Channel37) %>% data.matrix()
 
-ridge_fit <- glmnet(x, y, alpha = 0, family = "gaussian")
-plot(ridge_fit, xvar = "lambda", label = TRUE, main = "Plot showing shrinkage of coefficents with increase in log of lambda")
+lambda <- 10^seq(10, -2, length = 100)
+
+ridge_fit <- glmnet(x, y, alpha = 0, family = "gaussian", lambda = lambda)
+plot(ridge_fit, xvar = "lambda", label = TRUE, 
+     main = "Plot showing shrinkage of coefficents with rise in log of lambda")
 
 
+## Chnage of coefficent with respect to lambda
 result <- NULL
-for(i in 1:100){
-temp <- coef(ridge_fit, i) %>% as.matrix()
+for(i in lambda){
+temp <- t(coef(ridge_fit, i)) %>% as.matrix()
+temp <- cbind(temp, lambda = i)
 result <- rbind(temp, result)
 }
-
+result <- result %>% as.data.frame() %>% arrange(lambda)
 ```
 
+```{r echo=TRUE, results='asis'}
+table_cofe <- head(result, 10) %>% select(Channel18, Channel78, Channel84, Channel62, Channel53, Channel75, Channel57,Protein, lambda)
 
-
-
-
+knitr::kable(table_cofe, caption = "Coefficent of Ridge Regression vs. Lambda")
+```
 
 
 ## 3.6 Fit a Lasso regression model with the same predictor and response 
 
 ```{r}
+lambda <- 10^seq(10, -2, length = 100)
 
-lasso_fit <- glmnet(x, y, alpha = 1, family = "gaussian")
-plot(lasso_fit, xvar = "lambda", label = TRUE, main = "Plot showing shrinkage of coefficents with increase in log of lambda")
+lasso_fit <- glmnet(x, y, alpha = 1, family = "gaussian", lambda = lambda)
+plot(lasso_fit, xvar = "lambda", label = TRUE, 
+     main = "Plot showing shrinkage of coefficents with rise in log of lambda")
 
 ```
+## 3.7 Use cross-validation to find the optimal LASSO model, report the optimal 𝜆𝜆 and how many variables were chosen by the model and make conclusions
 
+```{r}
+#find the best lambda from our list via cross-validation
+lambda <- seq(from = 0, to = 100, length.out = 101)
+lass_cv <- cv.glmnet(x,y, alpha=1, lambda = lambda, type.measure="mse")
+best_lasso_lamda <- lasso_cv$lambda.min
+plot(lass_cv)
 
+`coef(lass_cv, lambda=lass_cv$lambda.1se)
+``
 # Apendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
 ```
