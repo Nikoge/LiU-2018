@@ -476,8 +476,7 @@ plot(lasso_fit, xvar = "lambda", label = TRUE,
 
 ```{r}
 # #find the best lambda from our list via cross-validation
-lambda_lasso <- 10^seq(10, -2, length = 100)
-lambda_lasso[101] <- 0
+lambda_lasso <- seq(from = 0, to = 100, length.out = 101)
 lasso_cv <- cv.glmnet(x,y, alpha=1, lambda = lambda_lasso, type.measure="mse")
 plot(lasso_cv)
 coef(lasso_cv, lambda = lasso_cv$lambda.min)
@@ -497,7 +496,7 @@ result_lasso <- rbind(temp, result_lasso)
 result_lasso <- result_lasso %>% as.data.frame() %>% arrange(lambda)
 colnames(result_lasso) <- c("Cross_Mean_Error", "Lambda")
 
-knitr::kable(head(result_lasso,10), caption = "Cross Validation Error vs. Lambda")
+ggplot(result_lasso, aes(x = Lambda, y = Cross_Mean_Error)) + geom_point() + ggtitle("Cross Validation Error vs. Lambda")
 ```
 
 Analysis: The minimum value of lambda was 0, implies zero penalisation. The variables selected are: Mositure, Protein, Channel 100, Channel41 along with intercept.
