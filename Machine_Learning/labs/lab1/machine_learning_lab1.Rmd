@@ -2,7 +2,9 @@
 title: "machine learning(732A99) lab1"
 author: "Anubhav Dikshit(anudi287)"
 date: "26 November 2018"
-output: pdf_document
+output: 
+    pdf_document:
+      toc: true
 ---
 
 ```{r setup, include=FALSE}
@@ -41,7 +43,7 @@ train = spam_data[id,]
 test = spam_data[-id,]
 ```
 
-## 1.2 Use logistic regression (functions glm(), predict()) to classify the training and test data by the classification principles
+## 1.2 Use logistic regression (functions glm(), predict()) to classify the training and test data by the classification principles and report the confusion matrices (use table()) and the misclassification rates for training and test data. Analyse the obtained results.
 
 ### Manual Feature Selection
 ```{r, warning=FALSE}
@@ -94,7 +96,7 @@ Analysis: Distribution of the prediction score grouped by known outcome given th
 
 From the confusion matrix it is apparent that Accuracy on train and test dataset when cutoff=50% is about ~84% for train and ~82% for test, thus the misclassification rate is ~16 and ~18% for the train and test dataset.
 
-## 1.3 Assessing the Fit on train dataset for 90%
+## 1.3 Use logistic regression to classify the test data by the classification principle probability>90%.Assessing the Fit on train dataset for 90% and report the confusion matrices (use table()) and the misclassification rates for training and test data. Compare the results. What effect did the new rule have?
 ```{r}
 
 #confusion table
@@ -252,17 +254,20 @@ colnames(result) <- c("kfold", "variables", "mse", "type")
 result$mse <- as.numeric(result$mse)
 result$no_variables <- nchar(as.character(result$variables)) - nchar(gsub('\\,', "", result$variables)) + 1
 
-variable_performance <- result %>% group_by(kfold, no_variables) %>% 
+result_test <- result %>% filter(type == "test") 
+
+variable_performance <- result_test %>% group_by(kfold, no_variables) %>% 
   summarise(MSE = mean(mse, na.rm = TRUE))
 
 myplot <- ggplot(data = variable_performance, aes(x = no_variables, y = MSE, color=kfold)) + 
-geom_line() + ggtitle("Plot of MSE vs. Number of variables by folds")
+geom_line() + ggtitle("Plot of MSE(test) vs. Number of variables")
 
-myplot2 <- ggplot(data = result, aes(x = variables, y = mse, color=kfold)) + 
-geom_bar(stat="identity") + ggtitle("Plot of MSE vs. Features by folds") + coord_flip() 
+myplot2 <- ggplot(data = result_test, aes(x = variables, y = mse, color=kfold)) + 
+geom_bar(stat="identity") + ggtitle("Plot of MSE(test) vs. Features by folds") + coord_flip() 
 
-best_variables <- result %>% group_by(type, variables) %>% filter(type == "test") %>% 
-  summarise(MSE = mean(mse, na.rm = TRUE)) %>% arrange(MSE) %>% select(variables) %>% slice(1) %>% as.vector()
+best_variables <- result_test %>% group_by(variables) %>% 
+  summarise(MSE = mean(mse, na.rm = TRUE)) %>% arrange(MSE) %>% 
+  select(variables) %>% slice(1) %>% as.vector()
 
 return(list(myplot, myplot2, best_variables))
 }
@@ -307,7 +312,7 @@ ggplot(data = tecator_data, aes(x = Protein, y = Moisture)) +
 ```
 Analysis: The data seems fairly linear in nature however there are many outliers. As we can see that data is fairly distributed around the line drawn (above and below) thus there is little bias.
 
-## 3.2 Multiple Models of varying degree.
+## 3.2 Consider model M in which Moisture is normally distributed, and the expected Moisture is a polynomial function of Protein including the polynomial terms up to power of i. Report a probabilistic model that describes M. Why is it appropriate to use MSE criterion when fitting this model to a training data?
 
 $$ M_i = \sum_{i=0}^{p} X^{i}{Protein} * \beta{i} + \epsilon$$ 
 
@@ -335,7 +340,7 @@ ggplot(data = tecator_data, aes(x = Moisture)) +
 Analysis: In this case we are given that mositure is normally distributed, thus the loss function to minimize had to be (actual-predicted)^2, if we were to minimize the absoulte value, then this would assume a Laplace distribution.
 
 
-## 3.3 Validation of the Model
+## 3.3 Divide the data into training and validation sets (50/50) and fit models M (i=1,2,3,..6). For each model, record the training and the validation MSE and present a plot showing how training and validation MSE depend on i (write some R code to make this plot). Which model is best according to the plot? How do the MSE values change and why? Interpret this picture in terms of bias-variance tradeoff.
 ```{r}
 
 final_data <- tecator_data
@@ -404,7 +409,7 @@ final_error_data <- final_data %>% select(type, M_1_error, M_2_error, M_3_error,
   group_by(type, power) %>% 
   summarise(MSE = mean(value, na.rm=TRUE))
 
-ggplot(final_error_data, aes(x = power, y = MSE, color=type)) + geom_point() + 
+ggplot(final_error_data, aes(x = power, y = MSE, color=type)) + geom_point() +
   ggtitle("Mean squared error vs. model complexitiy by dataset type")
 
 ```
@@ -414,7 +419,7 @@ The best model is M1, that is Moisture~Protein as evident from the least test er
 
 The above is a classical case of bias-varience trade-off, which is as follows, as one makes the model fit the trainning dataset better the model becomes more biased and its ability to handle variation to new dataset decreases(varience), thus one should also maintain a good trade off between these two.
 
-## 3.4 Perform variable selection of a linear model in which Fat is response and Channel1:Channel100 are predicted by using stepAIC.
+## 3.4 Perform variable selection of a linear model in which Fat is response and Channel1:Channel100 are predicted by using stepAIC. Comment on how many variables were selected.
 ```{r warning=FALSE}
 min.model1 = lm(Fat ~ 1, data=tecator_data[,-1])
 biggest1 <- formula(lm(Fat ~.,  data=tecator_data[,-1]))
@@ -423,18 +428,13 @@ step.model1 <- stepAIC(min.model1, direction ='forward', scope=biggest1, trace =
 summ(step.model1)
 ```
 
-Analysis: 29 variables were choose out of 107. Even among these there are many which have very low p values thus statistically it is a practice to remove variables which are above 0.0005 p values, thus the true variables may not even include these many.
+Analysis: 29 variables were choose out of 107. Even among these there are many which have very low p values thus statistically it is a practice to remove variables which have p values above 0.05, thus the true variables may not even include these many.
 
-## 3.5 Fit a Ridge regression model with the same predictor and response 
+## 3.5 Fit a Ridge regression model with the same predictor and response variables. Present a plot showing how model coefficients depend on the log of the penalty factor lambda and report how the coefficients change with lambda.
 
 ```{r}
 y <- tecator_data %>% select(Fat) %>% data.matrix()
-x <- tecator_data %>% select(Moisture, Protein, Channel100, Channel41,
-Channel7, Channel48, Channel42, Channel50, Channel45,
-Channel66, Channel56, Channel90, Channel60, Channel70,
-Channel67, Channel59, Channel65, Channel58, Channel44,
-Channel18, Channel78, Channel84, Channel62, Channel53,
-Channel75, Channel57, Channel63, Channel24, Channel37) %>% data.matrix()
+x <- tecator_data %>% select(-c(Fat)) %>% data.matrix()
 
 lambda <- 10^seq(10, -2, length = 100)
 
@@ -454,15 +454,20 @@ result <- result %>% as.data.frame() %>% arrange(lambda)
 ```
 
 ```{r echo=TRUE, results='asis'}
-table_cofe <- head(result, 10) %>% select(Channel18, Channel78, Channel84, Channel62, 
+table_cofe <- head(result, 10) %>% select(Channel1, Channel2, Channel84, Channel62, 
                                           Channel53, Channel75, Channel57,Protein, 
                                           lambda)
 
 knitr::kable(table_cofe, caption = "Coefficent of Ridge Regression vs. Lambda")
 ```
 
+Analysis: The idea of lasso and ridge regression is to introduce bias to variables in order to reduce/account for multicollinearity. Introducing bias (lambda) to covarience matrix is done by multiplying the diagonal elements by lambda(often 1+lambda), this inflates the covarience of predictors compared to correleations of predictors. The idea is to test the stability of betas that is how likely are the betas/coefficents of regressions to be stable if we keep introducing bias.
 
-## 3.6 Fit a Lasso regression model with the same predictor and response 
+We can clearly see that 'Channel1' and 'Channel2' betas go from positive to negative with very little bias introduced while terms like 'Channel75' dont change the beta signs. Thus the practice is exclude the terms whose beta/coefficent dont change drastically much within say first 10 introduction of lambda.
+
+We see that many of the terms/coefficent tend to zero at around log(lambda) that is ~5.
+
+## 3.6 Repeat step 5 but fit LASSO instead of the Ridge regression and compare the plots from steps 5 and 6. Conclusions? 
 
 ```{r}
 lambda <- 10^seq(10, -2, length = 100)
@@ -472,16 +477,20 @@ plot(lasso_fit, xvar = "lambda", label = TRUE,
      main = "Plot showing shrinkage of coefficents with rise in log of lambda")
 
 ```
-## 3.7 Use cross-validation to find the optimal LASSO model, report the optimal and how many variables were chosen by the model and make conclusions
+Analysis: We quickly see that very little introduction of penalisation/bias is all it takes to make many terms/coefficent to zero. This implies for the full dataset lasso is much better suited for regularisation compared to ridge.
+
+At lambda around 1 (log lambda is 0) we get only two or three non zero terms. 
+
+## 3.7 Use cross-validation to find the optimal LASSO model, report the optimal lambda and how many variables were chosen by the model and make conclusions. Present also a plot showing the dependence of the CV score and comment how the CV score changes with lambda.
 
 ```{r}
-# #find the best lambda from our list via cross-validation
-lambda_lasso <- seq(from = 0, to = 100, length.out = 101)
+#find the best lambda from our list via cross-validation
+
+lambda_lasso <- 10^seq(10, -2, length = 100)
 lasso_cv <- cv.glmnet(x,y, alpha=1, lambda = lambda_lasso, type.measure="mse")
-plot(lasso_cv)
 coef(lasso_cv, lambda = lasso_cv$lambda.min)
 
-lowest_lambda = lasso_cv$lambda.min
+lasso_cv$lambda.min
   
 ## Change of coefficent with respect to lambda
 result_lasso <- NULL
@@ -490,16 +499,35 @@ temp <- lasso_cv$cvm[i] %>% as.matrix()
 temp <- cbind(CVM_error = temp, lambda = lasso_cv$lambda[i])
 result_lasso <- rbind(temp, result_lasso)
 }
+
 ```
 
 ```{r echo=TRUE, results='asis'}
 result_lasso <- result_lasso %>% as.data.frame() %>% arrange(lambda)
 colnames(result_lasso) <- c("Cross_Mean_Error", "Lambda")
 
-ggplot(result_lasso, aes(x = Lambda, y = Cross_Mean_Error)) + geom_point() + ggtitle("Cross Validation Error vs. Lambda")
+ggplot(result_lasso, aes(x = log(Lambda), y = Cross_Mean_Error)) + geom_point() + 
+  ggtitle("Cross Validation Error vs. Lambda")
 ```
 
-Analysis: The minimum value of lambda was 0, implies zero penalisation. The variables selected are: Mositure, Protein, Channel 100, Channel41 along with intercept.
+Analysis: The minimum value of lambda was 0.1, implies almost zero penalisation. The variables selected are: 
+Channel98, Channel99, Channel100, Protein, Moisture, Channel37, Channel38, Channel39, Channel40 along with intercept.
+
+We see that Cross validation error is lowest at lambda 0.1 and remains low till lambda~1 (log lambda 0) after which the error drastically increases at log(lambda) ~ 2.5, the error maxes out and remains about the same for higher values of lambda. This implies that more bias introduction will lead to worse performance.
+
+## 3.8 Compare the results from steps 4 and 7.
+
+Analysis: In order to find the best predictors for a given model we employ various techniques.
+
+In step4 we analytically arrive at the best variables to model 'Fat' using multiple variables, using stepAIC we arrive at 29 variables excluding the Intercept.
+
+In step5 we use regularisation techniques and start introducing bias to eliminate the variables which maybe corellated with each other, employing this we get further reduction of about 10 variables at log lambda ~ 5.
+
+Using Lasso in step6 we get only about 5 variables at lambda close to 1, however the exact number of variables to choose is depended on the lambda value and the corresponding error. However having used the whole dataset, we need to employee cross validation to get the precise value of lambda.
+
+In step 7 we get the best value of lambda for lasso for which the mean squared error is the least and here we are left with 9 variables excluding the intercept. The mean squared error is also low (~10).
+
+Thus we have learned how to perform regression and how to account for multicorrlinearity and possible ways to detect and negate the same.
 
 # Apendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
