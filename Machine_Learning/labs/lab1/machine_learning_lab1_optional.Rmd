@@ -1,0 +1,148 @@
+---
+  title: "machine learning(732A99) lab1 optional tasks"
+author: "Anubhav Dikshit(anudi287)"
+date: "26 November 2018"
+output: 
+  pdf_document:
+  toc: true
+---
+  
+  ```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Assignment 1
+
+## Loading The Libraries
+```{r, message=FALSE, echo = FALSE}
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(xlsx, kknn, caret)
+
+options(scipen = 999)
+
+```
+
+## Loading Input files
+```{r}
+spam_data <- read.xlsx("spambase.xlsx", sheetName = "spambase_data")
+
+set.seed(12345)
+
+n =  NROW(spam_data)
+id = sample(1:n, floor(n*0.5))
+train = spam_data[id,]
+test = spam_data[-id,]
+```
+
+
+## 1.5 Repeat step 4 for K=1 and compare the results with step 4. What effect does the decrease of K lead to and why?
+```{r}
+knn_model1 <- train.kknn(Spam ~., data = train, kmax = 1)
+
+train$knn_prediction_class <- predict(knn_model1, train)
+test$knn_prediction_class <- predict(knn_model1, test)
+
+conf_train2 <- table(train$Spam, train$knn_prediction_class)
+names(dimnames(conf_train2)) <- c("Actual Train", "Predicted Train")
+confusionMatrix(conf_train2)
+
+conf_test2 <- table(test$Spam, test$knn_prediction_class)
+names(dimnames(conf_test2)) <- c("Actual Test", "Predicted Test")
+confusionMatrix(conf_test2)
+```
+
+## Function for distance
+```{r}
+cosine_distance <- function(x, y) 
+{
+    answer <- sum(t(x) %*% y)/(sqrt(sum(x^2)) * sqrt(sum(y^2)))
+    answer_minus <- 1 - answer
+    return(answer_minus)
+}
+
+knearest <- function(newdata, data, K){
+  
+  
+  pred <- c()  #empty pred vector 
+  #LOOP-1
+  for(i in c(1:nrow(newdata))){   #looping over each record of test data
+    cosine_dist =c()          #cosine_dist & cosine_char empty vector
+    cosine_char = c()
+    good = 0              #good & bad variable initialization with 0 value
+    bad = 0
+    
+    #LOOP-2-looping over train data 
+    for(j in c(1:nrow(data))){
+
+      #adding euclidean distance b/w test data point and train data to cosine_dist vector
+      cosine_dist <- c(cosine_dist, cosine_distance(newdata[i,], data[j,]))
+
+      #adding class variable of training data in cosine_char
+      cosine_char <- c(cosine_char, as.character(data[j,]))
+    }
+    
+    df <- data.frame(cosine_char, cosine_dist) #df dataframe created with cosine_char & cosine_dist columns
+
+    df <- df[order(df$cosine_dist),] #sorting df dataframe to gettop K neighbors
+    df <- df[1:K,]               #df dataframe with top K neighbors
+
+    #Loop 3: loops over df and counts classes of neibhors.
+    for(k in c(1:nrow(df))){
+      if(as.character(df[k,"cosine_char"]) == "g"){
+        good = good + 1
+      }
+      else
+        bad = bad + 1
+    }
+
+    # Compares the no. of neighbors with class label good or bad
+    if(good > bad){          #if majority of neighbors are good then put "g" in pred vector
+
+      pred <- c(pred, "g")
+    }
+    else if(good < bad){
+                   #if majority of neighbors are bad then put "b" in pred vector
+      pred <- c(pred, "b")
+    }
+    
+  }
+  return(pred) #return pred vector
+}
+```
+
+
+## 1.5 Repeat step 4 for K=1 and compare the results with step 4. What effect does the decrease of K lead to and why?
+```{r}
+
+
+n =  NROW(spam_data)
+id = sample(1:n, floor(n*0.5))
+train = spam_data[id,]
+test = spam_data[-id,]
+
+
+X_train <- train %>% select(-c(Spam)) %>% as.matrix()
+Y_train <-  train %>% select(Spam) %>% as.matrix()
+X_test <- test %>% select(-c(Spam)) %>% as.matrix()
+Y_test <-  test %>% select(Spam) %>% as.matrix()
+
+knn_model_train <- knearest(newdata = Y_train, data = X_train, K = 30)
+knn_model_test <- knearest(newdata = Y_test, data = X_test, K = 30)
+
+conf_train3 <- table(Y_train$Spam, knn_model_train)
+names(dimnames(conf_train3)) <- c("Actual Train", "Predicted Train")
+confusionMatrix(conf_train3)
+
+conf_test3 <- table(Y_test$Spam, knn_model_test)
+names(dimnames(conf_test3)) <- c("Actual Test", "Predicted Test")
+confusionMatrix(conf_test3)
+```
+
+```{r}
+
+```
+
+
+# Apendix
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+```

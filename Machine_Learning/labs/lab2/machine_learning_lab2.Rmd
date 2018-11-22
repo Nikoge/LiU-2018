@@ -1,0 +1,80 @@
+---
+title: "machine learning(732A99) lab2"
+author: "Anubhav Dikshit(anudi287)"
+date: "1 December 2018"
+output: 
+    pdf_document:
+      toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Assignment 1
+
+## Loading The Libraries
+```{r, message=FALSE, echo = FALSE}
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(xlsx, glmnet, MASS, jtools, huxtable, ggplot2, 
+               ggthemes, gridExtra, ROCR, broom, caret, e1071,
+               kknn, tidyr, dplyr,reshape2, glmnet)
+
+options("jtools-digits" = 2, scipen = 999)
+
+```
+
+## Loading Input files
+```{r}
+crab_data <- read.csv(file = "australian-crabs.csv", header = TRUE)
+credit_data <- read.xlsx("creditscoring.xls", sheetName = "credit")
+```
+
+
+## 1.1 Use australian-crabs.csv and make a scatterplot of carapace length (CL) versus rear width (RW) where observations are colored by Sex. Do you think that this data is easy to classify by linear discriminant analysis? Motivate your answer.
+
+```{r}
+ggplot(data = crab_data, aes(x = CL, y = RW, color = sex )) + geom_point() + geom_smooth(method = 'loess') + 
+  ggtitle("Scatter Plot of Carapace Length vs. Rear Width")
+
+
+mu_CL <- crab_data %>% 
+  group_by(sex) %>%
+  summarise(grp.mean = mean(CL))
+
+mu_RW <- crab_data %>% 
+  group_by(sex) %>%
+  summarise(grp.mean = mean(RW))
+
+
+ggplot(data = crab_data, aes(x = CL)) + geom_density(aes(fill = sex), alpha = 0.3) +
+      geom_vline(aes(xintercept = grp.mean, color = sex),
+             data = mu_CL, linetype = "dashed") + ggtitle("Density plot of Carapace Length vs. gender")
+
+
+ggplot(data = crab_data, aes(x = RW)) + geom_density(aes(fill = sex), alpha = 0.3) +
+      geom_vline(aes(xintercept = grp.mean, color = sex),
+             data = mu_RW, linetype = "dashed") + ggtitle("Density plot of Rear Width vs. gender")
+
+```
+
+Analysis: In Linear Discriminant Analysis (LDA) the boundary between differenet class of datapoints is a line just as the case in a logistics regression. In LDA there is an assumption that the data points for each class come from a Gaussian distribution with same variance,but different means, just as an added measure we have plotted this also.
+
+
+
+
+
+## 1.1 Import the data into R and divide it into training and test sets (50%/50%) by using the following code
+```{r}
+set.seed(12345)
+
+n =  NROW(spam_data)
+id = sample(1:n, floor(n*0.5))
+train = spam_data[id,]
+test = spam_data[-id,]
+```
+
+
+# Apendix
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+```
