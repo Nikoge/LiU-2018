@@ -1,0 +1,156 @@
+---
+title: "Computer Lab 1 (732A99 Machine Learning)"
+author: "Lennart Schilling (lensc874)"
+date: "22 November 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Assignment 1
+
+## 1.1 
+
+At first, the data from the Excel file *spambase.xlsx* will be imported and splitted into train and test data (50%:50%)
+```{r, echo=TRUE, eval=TRUE}
+# Importing data
+library(readxl)
+data = read_excel("spambase.xlsx")
+
+# Dividing data into train and test set
+n = dim(data)[1]
+set.seed(12345)
+id = sample(1:n, floor(n*0.5))
+train = data[id,]
+test = data[-id,]
+```
+
+## 1.2
+
+Using the train data, a logistic regression model will be created. Analysing the p-values of the coefficients, it can be seen which independent variables have a significant influence on the dependent variable *Spam*. For the sake of clarity, this is not explicitly stated in this report.
+```{r, echo=TRUE, eval=TRUE, results="hide"}
+# Fitting model
+logitModel = glm(Spam ~ ., data = train, family = binomial)
+summary(logitModel)
+```
+
+In the next step, the *logitModel* will be used to classify emails of the training and test data. To prevent duplicate code in 1.3, the *classificationLogit*-function was coded. Giving data and a threshold as an input, a list with the specified threshold to decide which probabilities lead to a spam classification, the confusion matrix and the misclassification rate will be returned.  
+```{r, echo=TRUE, eval=TRUE}
+# Classifying & evaluating results 
+classificationLogit = function(data, threshold = 0.5) {
+  # Classifying emails with the model
+  yFit = predict(logitModel,
+                 newdata = data[,!colnames(data) %in% "Spam"],
+                 type='response')
+  yFit = ifelse(yFit > threshold, 1, 0)
+  # Evaluating classification results
+  confusionMatrix = table(y = data$Spam, yFit)
+  misclassificationRate <- mean(yFit != data$Spam)
+  # Returning results
+  return(
+    list(
+      threshold = threshold,
+      confusionMatrix = confusionMatrix,
+      misclassificationRate = misclassificationRate
+    )
+  )
+}
+```
+
+Using the train data and the default threshold (0.5) as the input leads to the following confusion matrix and misclassification rate.
+```{r, echo=TRUE, eval=TRUE}
+classificationLogitTrain = classificationLogit(data = train)
+classificationLogitTrain$confusionMatrix
+classificationLogitTrain$misclassificationRate
+```
+
+Instead, using the test data and the default threshold (0.5) as the input leads to the following confusion matrix and misclassification rate.
+```{r, echo=TRUE, eval=TRUE}
+classificationLogitTest = classificationLogit(data = test)
+classificationLogitTest$confusionMatrix
+classificationLogitTest$misclassificationRate
+```
+
+It can be seen that the model performs about equally well for both data. The misclassification rate is slightly better for the training data (16.2%) than for the training data (17.7%). This is an indication that there is not too much overfitting on the training data. 
+
+## 1.3 
+
+Now we are changing the classification principle and therefore the input threshold from 0.5 to 0.9. 
+
+Using the train data and the threshold = 0.9 as the input leads to the following confusion matrix and misclassification rate.
+```{r, echo=TRUE, eval=TRUE}
+classificationLogitTrainAdjThreshold = classificationLogit(data = train, threshold = 0.9)
+classificationLogitTrainAdjThreshold$confusionMatrix
+classificationLogitTrainAdjThreshold$misclassificationRate
+```
+
+Using the test data and the threshold = 0.9 as the input leads to the following confusion matrix and misclassification rate.
+```{r, echo=TRUE, eval=TRUE}
+classificationLogitTestAdjThreshold = classificationLogit(data = test, threshold = 0.9)
+classificationLogitTestAdjThreshold$confusionMatrix
+classificationLogitTestAdjThreshold$misclassificationRate
+```
+
+In both cases it can be seen that the classification quality decreases a lot (misclassification rates about 30%). Because the threshold is now much higher than before, the number of false negative predictions has increased strongly.
+
+## 1.4
+
+In the following, the standard classifier *kknn()* was used to predict spam mails. Again, to prevent duplicate code in 1.5, the *classificationKknn*-function was coded. Giving data, number of k and a threshold as an input, a list with the same elements as the *classificationLogit*-function is returned.  
+
+```{r, echo=TRUE, eval=TRUE}
+library(kknn)
+# Classifying & evaluating results 
+classificationKknn = function(data, k, threshold = 0.5) {
+  # Classifying emails
+  kknnModel <- kknn(formula = Spam ~ .,
+                    train = train,
+                    test = data,
+                    k = k)
+  kknnModel$fitted.values = ifelse(kknnModel$fitted.values > threshold, 1, 0)
+  # Evaluating classification results
+  confusionMatrix = table(y = data$Spam, yFit = kknnModel$fitted.values)
+  misclassificationRate <- mean(kknnModel$fitted.values != data$Spam)
+  # Returning results
+  return(
+    list(
+      threshold = threshold,
+      confusionMatrix = confusionMatrix,
+      misclassificationRate = misclassificationRate
+    )
+  )
+}
+```
+
+Using the train data and k = 30 as the input leads to the following misclassification rate.
+```{r, echo=TRUE, eval=TRUE}
+classificationKnnTrain = classificationKknn(data = train, k = 30)
+classificationKnnTrain$misclassificationRate
+```
+
+Instead, using the test data and k = 30 as the input leads to the following misclassification rate.
+```{r, echo=TRUE, eval=TRUE}
+classificationKnnTest = classificationKknn(data = test, k = 30)
+classificationKnnTest$misclassificationRate
+```
+
+Here, a big difference between the prediction power of the model related to the train data (misclassification rate: 17.2%) and the test data (misclassification rate: 32.9%) can be observed. This leads to the assumption that the model is overfitting on the training data. Compared to the results of the logistic regression model with the threshold = 0.5, this model does not deliver such accurate predictions. 
+
+## 1.5
+
+Now we are changing the k from 30 to 1. 
+
+Using the train data and k = 1 as the input leads to the following misclassification rate.
+```{r, echo=TRUE, eval=TRUE}
+classificationKnnTrain = classificationKknn(data = train, k = 1)
+classificationKnnTrain$misclassificationRate
+```
+
+Using the test data and k = 1 as the input leads to the following misclassification rate.
+```{r, echo=TRUE, eval=TRUE}
+classificationKnnTest = classificationKknn(data = test, k = 1)
+classificationKnnTest$misclassificationRate
+```
+
+This example shows very clearly that the model is strongly overfitted on the training data. While it classifies every mail for the training data correctly, the misclassification rate for the test data is almost 35%. With k = 1, the classification depends only on the nearest neighbor (the value of the dependent variable of this observation in the training data where the independent variables have the lowest distance to the obsvervation which shall be classified) which leads to a much higher dependency on the training data.

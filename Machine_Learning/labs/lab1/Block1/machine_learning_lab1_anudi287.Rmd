@@ -529,6 +529,6 @@ In step 7 we get the best value of lambda for lasso for which the mean squared e
 
 Thus we have learned how to perform regression and how to account for multicorrlinearity and possible ways to detect and negate the same.
 
-# Apendix
+# Appendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
 ```

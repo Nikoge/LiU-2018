@@ -1,0 +1,178 @@
+---
+title: "machine learning(732A99) lab1 Block 2"
+author: "Anubhav Dikshit(anudi287)"
+date: "4 December 2018"
+output: 
+    pdf_document:
+      toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Assignment 1
+
+## Loading The Libraries
+```{r, message=FALSE, echo = FALSE, warnings=FALSE}
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(mboost, randomForest, dplyr, ggplot2)
+
+options(scipen = 999)
+
+```
+
+
+# 1.Your task is to evaluate the performance of Adaboost classification trees and random forests 
+on the spam data. Specifically, provide a plot showing the error rates when the number of trees considered are 10,20,..,100. 
+To estimate the error rates, use 2/3 of the data for training and 1/3 as hold-out test data.
+
+## Loading Input files
+```{r}
+spam_data <- read.csv(file = "spambase.data", header = FALSE)
+colnames(spam_data)[58] <- "Spam"
+spam_data$Spam <- factor(spam_data$Spam, levels = c(0,1), labels = c("0", "1"))
+```
+
+
+## Splitting into Train and Test with 66% and 33% ratio.
+```{r}
+set.seed(12345)
+n =  NROW(spam_data)
+id = sample(1:n, floor(n*(2/3)))
+train = spam_data[id,]
+test = spam_data[-id,]
+```
+
+## Trainning the Model
+
+### Adaboost with varying depth
+```{r}
+
+final_result <- NULL
+for(i in seq(from = 10, to = 100, by = 10)){
+
+ada_model <- mboost::blackboost(Spam~., 
+                                 data = train, 
+                                 family = AdaExp(), 
+                               control=boost_control(mstop=i))
+
+forest_model <- randomForest(Spam~., data = train, ntree = i)
+
+
+prediction_function <- function(model, data){
+  predicted <- predict(model, newdata = data, type = c("class"))
+  predict_correct <- ifelse(data$Spam == predicted, 1, 0) 
+  score <- sum(predict_correct)/NROW(data)
+  return(score)
+}
+
+
+train_ada_model_predict <- predict(ada_model, newdata = train, type = c("class"))
+test_ada_model_predict <- predict(ada_model, newdata = test, type = c("class"))
+train_forest_model_predict <- predict(forest_model, newdata = train, type = c("class"))
+test_forest_model_predict <- predict(forest_model, newdata = test, type = c("class"))
+
+test_predict_correct <- ifelse(test$Spam == test_forest_model_predict, 1, 0) 
+train_predict_correct <- ifelse(train$Spam == train_forest_model_predict, 1, 0) 
+
+
+train_ada_score <-  prediction_function(ada_model, train)
+test_ada_score <-  prediction_function(ada_model, test)
+train_forest_score <-  prediction_function(forest_model, train)
+test_forest_score <-  prediction_function(forest_model, test)
+
+iteration_result <- data.frame(number_of_trees = i, 
+                               accuracy = c(train_ada_score, 
+                                            test_ada_score, 
+                                            train_forest_score, 
+                                            test_forest_score), 
+                               type  = c("train", "test", "train", "test"),
+                               model = c("ADA", "ADA",  "Forest", "Forest"))
+
+
+final_result <- rbind(iteration_result, final_result)
+}
+
+final_result$error_rate_percentage <- 100*(1 - final_result$accuracy)
+ggplot(data = final_result, aes(x = number_of_trees, 
+                                y = error_rate_percentage, 
+                                group = type, color = type)) + 
+  geom_point() + 
+  geom_line() + 
+  ggtitle("Error Rate vs. increase in trees") + facet_grid(rows = vars(model))
+
+```
+
+## 2 Your task is to implement the EM algorithm for mixtures of multivariate Bernoulli distributions. Please use the template in the next page to solve the assignment. Then, use your implementation to show what happens when your mixture models has too few and too many components, i.e. set K = 2,3,4 and compare results. Please provide a short explanation as well.
+
+```{r}
+set.seed(1234567890)
+max_it <- 100 # max number of EM iterations
+min_change <- 0.1 # min change in log likelihood between two consecutive EM iterations
+N=1000 # number of training points
+D=10 # number of dimensions
+x <- matrix(nrow=N, ncol=D) # training data
+true_pi <- vector(length = 3) # true mixing coefficients
+true_mu <- matrix(nrow=3, ncol=D) # true conditional distributions
+true_pi=c(1/3, 1/3, 1/3)
+true_mu[1,]=c(0.5,0.6,0.4,0.7,0.3,0.8,0.2,0.9,0.1,1)
+true_mu[2,]=c(0.5,0.4,0.6,0.3,0.7,0.2,0.8,0.1,0.9,0)
+true_mu[3,]=c(0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5)
+plot(true_mu[1,], type="o", col="blue", ylim=c(0,1))
+points(true_mu[2,], type="o", col="red")
+points(true_mu[3,], type="o", col="green")
+
+
+# Producing the training data
+for(n in 1:N) {
+k <- sample(1:3,1,prob=true_pi)
+for(d in 1:D) {
+x[n,d] <- rbinom(1,1,true_mu[k,d])
+}
+}
+
+K=3 # number of guessed components
+z <- matrix(nrow=N, ncol=K) # fractional component assignments
+pi <- vector(length = K) # mixing coefficients
+mu <- matrix(nrow=K, ncol=D) # conditional distributions
+llik <- vector(length = max_it) # log likelihood of the EM iterations
+# Random initialization of the paramters
+pi <- runif(K,0.49,0.51)
+pi <- pi / sum(pi)
+
+
+for(k in 1:K) {
+mu[k,] <- runif(D,0.49,0.51)
+}
+pi
+mu
+
+
+for(it in 1:max_it) {
+plot(mu[1,], type="o", col="blue", ylim=c(0,1))
+points(mu[2,], type="o", col="red")
+points(mu[3,], type="o", col="green")
+#points(mu[4,], type="o", col="yellow")
+Sys.sleep(0.5)
+# E-step: Computation of the fractional component assignments
+# Your code here
+#Log likelihood computation.
+# Your code here
+cat("iteration: ", it, "log likelihood: ", llik[it], "\n")
+flush.console()
+# Stop if the lok likelihood has not changed significantly
+# Your code here
+#M-step: ML parameter estimation from the data and fractional component assignments
+# Your code here
+}
+pi
+mu
+plot(llik[1:it], type="o")
+
+```
+
+
+# Appendix
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+```

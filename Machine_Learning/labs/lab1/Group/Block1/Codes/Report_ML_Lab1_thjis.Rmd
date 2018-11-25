@@ -1,0 +1,465 @@
+---
+title: "Lab01 Machine Learning"
+subtitle: "Machine Learning - 732A99"
+author: "Thijs Quast (thiqu264)"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+bibliography: lab1_ml_ref.bib
+link-citations: yes
+output:
+  pdf_document
+toc: yes
+---
+
+\newpage
+# Assignment 1
+### 1
+```{r}
+# Import Excel file spambase.xlsx
+library(readxl)
+data <- read_excel("spambase.xlsx")
+
+# Divide excel file into training and tests sets (50%/50%)
+n <- dim(data)[1]
+set.seed(12345)
+id <- sample(1:n, floor(n*0.5))
+train <- data[id,]
+test <- data[-id, ]
+```
+
+
+### 2
+After splitting the dataset into training and test sets, a logistic regression is ran.
+```{r}
+# Fitting and predicting
+fit <- glm(Spam ~ ., data = train, family = binomial)
+predict_on_train <- predict(fit, train, type = "response")
+predict_on_test <- predict(fit, test, type = "response")
+
+# Classifying results for training and test datasets p>0.5
+predict_on_train[predict_on_train > 0.5] <- 1
+predict_on_train[predict_on_train <= 0.5] <- 0
+
+predict_on_test[predict_on_test > 0.5] <- 1
+predict_on_test[predict_on_test <= 0.5] <- 0
+
+# Confusion matrices
+train_confusion <- table(train$Spam, predict_on_train)
+test_confusion <- table(test$Spam, predict_on_test)
+
+# Misclassifcation rates
+total_observations_train <- sum(train_confusion)
+total_observations_test <- sum(test_confusion)
+
+fp_train <- train_confusion[1,2]
+fn_train <- train_confusion[2,1]
+fp_test <- test_confusion[1,2]
+fn_test <- test_confusion[2,1]
+
+missclassification_train <- (fp_train + fn_train)/total_observations_train
+missclassification_test <- (fp_test + fn_test)/total_observations_test
+```
+
+```{r}
+library(knitr)
+kable(train_confusion, caption = "Confusion matrix training data")
+```
+
+The misclassification rate on the training dataset is: 0.1627737
+
+```{r}
+kable(test_confusion ,caption = "Confusion matrix test data")
+```
+
+The misclassification rate on the test dataset is: 0.1773723
+
+From the obtained results from of the regression on training and test data, one can say that the regression performs better on the training data. The number of False Positives and False Negatives is smaller for the training dataset. Logically, the misclassification rates on the training data is smaller. In practice this means that the regression model is probably slightly overfitting on the training data.
+
+### 3
+```{r}
+# Fitting and predicting
+fit_2 <- glm(Spam ~ ., data = train, family = binomial)
+predict_on_train_2 <- predict(fit_2, train, type = "response")
+predict_on_test_2 <- predict(fit_2, test, type = "response")
+
+# Classifying results for training and test datasets p>0.9
+predict_on_train_2[predict_on_train_2 > 0.9] <- 1
+predict_on_train_2[predict_on_train_2 <= 0.9] <- 0
+
+predict_on_test_2[predict_on_test_2 > 0.9] <- 1
+predict_on_test_2[predict_on_test_2 <= 0.9] <- 0
+
+# Confusion matrices
+train_confusion_2 <- table(train$Spam, predict_on_train_2)
+test_confusion_2 <- table(test$Spam, predict_on_test_2)
+
+# Misclassifcation rates
+total_observations_train_2 <- sum(train_confusion_2)
+total_observations_test_2 <- sum(test_confusion_2)
+
+fp_train_2 <- train_confusion_2[1,2]
+fn_train_2 <- train_confusion_2[2,1]
+fp_test_2 <- test_confusion_2[1,2]
+fn_test_2 <- test_confusion_2[2,1]
+
+missclassification_train_2 <- (fp_train_2 + fn_train_2)/total_observations_train_2
+missclassification_test_2 <- (fp_test_2 + fn_test_2)/total_observations_test_2
+```
+
+```{r}
+kable(train_confusion_2, caption = "Confusion matrix training data")
+```
+
+The misclassification rate on the training dataset is: 0.3065693
+```{r}
+kable(test_confusion_2, caption = "Confusion matrix test data")
+```
+
+The misclassification rate on the test dataset is: 0.3124088
+
+Resulting from the new rule, the misclassification rates for both the training dataset and the test dataset have gone increased. Also, the confusion matrices have changed in their performance. For both the training and test data, the number of False Negatives have increased and the number of False Positives have decreased. In practice this means that the model more often classifies a spam email as a non-spam email. Which is not what one wants the spam classifier to do. I would say the new rule has made the model worse.
+
+### 4
+```{r}
+library(kknn)
+
+# Not sure whether to use train.kknn function or kknn function. For now I will go with kknn.
+kknn_model <- kknn(Spam ~ ., train = train, test = test, k = 30)
+predict_on_train_3 <- fitted(kknn_model)
+predict_on_test_3 <- fitted(kknn_model)
+
+# Classifying results for training and test datasets p>0.5
+predict_on_train_3[predict_on_train_3 > 0.5] <- 1
+predict_on_train_3[predict_on_train_3 <= 0.5] <- 0
+
+predict_on_test_3[predict_on_test_3 > 0.5] <- 1
+predict_on_test_3[predict_on_test_3 <= 0.5] <- 0
+
+# Confusion matrices
+train_confusion_3 <- table(train$Spam, predict_on_train_3)
+test_confusion_3 <- table(test$Spam, predict_on_test_3)
+
+# Misclassifcation rates
+total_observations_train_3 <- sum(train_confusion_3)
+total_observations_test_3 <- sum(test_confusion_3)
+
+fp_train_3 <- train_confusion_3[1,2]
+fn_train_3 <- train_confusion_3[2,1]
+fp_test_3 <- test_confusion_3[1,2]
+fn_test_3 <- test_confusion_3[2,1]
+
+missclassification_train_3 <- (fp_train_3 + fn_train_3)/total_observations_train_3
+missclassification_test_3 <- (fp_test_3 + fn_test_3)/total_observations_test_3
+```
+
+
+The misclassification rate on the training dataset is: 0.449635
+
+The misclassification rate on the test dataset is: 0.329927
+
+Compared the step 2, the misclassification rate on the training dataset is severly worse (0.449635 compared to 0.1627737). The misclassification on the test dataset is also worse, however the difference smaller than on the training dataset, (0.329927 compared to 0.1773723).
+
+### 5
+```{r}
+
+# 1.5 ####
+kknn_model_2 <- kknn(Spam ~ ., train = train, test = test, k = 1)
+predict_on_train_4 <- fitted(kknn_model_2)
+predict_on_test_4 <- fitted(kknn_model_2)
+
+# Classifying results for training and test datasets p>0.5
+predict_on_train_4[predict_on_train_4 > 0.5] <- 1
+predict_on_train_4[predict_on_train_4 <= 0.5] <- 0
+
+predict_on_test_4[predict_on_test_4 > 0.5] <- 1
+predict_on_test_4[predict_on_test_4 <= 0.5] <- 0
+
+# Confusion matrices
+train_confusion_4 <- table(train$Spam, predict_on_train_4)
+test_confusion_4 <- table(test$Spam, predict_on_test_4)
+
+# Misclassifcation rates
+total_observations_train_4 <- sum(train_confusion_4)
+total_observations_test_4 <- sum(test_confusion_4)
+
+fp_train_4 <- train_confusion_4[1,2]
+fn_train_4 <- train_confusion_4[2,1]
+fp_test_4 <- test_confusion_4[1,2]
+fn_test_4 <- test_confusion_4[2,1]
+
+missclassification_train_4 <- (fp_train_4 + fn_train_4)/total_observations_train_4
+missclassification_test_4 <- (fp_test_4 + fn_test_4)/total_observations_test_4
+```
+
+After setting K=1, the results are the following:
+The misclassification rate on the training dataset is: 0.470073
+The misclassification rate on the test dataset is: 0.3459854
+
+Compared to question 4, the misclassification rate on the training dataset and the test dataset have both increased. 
+
+# Assignment 3
+### 1
+```{r}
+select_my_features <- function(x, y, nfolds){
+  # set seed and reshuffle data
+  set.seed(12345)
+  intercept <- rep(1, nrow(x))
+  matrix_xy <- cbind(intercept, x, y)
+  n <- dim(x)[1]
+  id <- sample(1:n, floor(n))
+  matrix_xy <- matrix_xy[id, ]
+  matrix_x <- matrix_xy[, 1:6]
+  matrix_y <- matrix_xy[, 7]
+  
+  # Create folds and empty vectors
+  folds <- c(1:nfolds)
+  residuals_folds <- c()
+  res_model <- c()
+  n_features <- c()
+  
+  # Possible combinations of features including an intercept, intercept is always selected
+  combinations_matrix <- expand.grid(c(T, F), c(T, F), c(T, F), c(T, F),
+                                     c(T, F))
+  intercept_true <- rep(TRUE, 32)
+  combinations_matrix <- cbind(intercept_true, combinations_matrix)
+
+
+    # Loop over each possible model
+    for (i in 1:32){
+      model_i <- as.logical(combinations_matrix[i,])
+      data <- matrix_x[, model_i]
+      folds <- c(1:nfolds)
+      data_xy <- cbind(data, matrix_y, folds)
+      dim_x <- ncol(data_xy) - 2
+      
+      #loop over each fold
+      for (each in 1:nfolds){
+        #training and test data
+        train <- data_xy[data_xy[, "folds"] != each,]
+        train_x <- train[, 1:dim_x]
+        y_dim <- dim_x + 1
+        train_y <- train[, y_dim]
+        
+        test <- data_xy[data_xy[, "folds"] == each,]
+        test_x <- test[, 1:dim_x]
+        test_y <- test[, y_dim]
+        
+        # computing linear regressions
+        Xt_i <- t(train_x)
+        XtX_i <- solve(Xt_i %*% train_x)
+        betaestimates_i <- XtX_i %*% Xt_i %*% train_y
+        yfit_i <- test_x %*% betaestimates_i
+        res <- test_y - yfit_i
+        mse <- mean(res^2)
+        
+        #storing outcomes in vectors
+        residuals_folds[each] <- mse
+        mean_mse <- mean(residuals_folds)
+      }
+      # storing outcomes in other empty vectors, one level above previous loop
+   res_model[i] <- mean_mse
+   n_features[i] <- dim_x - 1
+    }
+  # extracting the best model
+  best_model <- which.min(res_model)
+  possible_regressors <- colnames(matrix_x)
+  x <- as.logical(combinations_matrix[best_model,])
+  final_model <- possible_regressors[x]
+  
+  df <- cbind(res_model, n_features)
+  
+  # Compute end result
+  list_of_results <- list(final_model)
+  list_of_results$plot <- barplot(height = res_model, names.arg = n_features)
+  list_of_results$cv_score <- df[best_model, 1]
+  return(list_of_results)
+}
+```
+
+### 2
+```{r}
+swiss_y <- as.matrix(swiss[, 1])
+swiss_x <- as.matrix(swiss[, 2:6])
+select_my_features(swiss_x, swiss_y, 5)
+```
+
+In general I would say that as the number of features increases the model performance increases as well. The optimal subset of featues is 4 (excluding the intercept). The optimal model therefore is:
+
+Fertility ~ Intercept + X1"Agriculture" + X2"Education" + X3"Catholic" + X4"Infant.Mortality"
+
+Resulting in a cross validation score of : 63.40326. 
+
+I would say for none of the independent variables it is reasonable to have an impact on the fertility of people. When reasoning, there is no explanation as to why working in agriculture, having a degree, religion or death of childs could affect the fertility of people. Therefore when computing these models it is always important to reason whether the results make sense.
+
+Infant Mortality is more a result of fertility. Therefore it could be an idea to have "Fertility" as independent variable and "Infant.Mortality" as dependent variable.
+
+# Assignment 4
+### 1
+```{r}
+library(ggplot2)
+#4.1
+tecator <- read_excel("tecator.xlsx")
+plot <- ggplot(tecator, aes(x=Protein, y=Moisture)) + geom_point()
+plot
+```
+
+Yes, althought there are some outliers, there seems to be positive linear relationship between
+Protein and Moisture. Meaning, if Protein increaes, Moisture increases. Therefore, I argue the data is well described by a linear model.
+
+### 2
+The probabilistic model that describes Mi is: Moisture = B0 + B1Protein + B2Protein^2 + ... + BiProtein^i + error. 
+
+It is appropriate to use MSE in this case, because MSE is an unbiased estimator of the variance of the error term. Because MSE is the average of the squared value of all the error terms, and it is computed by dividing by the degrees of freedom, the MSE measures how well the model fits the data [@ostertagova2012modelling].
+
+### 3
+```{r}
+# 4.3
+# Dividing data into 50%/50% train/test
+n <- dim(tecator)[1]
+set.seed(12345)
+id <- sample(1:n, floor(n*0.5))
+train <- tecator[id,]
+test <- tecator[-id, ]
+
+# M1
+model_m1 <- lm(Moisture ~ Protein, data = train)
+m1_predict_test <- predict(model_m1, test)
+m1_predict_train <- predict(model_m1, train)
+m1_residual_test <- (sum((test$Moisture - m1_predict_test)^2))/nrow(test)
+m1_residual_train <- (sum((train$Moisture - m1_predict_train)^2))/nrow(train)
+
+#M2
+model_m2 <- lm(Moisture ~ Protein + I(Protein^2), data = train)
+m2_predict_test <- predict(model_m2, test)
+m2_predict_train <- predict(model_m2, train)
+m2_residual_test <- (sum((test$Moisture - m2_predict_test)^2))/nrow(test)
+m2_residual_train <- (sum((train$Moisture - m2_predict_train)^2))/nrow(train)
+
+#M3
+model_m3 <- lm(Moisture ~ Protein + I(Protein^2) + I(Protein^3), data = train)
+m3_predict_test <- predict(model_m3, test)
+m3_predict_train <- predict(model_m3, train)
+m3_residual_test <- (sum((test$Moisture - m3_predict_test)^2))/nrow(test)
+m3_residual_train <- (sum((train$Moisture - m3_predict_train)^2))/nrow(train)
+
+#M4
+model_m4 <- lm(Moisture ~ Protein + I(Protein^2) + I(Protein^3) + I(Protein^4), data = train)
+m4_predict_test <- predict(model_m4, test)
+m4_predict_train <- predict(model_m4, train)
+m4_residual_test <- (sum((test$Moisture - m4_predict_test)^2))/nrow(test)
+m4_residual_train <- (sum((train$Moisture - m4_predict_train)^2))/nrow(train)
+
+#M5
+model_m5 <- lm(Moisture ~ Protein + I(Protein^2) + I(Protein^3) + I(Protein^4)
+               + I(Protein^5), data = train)
+m5_predict_test <- predict(model_m5, test)
+m5_predict_train <- predict(model_m5, train)
+m5_residual_test <- (sum((test$Moisture - m5_predict_test)^2))/nrow(test)
+m5_residual_train <- (sum((train$Moisture - m5_predict_train)^2))/nrow(train)
+
+#M6
+model_m6 <- lm(Moisture ~ Protein + I(Protein^2) + I(Protein^3) + I(Protein^4)
+               + I(Protein^5) + I(Protein^6), data = train)
+m6_predict_test <- predict(model_m6, test)
+m6_predict_train <- predict(model_m6, train)
+m6_residual_test <- (sum((test$Moisture - m6_predict_test)^2))/nrow(test)
+m6_residual_train <- (sum((train$Moisture - m6_predict_train)^2))/nrow(train)
+
+# Create dataframe of MSE outcomes
+mse_matrix <- matrix(NA, ncol = 3, nrow = 6)
+mse_matrix
+colnames(mse_matrix) <- c("train", "test", "i")
+model_i <- c(1:6)
+mse_matrix[,3] <- model_i
+mse_matrix[1,1] <- m1_residual_train
+mse_matrix[1,2] <- m1_residual_test
+mse_matrix[2,1] <- m2_residual_train
+mse_matrix[2,2] <- m2_residual_test
+mse_matrix[3,1] <- m3_residual_train
+mse_matrix[3,2] <- m3_residual_test
+mse_matrix[4,1] <- m4_residual_train
+mse_matrix[4,2] <- m4_residual_test
+mse_matrix[5,1] <- m5_residual_train
+mse_matrix[5,2] <- m5_residual_test
+mse_matrix[6,1] <- m6_residual_train
+mse_matrix[6,2] <- m6_residual_test
+
+mse_df <- as.data.frame(mse_matrix)
+mse_df
+
+# Plot MSE's of different models on training and test data
+
+plot_mse <- ggplot(data = mse_df, aes(x=i, y=train)) + geom_line(color = 'darkblue') + geom_line(aes(x=i, y=test))
+plot_mse <- plot_mse + ylab("residual")
+plot_mse 
+```
+The darkblue line represents the residuals on the training data against the number of i implemented in the model. The black line represents the residuals on the test data against the number of i implemented in the model. The best model according to the plot is where i = 1. This model has the lowest residual on the test dataset and therefore performs best. In this plot, one can see a clear example of a bias-variance tradeoff. As the model is more specifically fit to the training dataset, the performance on the training dataset increaes (The residual decreases) however the model is biased towards the training dataset. As soon as the model is presented a new dataset (the test dataset) with different variance, the model performs worse. Therefore it is always a tradeoff between overfitting on the training dataset to increase model performance and accounting for variance of new unseen data.
+
+
+### 4
+```{r}
+library("MASS")
+
+# Subsetting dataframe for the model
+df_4 <- tecator
+class(tecator)
+tecator_q4 <- tecator[, 2:102]
+
+full_model <- lm(Fat ~ ., data = tecator_q4)
+summary(full_model)
+stepwise <- stepAIC(full_model, direction = "both", trace = FALSE)
+summary(stepwise)
+
+# The intercept does not count as a variable, therefore subtract 1
+number_of_variables <- length(stepwise$coefficients) - 1
+number_of_variables
+```
+
+Excluding the intercept, a total of 63 independent variables are selected in this model.
+
+### 5
+```{r}
+# 4.5 ####
+# Installing and importing packages
+library(glmnet)
+
+# Preparing data
+dim(tecator_q4)
+covariates <- tecator_q4[, 1:100]
+response <- tecator_q4[, 101]
+dim(response)
+
+# 4.5 ####
+model_ridge <- glmnet(as.matrix(covariates), as.matrix(response), alpha = 0, family = "gaussian")
+plot(model_ridge, xvar = "lambda", label = TRUE)
+```
+
+All coefficients converge to zero, as log(lambda) increases.
+
+### 6
+```{r}
+model_lasso <- glmnet(as.matrix(covariates), as.matrix(response), alpha = 1, family = "gaussian")
+plot(model_lasso, xvar = "lambda", label = TRUE)
+```
+
+Comparing results from in the LASSO regression, less variables are selected. As log Lambda increases the coefficients in both models converge to zero. However, in the LASSO regression, the coefficients converge much faster as log(lambda) increases.
+
+### 7
+```{r}
+# Use cv.glmnet function, set alpha = 1, as a LASSO model is implemented
+model_cv <- cv.glmnet(as.matrix(covariates), as.matrix(response), alpha = 1, family = "gaussian",
+                      lambda = seq(0,1,0.001))
+model_cv$lambda.min
+plot(model_cv)
+coef(model_cv, s="lambda.min")
+```
+
+The optimal lambda is 0. Excluding the intercept, a total of 100 independent variables were selected. In this dataset, this means that all the independent variables were incorporated in the model.
+
+### 8
+
+The model implemented in question 4, by means of stepAIC, selects a total of 63 independent variables, whereas the model in question 7 selects 100 independent variables.
+
+# Appendix
+```{r, ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+```
+
