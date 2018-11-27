@@ -90,28 +90,53 @@ Thus we will select model using 'deviance' for further model building.
 ```{r}
 set.seed(12345)
 
-
 credit_tree <- tree(good_bad~., data=train, split = c("deviance"))
 
 credit_tree_purned_train <- prune.tree(credit_tree, method = c("deviance"))
-credit_tree_purned_test <- prune.tree(credit_tree, newdata = valid ,method = c("deviance"))
+credit_tree_purned_valid <- prune.tree(credit_tree, newdata = valid ,method = c("deviance"))
 
 result_train <- cbind(credit_tree_purned_train$size, credit_tree_purned_train$dev, "Train") 
-result_test <- cbind(credit_tree_purned_test$size, credit_tree_purned_test$dev, "Valid") 
+result_valid <- cbind(credit_tree_purned_valid$size, credit_tree_purned_test$dev, "Valid") 
 
-result <- as.data.frame(rbind(result_test, result_train))
+result <- as.data.frame(rbind(result_valid, result_train))
 colnames(result) <- c("Leaf", "Deviance", "Type")
 
 result$Leaf <- as.numeric(as.character(result$Leaf))
 result$Deviance <- as.numeric(as.character(result$Deviance))
 
+# plot of deviance vs. number of leafs
+ggplot(data = result, aes(x = Leaf, y = Deviance, colour = Type)) + 
+  geom_point() + geom_line() + ggtitle("Plot of Deviance vs. Tree Depth")
 
-ggplot(data = result, aes(x = Leaf, y = Deviance, colour = Type)) + geom_point()
+# prune the tree to the required depth
+credit_tree_sniped <- prune.tree(credit_tree, best=7)
 
+plot(credit_tree_sniped)
+text(credit_tree_sniped)
+
+# misclassification rate for best pruned tree
+result_prune_train <- predict(credit_tree_sniped, newdata = train, type = "class")
+
+conf_prune_tree_train <- table(train$good_bad, result_prune_train)
+names(dimnames(conf_prune_tree_train)) <- c("Actual Train", "Predicted Train")
+caret::confusionMatrix(conf_prune_tree_train)
+
+
+result_prune_test <- predict(credit_tree_sniped, newdata = test, type = "class")
+
+conf_prune_tree_test <- table(test$good_bad, result_prune_test)
+names(dimnames(conf_prune_tree_test)) <- c("Actual Test", "Predicted Test")
+caret::confusionMatrix(conf_prune_tree_test)
 ```
 
-Analysis:
+Analysis: 
+Choosing optimal depth tree we get that '7' as the best depth. The variables used in the best tree are- duration, history, savings, amount.
 
+From the tree structure we can see that the following variables are best to split on, 'duration' < 43.5 then 'savings' < 4, 'history' < 1.5 and finally 'amount'.
+
+The accuracy on the model trained on 'train' dataset is (77% and misclassification 23%) and on the 'test' dataset accuracy is 73.67%, thus the misclassification rate is 26.33%. We see that model predicts 'good' applicants very well (accuracy of 90%) while it classifies 'bad' applicant way badly (accuracy is 34.78%).
+
+Thus this model would be very badly for the business.
 
 ## 4. Use training data to perform classification using Naïve Bayes and report the confusion matrices and misclassification rates for the training and for the test data. Compare the results with those from step 3.
 
@@ -121,16 +146,13 @@ credit_naive_model = naiveBayes(good_bad ~., data=train)
 
 credit_naive_model
 
-
 #Prediction on the dataset
-predict_naive_train = predict(credit_naive_model, newdata=train)
-predict_naive_test = predict(credit_naive_model, newdata=test)
-
+predict_naive_train = predict(credit_naive_model, newdata=train, type = "class")
+predict_naive_test = predict(credit_naive_model, newdata=test, type = "class")
 
 conf_naive_train <- table(train$good_bad, predict_naive_train)
 names(dimnames(conf_naive_train)) <- c("Actual Train", "Predicted Train")
 caret::confusionMatrix(conf_naive_train)
-
 
 conf_naive_test <- table(test$good_bad, predict_naive_test)
 names(dimnames(conf_naive_test)) <- c("Actual Test", "Predicted Test")
@@ -139,10 +161,29 @@ caret::confusionMatrix(conf_naive_test)
 ```
 Analysis:
 
-For the train dataset using NaiveBayes method we get accuracy 70% or misclassification of 30%, here we also notice that the accuracy of class 'bad' is 64.63% while for class 'good' is 72.24%, thus the model is more balanced in predicting, thus its not very baised in predict one class over the other.
+For the train dataset using NaiveBayes method we get accuracy 73% or misclassification of 27%, here we also notice that the accuracy of class 'bad' is 54% while for class 'good' is 80%, thus the model is more balanced in predicting, thus its not very baised in predict one class over the other.
 
-For the test dataset using NaiveBayes method we get accuracy 66.8% or misclassification of 33.2%, here we also notice that the accuracy of class 'bad' is 63.40% while for class 'good' is 68.30%, thus the model is more balanced in predicting even compared to train.
+For the test dataset using NaiveBayes method we get accuracy 71% or misclassification of 29%, here we also notice that the accuracy of class 'bad' is 54% while for class 'good' is 78%, thus the model is more balanced in predicting even compared to train.
 
+Compared to step3, we see that for the 'train' dataset the optimal tree has accuracy of 77% while it is 73% on the 'test' dataset. For the NaiveBayes model, accuracy on the 'train' dataset is 73% and while it is 71% on the 'test' datatset.
+
+Accuracy is only part of the story what we see is better here is that this model classifies 'bad' customers better better for both train and test dataset than decision tree (54% train, 54% test for naive compared 38% train, 34% test for decision tree).
+
+## 5. Use the optimal tree and the Naïve Bayes model to classify the test data by using the following principle: where prob(Y|'good')=A, where A=0.05,0.10,.....0.95.
+Compute the TPR and FPR values for the two models and plot the corresponding ROC curves. Conclusion?
+
+```{r}
+predict_prune_test_prob <- predict(credit_tree_sniped, newdata = test)
+predict_naive_test_prob <- predict(credit_naive_model, newdata=test, type = "raw")
+
+probability_data_naive <- as.data.frame(cbind(predict_naive_test_prob, as.character(test$good_bad), "naivebayes"))
+probability_data_tree <- as.data.frame(cbind(predict_prune_test_prob, as.character(test$good_bad), "tree"))
+
+probability_data_combined <- rbind(probability_data_tree, probability_data_naive)
+colnames(probability_data_combined) <- c("prob_bad", "prob_good", "actual_test_class", "model")
+
+
+```
 
 
 
