@@ -27,173 +27,29 @@ options("jtools-digits" = 2, scipen = 999)
 
 ## Loading Input files
 ```{r}
-crab_data <- read.csv(file = "australian-crabs.csv", header = TRUE)
 credit_data <- read.xlsx("creditscoring.xls", sheetName = "credit")
 credit_data$good_bad <- as.factor(credit_data$good_bad)
 ```
 
-
-## 1.1 Use australian-crabs.csv and make a scatterplot of carapace length (CL) versus rear width (RW) where observations are colored by Sex. Do you think that this data is easy to classify by linear discriminant analysis? Motivate your answer.
-
-```{r}
-p1 <- ggplot(data = crab_data, aes(x = CL, y = RW, color = sex )) + geom_point() + 
-  geom_smooth(method = 'loess') + 
-  ggtitle("Scatter Plot of Carapace Length vs. Rear Width by Sex")
-
-mu_CL <- crab_data %>% 
-  group_by(sex) %>%
-  summarise(grp.mean = mean(CL))
-
-mu_RW <- crab_data %>% 
-  group_by(sex) %>%
-  summarise(grp.mean = mean(RW))
-
-
-ggplot(data = crab_data, aes(x = CL)) + 
-  geom_density(aes(fill = sex), alpha = 0.3) +
-      geom_vline(aes(xintercept = grp.mean, color = sex), 
-                 data = mu_CL, linetype = "dashed") + 
-  ggtitle("Density plot of Carapace Length vs. gender")
-
-
-ggplot(data = crab_data, aes(x = RW)) + 
-  geom_density(aes(fill = sex), alpha = 0.3) +
-      geom_vline(aes(xintercept = grp.mean, color = sex),
-             data = mu_RW, linetype = "dashed") + 
-  ggtitle("Density plot of Rear Width vs. gender")
-
-```
-
-Analysis: In Linear Discriminant Analysis (LDA) the boundary between differenet class of datapoints is a line just as the case in a logistics regression. In LDA there is an assumption that the data points for each class come from a Gaussian distribution with same variance,but different means, just as an added measure we have plotted this also. Here we find that for variable 'Carapace Length' the mean is only slightly different however for variable 'Rear width' the mean between the two sex is seperated by a larger margin.
-
-Thus although the assumptions are violated a bit, judging by the orginal scatter plot we do find this to be case where LDA might do a good job.
-
-
-## 1.2 Make LDA analysis with target Sex and features CL and RW and proportional prior by using lda() function in package MASS. Make a scatter plot of CL versus RW colored by the predicted Sex and compare it with the plot in step 1. Compute the misclassification error and comment on the quality of fit.
-
-```{r}
-
-set.seed(12345)
-temp <- crab_data
-
-## using priors same as the propotional of the dataset
-crab_lda <- MASS::lda(formula = sex ~ CL+ RW, data = temp)
-print(crab_lda)
-
-lda_predicted_class <- predict(crab_lda, newdata = temp)
-temp$lda_predicted_sex <- lda_predicted_class$class
-
-p2 <- ggplot(data = temp, aes(x = CL, y = RW, color = lda_predicted_sex)) + 
-  geom_point() + geom_smooth(method = 'loess') + 
-  ggtitle("Scatter Plot of Carapace Length vs. Rear Width by Predicted Sex")
-
-gridExtra::grid.arrange(p1, p2, nrow = 2)
-
-misclassification_lda <- table(temp$sex, temp$lda_predicted_sex)
-names(dimnames(misclassification_lda)) <- c("Actual", "Predicted")
-caret::confusionMatrix(misclassification_lda)
-```
-Analysis: 
-
-The Accuracy of the fit is 96.5% thus the misclassification rate is 3.5%. Such a high value suggests that our model maybe overfit on the dataset, however to asses the fit we need a test dataset.
-
-As evident from the plot we see that some of 'Female' crabs are classified as 'Males' especially when the Carapace Length (CL) is below 20 and Rear width(RW) is below 10.
-
-## 1.3 Repeat step 2 but use priors p(Male)=0.9, p(Female)=0.1 instead. How did the classification result change and why?
-```{r}
-set.seed(12345)
-temp <- crab_data
-
-## using priors same as the propotional of the dataset
-crab_lda <- MASS::lda(formula = sex ~ CL+ RW, data = temp, prior = c(0.1, 0.9))
-print(crab_lda)
-
-lda_predicted_class <- predict(crab_lda, newdata = temp)
-temp$lda_predicted_sex <- lda_predicted_class$class
-
-p3 <- ggplot(data = temp, aes(x = CL, y = RW, color = lda_predicted_sex)) + 
-  geom_point() + geom_smooth(method = 'loess') + 
-  ggtitle("Scatter Plot of Carapace Length vs. Rear Width by Predicted Sex(Prior changed)")
-
-gridExtra::grid.arrange(p2, p3, nrow = 2)
-
-misclassification_lda <- table(temp$sex, temp$lda_predicted_sex)
-names(dimnames(misclassification_lda)) <- c("Actual", "Predicted")
-caret::confusionMatrix(misclassification_lda)
-```
-Analysis: 
-
-The Accuracy of the fit is 92% thus the misclassification rate is 8%.
-
-As evident from the confusion matrix we notice that all 'Males' crabs are classfied correctly, while some (16/100) of the female crabs are classified wrongly.
-
-Compared to previous plot we see that the extend of misclassification for females has increased for lower values of CW and RL compared to previous model with prior same as the dataset.
-
-The classification is worse now compared to previous model because the dataset has the priors of 50-50 for both the sexes while we biased the model with wrong prior.
-
-## 1.4 Make a similar kind of classification by logistic regression (use function glm()), plot the classified data and compute the misclassification error. Compare these results with the LDA results. Finally, report the equation of the decision boundary and draw it in the plot of the classified data.
-
-```{r, warning=FALSE}
-
-set.seed(12345)
-temp <- crab_data
-
-## using priors same as the propotional of the dataset
-crab_logit <- glm(formula = sex ~ CL+ RW, data = temp, family = binomial)
-summary(crab_logit)
-
-logit_predicted_class <- predict(crab_logit, newdata = temp, type = c("response"))
-temp$logit_predicted_prob <- logit_predicted_class
-temp$logit_predicted_sex <- ifelse(temp$logit_predicted_prob >= 0.5, "Male", "Female")
-
-p4 <- ggplot(data = temp, aes(x = CL, y = RW, color = logit_predicted_sex)) + 
-  geom_point() + geom_smooth(method = 'loess') + 
-  ggtitle("Scatter Plot of Carapace Length vs. Rear Width by Predicted Sex(Logit)")
-
-gridExtra::grid.arrange(p3, p4, nrow = 2)
-
-misclassification_logit <- table(temp$sex, temp$logit_predicted_sex)
-names(dimnames(misclassification_logit)) <- c("Actual", "Predicted")
-caret::confusionMatrix(misclassification_logit)
-
-
-p5 <- ggplot(temp, aes(x = CL, y = RW)) + geom_point(aes(col = sex), size = 0.5)+
-  labs(x="Carapace Length", y="Rear Width", 
-       title="Decision Boundary of the Logit Model", colour="sex") +
-  coord_equal()  # assuming that the scores have the same scale
-
-
-B0 <- coef(crab_logit)[1]
-B1 <- coef(crab_logit)[2]
-B2 <- coef(crab_logit)[3]
-
-intercept = -B0/B2
-slope = -B1/B2
-
-x <- temp$CL
-y <- (intercept + slope * x)
-
-decision_data <- cbind(x,y) %>% as.data.frame()
-
-# Add the decision boundary plot
-p5 + geom_line(data=decision_data, aes(x=x, y=y))
-
-```
-
-### Equation of Probability
-$$P(sex = 'Male'|CL,RW) = \frac{exp{(13.617 + 4.631 \cdot CL -12.564 \cdot RW)}}{1+exp{(13.617 + 4.631 \cdot CL -12.564 \cdot RW)}}$$
-### Equation of the Decision Boundary
-$$P(sex = 'Male'|CL,RW) >= 0.5 $$
 # Assignment 2
 
 ## 2.1 Import the data to R and divide into training/validation/test as 50/25/25: use data partitioning code specified in Lecture 1e.
 ```{r}
 set.seed(12345)
 
-n =  NROW(credit_data)
-id = sample(1:n, floor(n*0.5))
-train = credit_data[id,]
-test = credit_data[-id,]
+n=NROW(credit_data)
+set.seed(12345) 
+id=sample(1:n, floor(n*0.4)) 
+train=credit_data[id,] 
+
+id1=setdiff(1:n, id)
+set.seed(12345) 
+id2=sample(id1, floor(n*0.3)) 
+valid=credit_data[id2,]
+
+id3=setdiff(id1,id2)
+test=credit_data[id3,] 
+
 ```
 
 ## 2.2 Fit a decision tree to the training data by using the following measures of impurity: a. Deviance b. Gini index and report the misclassification rates for the training and test data. Choose the measure providing the better results for the following steps.
@@ -234,11 +90,24 @@ Thus we will select model using 'deviance' for further model building.
 ```{r}
 set.seed(12345)
 
-credit_tree_deviance <- tree(good_bad~., data=train, split = c("deviance"))
-plot(deviance(credit_tree_deviance, detail = TRUE))
 
-data <- cbind(deviance(credit_tree_deviance, detail = TRUE))
-data$leafs
+credit_tree <- tree(good_bad~., data=train, split = c("deviance"))
+
+credit_tree_purned_train <- prune.tree(credit_tree, method = c("deviance"))
+credit_tree_purned_test <- prune.tree(credit_tree, newdata = valid ,method = c("deviance"))
+
+result_train <- cbind(credit_tree_purned_train$size, credit_tree_purned_train$dev, "Train") 
+result_test <- cbind(credit_tree_purned_test$size, credit_tree_purned_test$dev, "Valid") 
+
+result <- as.data.frame(rbind(result_test, result_train))
+colnames(result) <- c("Leaf", "Deviance", "Type")
+
+result$Leaf <- as.numeric(as.character(result$Leaf))
+result$Deviance <- as.numeric(as.character(result$Deviance))
+
+
+ggplot(data = result, aes(x = Leaf, y = Deviance, colour = Type)) + geom_point()
+
 ```
 
 Analysis:
