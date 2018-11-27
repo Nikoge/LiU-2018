@@ -487,6 +487,7 @@ At lambda around 1 (log lambda is 0) we get only two or three non zero terms.
 #find the best lambda from our list via cross-validation
 
 lambda_lasso <- 10^seq(10, -2, length = 100)
+lambda_lasso[101] <- 0
 lasso_cv <- cv.glmnet(x,y, alpha=1, lambda = lambda_lasso, type.measure="mse")
 coef(lasso_cv, lambda = lasso_cv$lambda.min)
 
@@ -510,10 +511,10 @@ ggplot(result_lasso, aes(x = log(Lambda), y = Cross_Mean_Error)) + geom_point() 
   ggtitle("Cross Validation Error vs. Lambda")
 ```
 
-Analysis: The minimum value of lambda was 0.1, implies almost zero penalisation. The variables selected are: 
+Analysis: The minimum value of lambda was 0, implies zero penalisation. The variables selected are: 
 Channel98, Channel99, Channel100, Protein, Moisture, Channel37, Channel38, Channel39, Channel40 along with intercept.
 
-We see that Cross validation error is lowest at lambda 0.1 and remains low till lambda~1 (log lambda 0) after which the error drastically increases at log(lambda) ~ 2.5, the error maxes out and remains about the same for higher values of lambda. This implies that more bias introduction will lead to worse performance.
+We see that Cross validation error is lowest at lambda= 0 and remains low till lambda~1 (log lambda 0) after which the error drastically increases at log(lambda) ~ 2.5, the error maxes out and remains about the same for higher values of lambda. This implies that more bias introduction will lead to worse performance.
 
 ## 3.8 Compare the results from steps 4 and 7.
 

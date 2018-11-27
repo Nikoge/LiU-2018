@@ -156,13 +156,20 @@ points(mu[3,], type="o", col="green")
 #points(mu[4,], type="o", col="yellow")
 Sys.sleep(0.5)
 # E-step: Computation of the fractional component assignments
-# Your code here
+  
+for(k in 1:K)
+prod <- exp(x %*% log(t(mu))) * exp((1-x) %*% t(1-mu))
+
+num = matrix(rep(pi,N), ncol = 3, byrow = TRUE) * prod
+dem = rowSums(num)
+post = num/dem  
+
 #Log likelihood computation.
 # Your code here
 cat("iteration: ", it, "log likelihood: ", llik[it], "\n")
 flush.console()
 # Stop if the lok likelihood has not changed significantly
-# Your code here
+if(abs(llik[k+1]-llik[k]) < min_change){stop("Best solution")}
 #M-step: ML parameter estimation from the data and fractional component assignments
 # Your code here
 }

@@ -16,7 +16,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Loading The Libraries
 ```{r, message=FALSE, echo = FALSE}
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(xlsx, kknn, caret)
+pacman::p_load(xlsx, kknn, caret, data.table)
 
 options(scipen = 999)
 
@@ -64,10 +64,16 @@ answer <-  1 - (num/dem)
 
 knearest <- function(data, K, newdata){
 
+  train = data.table(train)
+  test = data.table(test)
+  
+  data = train
+  newdata = train[, !c("Spam")]
+
   data$ID <- rownames(data)
   newdata$ID <- rownames(newdata)
-  
-  
+  res <- setkey(data[,c(k=1,.SD)],k)[newdata[,c(k=1,.SD)],allow.cartesian=TRUE][,k:=NULL]
+  distance <- cosine(as.matrix(res[1:1000,1:48]), as.matrix(res[1:1000,51:98]))
   
 }
 

@@ -18,7 +18,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Loading The Libraries
 ```{r, message=FALSE, echo = FALSE}
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(xlsx, ggplot2, MASS, tidyr, dplyr, reshape2, gridExtra)
+pacman::p_load(xlsx, ggplot2, MASS, tidyr, dplyr, reshape2, gridExtra, 
+               tree, caret, e1071)
 
 set.seed(12345)
 options("jtools-digits" = 2, scipen = 999)
@@ -28,6 +29,7 @@ options("jtools-digits" = 2, scipen = 999)
 ```{r}
 crab_data <- read.csv(file = "australian-crabs.csv", header = TRUE)
 credit_data <- read.xlsx("creditscoring.xls", sheetName = "credit")
+credit_data$good_bad <- as.factor(credit_data$good_bad)
 ```
 
 
@@ -182,6 +184,97 @@ p5 + geom_line(data=decision_data, aes(x=x, y=y))
 $$P(sex = 'Male'|CL,RW) = \frac{exp{(13.617 + 4.631 \cdot CL -12.564 \cdot RW)}}{1+exp{(13.617 + 4.631 \cdot CL -12.564 \cdot RW)}}$$
 ### Equation of the Decision Boundary
 $$P(sex = 'Male'|CL,RW) >= 0.5 $$
+# Assignment 2
+
+## 2.1 Import the data to R and divide into training/validation/test as 50/25/25: use data partitioning code specified in Lecture 1e.
+```{r}
+set.seed(12345)
+
+n =  NROW(credit_data)
+id = sample(1:n, floor(n*0.5))
+train = credit_data[id,]
+test = credit_data[-id,]
+```
+
+## 2.2 Fit a decision tree to the training data by using the following measures of impurity: a. Deviance b. Gini index and report the misclassification rates for the training and test data. Choose the measure providing the better results for the following steps.
+
+```{r}
+# Create a decision tree model
+credit_tree_deviance <- tree(good_bad~., data=train, split = c("deviance"))
+credit_tree_gini <- tree(good_bad~., data=train, split = c("gini"))
+
+# Visualize the decision tree with rpart.plot
+summary(credit_tree_deviance)
+summary(credit_tree_gini)
+
+# predicting on the test dataset to get the misclassification rate.
+predict_tree_deviance <- predict(credit_tree_deviance, newdata = test, type = "class")
+predict_tree_gini <- predict(credit_tree_gini, newdata = test, type = "class")
+
+conf_tree_deviance <- table(test$good_bad, predict_tree_deviance)
+names(dimnames(conf_tree_deviance)) <- c("Actual Test", "Predicted Test")
+caret::confusionMatrix(conf_tree_deviance)
+
+conf_tree_gini <- table(test$good_bad, predict_tree_gini)
+names(dimnames(conf_tree_gini)) <- c("Actual Test", "Predicted Test")
+caret::confusionMatrix(conf_tree_gini)
+```
+Analysis: On the Training dataset model with 'deviance' had a misclassfication rate of 21% while the model with 'gini' split had the misclassification rate of 23.68%.
+
+For the test dataset we see that the model with 'deviance' type of split has a accuracy of 73.4% or misclassifiaction rate of 26.6%, we see that to predict 'good' the accuracy is 89% but for predicting bad its just 37%. Thus our model is heavily baised towards predicting cases as good.
+
+For the test dataset we see that the model with 'gini' type of split has a accuracy of 65.8% or misclassifiaction rate of 34.2%, we see that to predict 'good' the accuracy is 82% but for predicting bad its just 28%. Thus our model is heavily baised towards predicting cases as good.
+
+Both our models would lead to many bad loan applicant to be given loans which is never a good thing, however among the model the one using 'deviance' mode for split is better by 7.6%.
+
+Thus we will select model using 'deviance' for further model building.
+
+## 3. Use training and validation sets to choose the optimal tree depth. Present the graphs of the dependence of deviances for the training and the validation data on the number of leaves. Report the optimal tree, report it's depth and the variables used by the tree. Interpret the information provided by the tree structure. Estimate the misclassification rate for the test data.
+
+```{r}
+set.seed(12345)
+
+credit_tree_deviance <- tree(good_bad~., data=train, split = c("deviance"))
+plot(deviance(credit_tree_deviance, detail = TRUE))
+
+data <- cbind(deviance(credit_tree_deviance, detail = TRUE))
+data$leafs
+```
+
+Analysis:
+
+
+## 4. Use training data to perform classification using Naïve Bayes and report the confusion matrices and misclassification rates for the training and for the test data. Compare the results with those from step 3.
+
+```{r}
+#Fitting the Naive Bayes model
+credit_naive_model = naiveBayes(good_bad ~., data=train)
+
+credit_naive_model
+
+
+#Prediction on the dataset
+predict_naive_train = predict(credit_naive_model, newdata=train)
+predict_naive_test = predict(credit_naive_model, newdata=test)
+
+
+conf_naive_train <- table(train$good_bad, predict_naive_train)
+names(dimnames(conf_naive_train)) <- c("Actual Train", "Predicted Train")
+caret::confusionMatrix(conf_naive_train)
+
+
+conf_naive_test <- table(test$good_bad, predict_naive_test)
+names(dimnames(conf_naive_test)) <- c("Actual Test", "Predicted Test")
+caret::confusionMatrix(conf_naive_test)
+
+```
+Analysis:
+
+For the train dataset using NaiveBayes method we get accuracy 70% or misclassification of 30%, here we also notice that the accuracy of class 'bad' is 64.63% while for class 'good' is 72.24%, thus the model is more balanced in predicting, thus its not very baised in predict one class over the other.
+
+For the test dataset using NaiveBayes method we get accuracy 66.8% or misclassification of 33.2%, here we also notice that the accuracy of class 'bad' is 63.40% while for class 'good' is 68.30%, thus the model is more balanced in predicting even compared to train.
+
+
 
 
 # Appendix
