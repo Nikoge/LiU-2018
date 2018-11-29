@@ -199,8 +199,6 @@ if(abs(llik[it] - llik[it-1]) < min_change){break}
 num_pi = colSums(poster)
 pi = num_pi/N
 mu = (t(poster) %*% x)/num_pi
-
-
 }
 
 a <- pi

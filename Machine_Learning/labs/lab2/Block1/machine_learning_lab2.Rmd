@@ -19,7 +19,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r, message=FALSE, echo = FALSE}
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(xlsx, ggplot2, MASS, tidyr, dplyr, reshape2, gridExtra, 
-               tree, caret, e1071)
+               tree, caret, e1071, pROC, mlr)
 
 set.seed(12345)
 options("jtools-digits" = 2, scipen = 999)
@@ -49,12 +49,13 @@ valid=credit_data[id2,]
 
 id3=setdiff(id1,id2)
 test=credit_data[id3,] 
-
 ```
 
 ## 2.2 Fit a decision tree to the training data by using the following measures of impurity: a. Deviance b. Gini index and report the misclassification rates for the training and test data. Choose the measure providing the better results for the following steps.
 
 ```{r}
+set.seed(12345)
+
 # Create a decision tree model
 credit_tree_deviance <- tree(good_bad~., data=train, split = c("deviance"))
 credit_tree_gini <- tree(good_bad~., data=train, split = c("gini"))
@@ -68,20 +69,20 @@ predict_tree_deviance <- predict(credit_tree_deviance, newdata = test, type = "c
 predict_tree_gini <- predict(credit_tree_gini, newdata = test, type = "class")
 
 conf_tree_deviance <- table(test$good_bad, predict_tree_deviance)
-names(dimnames(conf_tree_deviance)) <- c("Actual Test", "Predicted Test")
+names(dimnames(conf_tree_deviance)) <- c("Actual Test", "P2redicted Test")
 caret::confusionMatrix(conf_tree_deviance)
 
 conf_tree_gini <- table(test$good_bad, predict_tree_gini)
 names(dimnames(conf_tree_gini)) <- c("Actual Test", "Predicted Test")
 caret::confusionMatrix(conf_tree_gini)
 ```
-Analysis: On the Training dataset model with 'deviance' had a misclassfication rate of 21% while the model with 'gini' split had the misclassification rate of 23.68%.
+Analysis: On the Training dataset model with 'deviance' had a misclassfication rate of 18.7% while the model with 'gini' split had the misclassification rate of 22.8%.
 
-For the test dataset we see that the model with 'deviance' type of split has a accuracy of 73.4% or misclassifiaction rate of 26.6%, we see that to predict 'good' the accuracy is 89% but for predicting bad its just 37%. Thus our model is heavily baised towards predicting cases as good.
+For the test dataset we see that the model with 'deviance' type of split has a accuracy of 67% or misclassifiaction rate of 33%, we see that to predict 'good' the accuracy is 73.08% but for predicting bad its just 53.26%. Thus our our model is heavily baised towards predicting cases as 'good'.
 
-For the test dataset we see that the model with 'gini' type of split has a accuracy of 65.8% or misclassifiaction rate of 34.2%, we see that to predict 'good' the accuracy is 82% but for predicting bad its just 28%. Thus our model is heavily baised towards predicting cases as good.
+For the test dataset we see that the model with 'gini' type of split has a accuracy of 62.7% or misclassifiaction rate of 37.3%, we also see that to predict 'good' the accuracy is 78.8% but for predicting bad its just 26%. Thus our model is heavily baised towards predicting cases as 'good' even more than the model which uses 'deviance' to split variable.
 
-Both our models would lead to many bad loan applicant to be given loans which is never a good thing, however among the model the one using 'deviance' mode for split is better by 7.6%.
+Both our models would lead to many bad loan applicants to be given loans which is never a good thing, however among the model the one using 'deviance' mode for split is better by 27%.
 
 Thus we will select model using 'deviance' for further model building.
 
@@ -96,7 +97,7 @@ credit_tree_purned_train <- prune.tree(credit_tree, method = c("deviance"))
 credit_tree_purned_valid <- prune.tree(credit_tree, newdata = valid ,method = c("deviance"))
 
 result_train <- cbind(credit_tree_purned_train$size, credit_tree_purned_train$dev, "Train") 
-result_valid <- cbind(credit_tree_purned_valid$size, credit_tree_purned_test$dev, "Valid") 
+result_valid <- cbind(credit_tree_purned_valid$size, credit_tree_purned_valid$dev, "Valid") 
 
 result <- as.data.frame(rbind(result_valid, result_train))
 colnames(result) <- c("Leaf", "Deviance", "Type")
@@ -106,7 +107,7 @@ result$Deviance <- as.numeric(as.character(result$Deviance))
 
 # plot of deviance vs. number of leafs
 ggplot(data = result, aes(x = Leaf, y = Deviance, colour = Type)) + 
-  geom_point() + geom_line() + ggtitle("Plot of Deviance vs. Tree Depth")
+  geom_point() + geom_line() + ggtitle("Plot of Deviance vs. Tree Depth (Shows Deviance least at 7)")
 
 # prune the tree to the required depth
 credit_tree_sniped <- prune.tree(credit_tree, best=7)
@@ -115,12 +116,6 @@ plot(credit_tree_sniped)
 text(credit_tree_sniped)
 
 # misclassification rate for best pruned tree
-result_prune_train <- predict(credit_tree_sniped, newdata = train, type = "class")
-
-conf_prune_tree_train <- table(train$good_bad, result_prune_train)
-names(dimnames(conf_prune_tree_train)) <- c("Actual Train", "Predicted Train")
-caret::confusionMatrix(conf_prune_tree_train)
-
 
 result_prune_test <- predict(credit_tree_sniped, newdata = test, type = "class")
 
@@ -136,14 +131,13 @@ From the tree structure we can see that the following variables are best to spli
 
 The accuracy on the model trained on 'train' dataset is (77% and misclassification 23%) and on the 'test' dataset accuracy is 73.67%, thus the misclassification rate is 26.33%. We see that model predicts 'good' applicants very well (accuracy of 90%) while it classifies 'bad' applicant way badly (accuracy is 34.78%).
 
-Thus this model would be very badly for the business.
+Thus this model would be very bad for the business and would likely to run the business bankrupt.
 
 ## 4. Use training data to perform classification using Naïve Bayes and report the confusion matrices and misclassification rates for the training and for the test data. Compare the results with those from step 3.
 
 ```{r}
 #Fitting the Naive Bayes model
 credit_naive_model = naiveBayes(good_bad ~., data=train)
-
 credit_naive_model
 
 #Prediction on the dataset
@@ -157,17 +151,18 @@ caret::confusionMatrix(conf_naive_train)
 conf_naive_test <- table(test$good_bad, predict_naive_test)
 names(dimnames(conf_naive_test)) <- c("Actual Test", "Predicted Test")
 caret::confusionMatrix(conf_naive_test)
-
 ```
 Analysis:
 
-For the train dataset using NaiveBayes method we get accuracy 73% or misclassification of 27%, here we also notice that the accuracy of class 'bad' is 54% while for class 'good' is 80%, thus the model is more balanced in predicting, thus its not very baised in predict one class over the other.
+For the train dataset using NaiveBayes method we get accuracy 73% or misclassification of 27%, here we also notice that the accuracy of class 'bad' is 54% while for class 'good' is 80%, thus the model is more balanced in predicting, thus its still baised in predict one class over the other.
 
-For the test dataset using NaiveBayes method we get accuracy 71% or misclassification of 29%, here we also notice that the accuracy of class 'bad' is 54% while for class 'good' is 78%, thus the model is more balanced in predicting even compared to train.
+For the test dataset using NaiveBayes method we get accuracy 71% or misclassification of 29%, here we also notice that the accuracy of class 'bad' is 54% while for class 'good' is 78%, thus the model is almost the same compared to train.
 
 Compared to step3, we see that for the 'train' dataset the optimal tree has accuracy of 77% while it is 73% on the 'test' dataset. For the NaiveBayes model, accuracy on the 'train' dataset is 73% and while it is 71% on the 'test' datatset.
 
-Accuracy is only part of the story what we see is better here is that this model classifies 'bad' customers better better for both train and test dataset than decision tree (54% train, 54% test for naive compared 38% train, 34% test for decision tree).
+Accuracy is only part of the story what we see is better here is that this model classifies 'bad' customers better better for both train and test dataset than decision tree (54% for both train and test for naive compared 38% train, 34% test for decision tree).
+
+Thus the model is better to be used for the business than the one in the step3, the risk of providing loans to bad applicant is lesser than the previous model but its still not good enough!
 
 ## 5. Use the optimal tree and the Naïve Bayes model to classify the test data by using the following principle: where prob(Y|'good')=A, where A=0.05,0.10,.....0.95.
 Compute the TPR and FPR values for the two models and plot the corresponding ROC curves. Conclusion?
@@ -181,6 +176,85 @@ probability_data_tree <- as.data.frame(cbind(predict_prune_test_prob, as.charact
 
 probability_data_combined <- rbind(probability_data_tree, probability_data_naive)
 colnames(probability_data_combined) <- c("prob_bad", "prob_good", "actual_test_class", "model")
+
+probability_data_combined$prob_good <- as.numeric(as.character(probability_data_combined$prob_good))
+
+
+final <- NULL
+for(threshold in seq(from = 0.05, to = 0.95, by = 0.05)){
+  probability_data_combined$predicted_class <- ifelse(probability_data_combined$prob_good > threshold, "good", "bad")
+  
+  df2 <- probability_data_combined[,c("model", "actual_test_class", "predicted_class")]
+  df2$threshold <- threshold
+  df2$match <- ifelse(df2$actual_test_class == df2$predicted_class, 1, 0)
+  
+  final <- rbind(df2, final)
+
+}
+
+
+tree_list <- NULL
+naive_list <- NULL
+
+for(threshold in seq(from = 0.05, to = 0.95, by = 0.05)){
+
+temp <- final[final$threshold == threshold,]  
+temp_tree <- temp[temp$model == "tree",]
+temp_non_tree <- temp[temp$model != "tree",]
+
+    tree_list[[paste0("tree", threshold)]] <- roc(temp_tree$actual_test_class, temp_tree$match)
+    
+    naive_list[[paste0("naive", threshold)]] <- roc(temp_non_tree$actual_test_class, temp_non_tree$match)
+}
+
+
+ggroc(list(tree_0.05 = tree0.05, tree_0.10 = tree0.1))
+ggroc(list(naive_0.05 = naive0.05, naive_0.10 = naive0.1))
+
+ggroc(list(naive_0.05 = naive_list[[1]], naive_0.10 = naive_list[[2]]))
+
+
+
+
+
+roc_obj <- roc(final$actual_test_class, final$match)
+roc_df <- data.frame(
+  TPR=rev(roc_obj$sensitivities), 
+  FPR=rev(1 - roc_obj$specificities), 
+  labels=roc_obj$response, 
+  scores=roc_obj$predictor,
+  model_type = final$model,
+  threshold = final$threshold,
+  ID = rownames(final))
+
+roc_df$model_type <- as.factor(roc_df$model_type)
+roc_df$threshold <- as.factor(roc_df$threshold)
+
+
+
+ggplot(data = roc_df, aes(x = FPR, y = TPR)) + 
+  geom_point(aes(color = threshold)) + 
+  geom_line(aes(color = threshold)) + 
+  facet_grid(~ threshold)
+
+
+
+# Creating the FRP and TRP for each model and threshold  
+final$temp <- 1
+final_summary <- final %>% 
+group_by(model, threshold) %>% 
+summarise(total_positive = sum(temp[actual_test_class == "good"]),
+          total_negative = sum(temp[actual_test_class == "bad"]),
+          correct_positive = sum(temp[actual_test_class == "good" & predicted_class == "good"]),
+          false_positive = sum(temp[actual_test_class == "bad" & predicted_class == "good"])) %>% 
+    mutate(TPR = correct_positive/total_positive, FPR = false_positive/total_negative) %>% 
+  select(model, threshold, TPR, FPR)
+
+
+#ggroc(roc_obj) + ggtitle("ROC for thershold of 0.50")
+
+
+roc_metric(probability_data_combined)
 
 
 ```
