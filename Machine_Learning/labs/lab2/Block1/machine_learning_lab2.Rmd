@@ -13,22 +13,14 @@ knitr::opts_chunk$set(echo = TRUE)
 
 \newpage
 
-# Assignment 1
-
 ## Loading The Libraries
 ```{r, message=FALSE, echo = FALSE}
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(xlsx, ggplot2, MASS, tidyr, dplyr, reshape2, gridExtra, 
-               tree, caret, e1071, pROC, mlr)
+               tree, caret, e1071, pROC)
 
 set.seed(12345)
 options("jtools-digits" = 2, scipen = 999)
-```
-
-## Loading Input files
-```{r}
-credit_data <- read.xlsx("creditscoring.xls", sheetName = "credit")
-credit_data$good_bad <- as.factor(credit_data$good_bad)
 ```
 
 # Assignment 2
@@ -36,6 +28,9 @@ credit_data$good_bad <- as.factor(credit_data$good_bad)
 ## 2.1 Import the data to R and divide into training/validation/test as 50/25/25: use data partitioning code specified in Lecture 1e.
 ```{r}
 set.seed(12345)
+credit_data <- read.xlsx("creditscoring.xls", sheetName = "credit")
+credit_data$good_bad <- as.factor(credit_data$good_bad)
+
 
 n=NROW(credit_data)
 set.seed(12345) 
@@ -168,7 +163,6 @@ Thus the model is better to be used for the business than the one in the step3, 
 Compute the TPR and FPR values for the two models and plot the corresponding ROC curves. Conclusion?
 
 ```{r}
-
 set.seed(12345)
 
 credit_tree <- tree(good_bad~., data=train, split = c("deviance"))
@@ -203,68 +197,71 @@ for(threshold in seq(from = 0.05, to = 0.95, by = 0.05)){
   df2$match <- ifelse(df2$actual_test_class == df2$predicted_class, 1, 0)
   
   final <- rbind(df2, final)
-  temp <- final[final$threshold == threshold,]  
-  temp_tree <- temp[temp$model == "tree",]
-  temp_non_tree <- temp[temp$model != "tree",]
-
-    tree_list[[paste0("tree", threshold)]] <- roc(temp_tree$actual_test_class, temp_tree$match)
-    naive_list[[paste0("naive", threshold)]] <- roc(temp_non_tree$actual_test_class, temp_non_tree$match)
-
 }
 
-#printing ROC curves for different threshold
+# Creating the FRP and TRP for each model and threshold  
+final$temp <- 1
+final_summary <- final %>% 
+group_by(model, threshold) %>% 
+summarise(total_positive = sum(temp[actual_test_class == "good"]),
+          total_negative = sum(temp[actual_test_class == "bad"]),
+          correct_positive = sum(temp[actual_test_class == "good" & predicted_class == "good"]),
+          false_positive = sum(temp[actual_test_class == "bad" & predicted_class == "good"])) %>% 
+    mutate(TPR = correct_positive/total_positive, FPR = false_positive/total_negative) %>% 
+  select(model, threshold, TPR, FPR)
 
-ggroc(list(naive_0.05 = naive_list[[1]], 
-           naive_0.10 = naive_list[[2]],
-           naive_0.15 = naive_list[[3]], 
-           naive_0.20 = naive_list[[4]],
-           naive_0.25 = naive_list[[5]], 
-           naive_0.30 = naive_list[[6]],
-           naive_0.35 = naive_list[[7]], 
-           naive_0.40 = naive_list[[8]], 
-           naive_0.45 = naive_list[[9]],
-           naive_0.50 = naive_list[[10]], 
-           naive_0.55 = naive_list[[11]],
-           naive_0.60 = naive_list[[12]], 
-           naive_0.65 = naive_list[[13]],
-           naive_0.70 = naive_list[[14]], 
-           naive_0.75 = naive_list[[15]],
-           naive_0.80 = naive_list[[16]], 
-           naive_0.85 = naive_list[[17]],
-           naive_0.90 = naive_list[[18]], 
-           naive_0.95 = naive_list[[19]])) + ggtitle("ROC of Naive Bayes Model vs. Threshold")
+ggplot(data = final_summary, aes(x = FPR, y=TPR)) + geom_line(aes(colour = model)) + ggtitle("ROC curve for the Naive Bayes vs. Tree Model")
 
-ggroc(list(tree_0.05 = tree_list[[1]], 
-           tree_0.10 = tree_list[[2]],
-           tree_0.15 = tree_list[[3]], 
-           tree_0.20 = tree_list[[4]],
-           tree_0.25 = tree_list[[5]], 
-           tree_0.30 = tree_list[[6]],
-           tree_0.35 = tree_list[[7]], 
-           tree_0.40 = tree_list[[8]], 
-           tree_0.45 = tree_list[[9]],
-           tree_0.50 = tree_list[[10]], 
-           tree_0.55 = tree_list[[11]],
-           tree_0.60 = tree_list[[12]], 
-           tree_0.65 = tree_list[[13]],
-           tree_0.70 = tree_list[[14]], 
-           tree_0.75 = tree_list[[15]],
-           tree_0.80 = tree_list[[16]], 
-           tree_0.85 = tree_list[[17]],
-           tree_0.90 = tree_list[[18]], 
-           tree_0.95 = tree_list[[19]])) + ggtitle("ROC of Tree Model vs. Threshold")
 
 ```
-Analysis: We find that tree model is in general better than naive bayes model in terms of variation showed by the ROC curve. threshold of 0.45-0.6 yields highest ROC value for tree while 0.1,0.25 yields the best ROC curve for naive bayes model
+Analysis: We find that 'naivebayes' model is better than 'tree' model for across varying threshold values.
 
 ## 6. Repeat Naïve Bayes classification as it was in step 4 but use the following loss matrix (good loss 1, bad loss 10) and report the confusion matrix for the training and test data. Compare the results with the results from step 4 and discuss how the rates has changed and why.
 ```{r}
+set.seed(12345)
+
+credit_naive_model = naiveBayes(good_bad ~., data=train)
+
+# predicting class, getting probability 
+predict_naive_train_prob <- predict(credit_naive_model, newdata=train, type = "raw")
+predict_naive_test_prob <- predict(credit_naive_model, newdata=test, type = "raw")
+
+train <- cbind(predict_naive_train_prob, train)
+test <- cbind(predict_naive_test_prob, test)
+
+# class based on the loss matrix
+train$predicted_class <- ifelse(train$good > 10*train$bad, "good", "bad") 
+test$predicted_class <- ifelse(test$good > 10*test$bad, "good", "bad") 
+
+# confusion matrix
+conf_naive_train <- table(train$good_bad, train$predicted_class)
+names(dimnames(conf_naive_train)) <- c("Actual Train", "Predicted Train")
+caret::confusionMatrix(conf_naive_train)
+
+conf_naive_test <- table(test$good_bad, test$predicted_class)
+names(dimnames(conf_naive_test)) <- c("Actual Test", "Predicted Test")
+caret::confusionMatrix(conf_naive_test)
+
 
 ```
 
 # Assignment 3
 
 ## 1. Reorder your data with respect to the increase of MET and plot EX versus MET. Discuss what kind of model can be appropriate here. Use the reordered data in steps 2-5.
+```{r}
+rm(list=ls())
+
+set.seed(12345)
+state_data <- read.csv2("state.csv")
+
+state_data <- state_data %>% arrange(MET)
+
+ggplot(data = state_data, aes(x=MET, y = EX)) + 
+  geom_point() +
+  geom_smooth() +
+  ggtitle("Plot of MET vs. EX")
+```
+Analysis:
 
 
 # Appendix
