@@ -116,13 +116,19 @@ Analysis: As evident from the two plots the density plot suggests a clusters bei
 ### 1. Loading the input xlxs file
 ```{r}
 baseball <- read.xlsx("baseball-2016.xlsx", sheetName = "Sheet1")
+
 ```
 
 Analysis: Yes its reasonable to scale the data (perform dimensionality reduction) since more than visualizing more than 4 feaures is not advised.
 
 ### 2. Non mertic MDS (ISOMDS)
 ```{r}
-distance <- dist(baseball[, !names(baseball) %in% c("Team", "League")] , method = "minkowski")
+
+baseball_scaled <- scale(baseball[,3:length(baseball)])
+distance <- dist(baseball_scaled)
+
+
+
 fit <- isoMDS(distance, k = 2, maxit = 100)
 
 baseball$MDS1 <- fit$points[,1]
@@ -137,7 +143,9 @@ baseball %>% plot_ly(type = "scatter",
 
 ```
 
-Analysis: None of the axis make a clear boundary between the two Leagues. The outlier teams are as follows: Milwaukee Brewers, Boston Red Sox, Los Angeles Angels, Philadelphia Philies, San Diego Padres.
+Analysis: From the scatterplot, we see that there is some difference between the 2 leagues. More teams from NL league are at the bottom of the plot as compared to teams from the AL league. Most of the teams from the AL league are concentrated in the central portion in the upper part of the plot (MDS_V1 > -3, MDS_V1 < 4, MDS_V2 > -1.5 ). Among the 2 MDS variables, MDS_V2 appears to differentiate the 2 leagues the best since it is possible to observe a boundary around MDS_V2 = -1. It is difficult to observe such a boundary using the MDS_V1 variable.
+
+Outliers: Based on the plot, Boston Red Sox seems like an outlier. While there are other teams also which lie in the other extremes, they are not isolated and hence, do not appear like outliers.
 
 ### 3. Shepard plot of MDS
 ```{r}
@@ -163,7 +171,9 @@ plot_ly()%>%
   #if nonmetric MDS inolved
   add_lines(x=~sh$x, y=~sh$yf, name="Stress")
 ```
-Analysis: The datapoints away from the 45degree line(orange) are the the pairs of points where the MDS was not successful.
+Analysis: The mapping line in the Shepard's plot looks almost linear and apart from a few points, most of them are crowded close to this line. So, it seems like the stress involved in the MDS operation must have been relatively low. So, it appears like the MDS operation was successful.
+
+While mapping observations in Non-metric MDS, if the points lie on a straight line, then it is easiest to map the observations. And those points which are farthest from the regression line of D and delta are the hardest to map. Based on this logic, we can see that observation pairs ->  Minnesota twins & Arizonna Diamondbacks, Oakland Athlatics and Milwakee Brewers. NY Mets and Minnesota Twins were the most difficult to map as they lie farthest from the regression line.
 
 ### 4. Plotting MDS axis with variables of baseball dataset
 ```{r}
@@ -241,12 +251,12 @@ MDS_plotter <- function(MDS_axis, Col){
 # MDS_plotter("MDS2", "IBB")
 # MDS_plotter("MDS2", "LOB")
 
-# Best plots are with MDS-2 with variables HR.per.game and HR
+# Best plots are with MDS-2 with variables HR.per.game and X3B
 MDS_plotter("MDS2", "HR.per.game")
-MDS_plotter("MDS2", "HR")
+MDS_plotter("MDS2", "X3B")
 
 ```
-Analysis:  For batter, the three metric "Batting average", "Runs batted in (RBI)" and "Home Runs (HR)" determine the ranking. For the pitchers its "Stike Outs(SO)" and "Wins". Thus MDS1 axis of our MDS helps to seperate leagues on the batting performance. One thing to note is unlike PCA, there is no way of stating how much % of varies is explained by MDS axis
+Analysis: According to Wikipedia, a home run (HR) is scored when the ball is hit in such a way that the batter is able to circle the bases and reach home safely in one play without any errors being committed by the defensive team in the process. According to Wikipedia, a triple (3B) is the act of a batter safely reaching third base after hitting the ball, with neither the benefit of a fielder's misplay nor another runner being put out on a fielder's choice. Both the variables are very important in scoring baseball teams as they are the most important way for a batting team to score runs. The MDS_V2 variable is positively correlated with Home runs and negatively correlated with Triples. Both the variables depict the batting characteristics of a team. So, MDS_V2 variable represents the batting characteristics of a team and probably denotes the ability of teams to score more home runs compared to triples.
 
 ### Appendix
 

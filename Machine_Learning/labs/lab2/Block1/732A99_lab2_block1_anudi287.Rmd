@@ -1,0 +1,460 @@
+---
+title: "machine learning(732A99) lab2"
+author: "Anubhav Dikshit(anudi287)"
+date: "10 December 2018"
+output: 
+    pdf_document:
+      toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+\newpage
+
+## Loading The Libraries
+```{r, message=FALSE, echo = FALSE}
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(xlsx, ggplot2, MASS, tidyr, dplyr, reshape2, gridExtra, 
+               tree, caret, e1071, pROC, boot, factoextra)
+
+set.seed(12345)
+options("jtools-digits" = 2, scipen = 999)
+```
+
+# Assignment 2
+
+## 2.1 Import the data to R and divide into training/validation/test as 50/25/25: use data partitioning code specified in Lecture 1e.
+```{r}
+set.seed(12345)
+credit_data <- read.xlsx("creditscoring.xls", sheetName = "credit")
+credit_data$good_bad <- as.factor(credit_data$good_bad)
+
+
+n=NROW(credit_data)
+set.seed(12345) 
+id=sample(1:n, floor(n*0.4)) 
+train=credit_data[id,] 
+
+id1=setdiff(1:n, id)
+set.seed(12345) 
+id2=sample(id1, floor(n*0.3)) 
+valid=credit_data[id2,]
+
+id3=setdiff(id1,id2)
+test=credit_data[id3,] 
+```
+
+## 2.2 Fit a decision tree to the training data by using the following measures of impurity: a. Deviance b. Gini index and report the misclassification rates for the training and test data. Choose the measure providing the better results for the following steps.
+
+```{r}
+set.seed(12345)
+
+# Create a decision tree model
+credit_tree_deviance <- tree(good_bad~., data=train, split = c("deviance"))
+credit_tree_gini <- tree(good_bad~., data=train, split = c("gini"))
+
+# Visualize the decision tree with rpart.plot
+summary(credit_tree_deviance)
+summary(credit_tree_gini)
+
+# predicting on the test dataset to get the misclassification rate.
+predict_tree_deviance <- predict(credit_tree_deviance, newdata = test, type = "class")
+predict_tree_gini <- predict(credit_tree_gini, newdata = test, type = "class")
+
+conf_tree_deviance <- table(test$good_bad, predict_tree_deviance)
+names(dimnames(conf_tree_deviance)) <- c("Actual Test", "P2redicted Test")
+caret::confusionMatrix(conf_tree_deviance)
+
+conf_tree_gini <- table(test$good_bad, predict_tree_gini)
+names(dimnames(conf_tree_gini)) <- c("Actual Test", "Predicted Test")
+caret::confusionMatrix(conf_tree_gini)
+```
+Analysis: On the Training dataset model with 'deviance' had a misclassfication rate of 18.7% while the model with 'gini' split had the misclassification rate of 22.8%.
+
+For the test dataset we see that the model with 'deviance' type of split has a accuracy of 67% or misclassifiaction rate of 33%, we see that to predict 'good' the accuracy is 73.08% but for predicting bad its just 53.26%. Thus our our model is heavily baised towards predicting cases as 'good'.
+
+For the test dataset we see that the model with 'gini' type of split has a accuracy of 62.7% or misclassifiaction rate of 37.3%, we also see that to predict 'good' the accuracy is 78.8% but for predicting bad its just 26%. Thus our model is heavily baised towards predicting cases as 'good' even more than the model which uses 'deviance' to split variable.
+
+Both our models would lead to many bad loan applicants to be given loans which is never a good thing, however among the model the one using 'deviance' mode for split is better by 27%.
+
+Thus we will select model using 'deviance' for further model building.
+
+## 3. Use training and validation sets to choose the optimal tree depth. Present the graphs of the dependence of deviances for the training and the validation data on the number of leaves. Report the optimal tree, report it's depth and the variables used by the tree. Interpret the information provided by the tree structure. Estimate the misclassification rate for the test data.
+
+```{r}
+set.seed(12345)
+
+credit_tree <- tree(good_bad~., data=train, split = c("deviance"))
+
+credit_tree_purned_train <- prune.tree(credit_tree, method = c("deviance"))
+credit_tree_purned_valid <- prune.tree(credit_tree, newdata = valid ,method = c("deviance"))
+
+result_train <- cbind(credit_tree_purned_train$size, credit_tree_purned_train$dev, "Train") 
+result_valid <- cbind(credit_tree_purned_valid$size, credit_tree_purned_valid$dev, "Valid") 
+
+result <- as.data.frame(rbind(result_valid, result_train))
+colnames(result) <- c("Leaf", "Deviance", "Type")
+
+result$Leaf <- as.numeric(as.character(result$Leaf))
+result$Deviance <- as.numeric(as.character(result$Deviance))
+
+# plot of deviance vs. number of leafs
+ggplot(data = result, aes(x = Leaf, y = Deviance, colour = Type)) + 
+  geom_point() + geom_line() + ggtitle("Plot of Deviance vs. Tree Depth (Shows Deviance least at 7)")
+
+# prune the tree to the required depth
+credit_tree_sniped <- prune.tree(credit_tree, best=7)
+
+plot(credit_tree_sniped)
+text(credit_tree_sniped)
+
+# misclassification rate for best pruned tree
+
+result_prune_test <- predict(credit_tree_sniped, newdata = test, type = "class")
+
+conf_prune_tree_test <- table(test$good_bad, result_prune_test)
+names(dimnames(conf_prune_tree_test)) <- c("Actual Test", "Predicted Test")
+caret::confusionMatrix(conf_prune_tree_test)
+```
+
+Analysis: 
+Choosing optimal depth tree we get that '7' as the best depth. The variables used in the best tree are- duration, history, savings, amount.
+
+From the tree structure we can see that the following variables are best to split on, 'duration' < 43.5 then 'savings' < 4, 'history' < 1.5 and finally 'amount'.
+
+The accuracy on the model trained on 'train' dataset is (77% and misclassification 23%) and on the 'test' dataset accuracy is 73.67%, thus the misclassification rate is 26.33%. We see that model predicts 'good' applicants very well (accuracy of 90%) while it classifies 'bad' applicant way badly (accuracy is 34.78%).
+
+Thus this model would be very bad for the business and would likely to run the business bankrupt.
+
+## 4. Use training data to perform classification using Naïve Bayes and report the confusion matrices and misclassification rates for the training and for the test data. Compare the results with those from step 3.
+
+```{r}
+#Fitting the Naive Bayes model
+credit_naive_model = naiveBayes(good_bad ~., data=train)
+credit_naive_model
+
+#Prediction on the dataset
+predict_naive_train = predict(credit_naive_model, newdata=train, type = "class")
+predict_naive_test = predict(credit_naive_model, newdata=test, type = "class")
+
+conf_naive_train <- table(train$good_bad, predict_naive_train)
+names(dimnames(conf_naive_train)) <- c("Actual Train", "Predicted Train")
+caret::confusionMatrix(conf_naive_train)
+
+conf_naive_test <- table(test$good_bad, predict_naive_test)
+names(dimnames(conf_naive_test)) <- c("Actual Test", "Predicted Test")
+caret::confusionMatrix(conf_naive_test)
+```
+Analysis:
+
+For the train dataset using NaiveBayes method we get accuracy 73% or misclassification of 27%, here we also notice that the accuracy of class 'bad' is 54% while for class 'good' is 80%, thus the model is more balanced in predicting, thus its still baised in predict one class over the other.
+
+For the test dataset using NaiveBayes method we get accuracy 71% or misclassification of 29%, here we also notice that the accuracy of class 'bad' is 54% while for class 'good' is 78%, thus the model is almost the same compared to train.
+
+Compared to step3, we see that for the 'train' dataset the optimal tree has accuracy of 77% while it is 73% on the 'test' dataset. For the NaiveBayes model, accuracy on the 'train' dataset is 73% and while it is 71% on the 'test' datatset.
+
+Accuracy is only part of the story what we see is better here is that this model classifies 'bad' customers better better for both train and test dataset than decision tree (54% for both train and test for naive compared 38% train, 34% test for decision tree).
+
+Thus the model is better to be used for the business than the one in the step3, the risk of providing loans to bad applicant is lesser than the previous model but its still not good enough!
+
+## 5. Use the optimal tree and the Naïve Bayes model to classify the test data by using the following principle: where prob(Y|'good')=A, where A=0.05,0.10,.....0.95.
+Compute the TPR and FPR values for the two models and plot the corresponding ROC curves. Conclusion?
+
+```{r}
+set.seed(12345)
+
+credit_tree <- tree(good_bad~., data=train, split = c("deviance"))
+credit_naive_model = naiveBayes(good_bad ~., data=train)
+
+# prune the tree to the required depth
+credit_tree_sniped <- prune.tree(credit_tree, best=7)
+
+# predicting class, getting probability 
+predict_prune_test_prob <- predict(credit_tree_sniped, newdata = test)
+predict_naive_test_prob <- predict(credit_naive_model, newdata=test, type = "raw")
+
+# data mugging
+probability_data_naive <- as.data.frame(cbind(predict_naive_test_prob, as.character(test$good_bad), "naivebayes"))
+probability_data_tree <- as.data.frame(cbind(predict_prune_test_prob, as.character(test$good_bad), "tree"))
+probability_data_combined <- rbind(probability_data_tree, probability_data_naive)
+colnames(probability_data_combined) <- c("prob_bad", "prob_good", "actual_test_class", "model")
+
+# final dataset
+probability_data_combined$prob_good <- as.numeric(as.character(probability_data_combined$prob_good))
+
+# changing the threshold and printing the probability
+
+tree_list <- NULL
+naive_list <- NULL
+final <- NULL
+for(threshold in seq(from = 0.05, to = 0.95, by = 0.05)){
+  probability_data_combined$predicted_class <- ifelse(probability_data_combined$prob_good > threshold, "good", "bad")
+  
+  df2 <- probability_data_combined[,c("model", "actual_test_class", "predicted_class")]
+  df2$threshold <- threshold
+  df2$match <- ifelse(df2$actual_test_class == df2$predicted_class, 1, 0)
+  
+  final <- rbind(df2, final)
+}
+
+# Creating the FRP and TRP for each model and threshold  
+final$temp <- 1
+final_summary <- final %>% 
+group_by(model, threshold) %>% 
+summarise(total_positive = sum(temp[actual_test_class == "good"]),
+          total_negative = sum(temp[actual_test_class == "bad"]),
+          correct_positive = sum(temp[actual_test_class == "good" & predicted_class == "good"]),
+          false_positive = sum(temp[actual_test_class == "bad" & predicted_class == "good"])) %>% 
+    mutate(TPR = correct_positive/total_positive, FPR = false_positive/total_negative) %>% 
+  select(model, threshold, TPR, FPR)
+
+ggplot(data = final_summary, aes(x = FPR, y=TPR)) + geom_line(aes(colour = model)) + ggtitle("ROC curve for the Naive Bayes vs. Tree Model")
+
+
+```
+Analysis: We find that 'naivebayes' model is better than 'tree' model for across varying threshold values.
+
+## 6. Repeat Naïve Bayes classification as it was in step 4 but use the following loss matrix (good loss 1, bad loss 10) and report the confusion matrix for the training and test data. Compare the results with the results from step 4 and discuss how the rates has changed and why.
+```{r}
+set.seed(12345)
+
+credit_naive_model = naiveBayes(good_bad ~., data=train)
+
+# predicting class, getting probability 
+predict_naive_train_prob <- predict(credit_naive_model, newdata=train, type = "raw")
+predict_naive_test_prob <- predict(credit_naive_model, newdata=test, type = "raw")
+
+train <- cbind(predict_naive_train_prob, train)
+test <- cbind(predict_naive_test_prob, test)
+
+# class based on the loss matrix
+train$predicted_class <- ifelse(train$good > 10*train$bad, "good", "bad") 
+test$predicted_class <- ifelse(test$good > 10*test$bad, "good", "bad") 
+
+# confusion matrix
+conf_naive_train <- table(train$good_bad, train$predicted_class)
+names(dimnames(conf_naive_train)) <- c("Actual Train", "Predicted Train")
+caret::confusionMatrix(conf_naive_train)
+
+conf_naive_test <- table(test$good_bad, test$predicted_class)
+names(dimnames(conf_naive_test)) <- c("Actual Test", "Predicted Test")
+caret::confusionMatrix(conf_naive_test)
+
+
+```
+
+# Assignment 3
+
+## 1. Reorder your data with respect to the increase of MET and plot EX versus MET. Discuss what kind of model can be appropriate here. Use the reordered data in steps 2-5.
+```{r}
+rm(list=ls())
+
+set.seed(12345)
+state_data <- read.csv2("state.csv")
+
+state_data <- state_data %>% arrange(MET)
+
+ggplot(data = state_data, aes(x=MET, y = EX)) + 
+  geom_point() +
+  geom_smooth(method = 'loess') +
+  ggtitle("Plot of MET vs. EX")
+```
+Analysis:
+As evident from the graph the best model, linear regression will not be a good fit, even the trend is non linear. Piece wise linear model(spline) might be a good one, thus regression per group/cluster will be a good approach.
+
+## 2. Use package tree and fit a regression tree model with target EX and feature MET in which the number of the leaves is selected by cross-validation, use the entire data set and set minimum number of observations in a leaf equal to 8 (setting minsize in tree.control). Report the selected tree. Plot the original and the fitted data and histogram of residuals. Comment on the distribution of the residuals and the quality of the fit.
+```{r}
+set.seed(12345)
+
+state_tree_regression <- tree(data = state_data, EX~MET, 
+                              control = tree.control(nobs=NROW(state_data), 
+                                                     minsize = 8))
+
+state_cv_tree <- cv.tree(state_tree_regression, FUN  = prune.tree)
+plot(state_cv_tree)
+# The best size is either 3 or 4
+
+# puring the tree for leaf size of 3
+state_cv_tree_purned <- prune.tree(state_tree_regression, k = 3)
+plot(state_cv_tree_purned, main="Pruned Tree for the given dataset")
+text(state_cv_tree_purned)
+
+# Original vs. Fitted values
+compare_data <- predict(state_cv_tree_purned, newdata = state_data)
+compare_data <- cbind(compare_data, state_data$EX)
+compare_data <- as.data.frame(compare_data)
+colnames(compare_data) <- c("predicted_value", "actual_value")
+compare_data$residual <- compare_data$actual_value -  compare_data$predicted_value
+
+# plots
+ggplot(compare_data, aes(x = actual_value, y =  predicted_value)) + 
+  geom_point() +
+  ggtitle("Plot of Actual vs. Predicted Value")
+
+ggplot(compare_data, aes(x = predicted_value, y = residual)) + 
+  geom_point() + geom_abline(slope=0, intercept=0) +
+  ggtitle("Plot of Predicted Value vs. Residual")
+
+ggplot(data = compare_data, aes(x = residual)) + 
+  geom_histogram(aes(y = ..density..), binwidth = 8) +
+  geom_density(colour = "red") +
+  ggtitle("Histogram of Residual")
+
+```
+
+Analysis:
+
+The predicted vs. Actual provides us the insight that for lower values of variable, our model is over predicting (actual value ~200) while the predicted value is ~250. While for larger values (~400) our model is under predicting (~330). At around the mean value (~300) the predicted values are both under and over predicted thus no bias.
+Thus for values that are away from the mean our model is baised towards over/under predicted while values close to mean our model is not biased.
+
+From the plot of Predicted vs. Residual values we can see that error appears random, neither is large bias/concentration of the error towards any value expect at lower/higher values(more points on one side of the line)
+
+From the histogram we can see that the histogram has higher values on the left of zero, and a longer tail on the right. Thus from the above three points we can see that there is scope of improvement in the model especially in the extreme values of the predicted values.
+
+## 3. Compute and plot the 95% confidence bands for the regression tree model from step 2 (fit a regression tree with the same settings and the same number of leaves as in step 2 to the resampled data) by using a non-parametric bootstrap. Comment whether the band is smooth or bumpy and try to explain why. Consider the width of the confidence band and comment whether results of the regression model in step 2 seem to be reliable.
+
+```{r}
+
+set.seed(12345)
+
+# function to obtain R-Squared from the data
+rsq <- function(data, indices) {
+  d <- data[indices,] # allows boot to select sample
+  
+  model <- tree(data = d, 
+                EX~MET, 
+                control = tree.control(nobs=NROW(data), minsize = 8))
+  
+  model_purned <- prune.tree(model, k = 3)
+  
+  compare_data <- predict(model_purned, newdata = d)
+
+  return(compare_data)
+}
+# bootstrapping with 1000 replications
+results <- boot(data=state_data, statistic=rsq, R=1000)
+
+e=envelope(results) #compute confidence bands
+
+compare_data_non_para_boot <- compare_data
+compare_data_non_para_boot$MET <- state_data$MET
+compare_data_non_para_boot$lower_bound <- e$point[2,]
+compare_data_non_para_boot$upper_bound <- e$point[1,]
+
+ggplot(data=compare_data_non_para_boot, aes(x = MET, y = actual_value)) + 
+  geom_point(aes(y=predicted_value)) +
+  geom_line(aes(y=upper_bound), colour="red") +  # first layer
+  geom_line(aes(y=lower_bound), colour="red") +
+  ggtitle("Predicted EX value along with 95% CI band")
+
+```
+
+Analysis:
+
+The confidence bands certainly appear to be bumpy and not smooth, the confidence bands are bumpy because the predicted values shows large flucations. From the width of the confidence band we can assume that our model is not a good one. Ideally we want the confidence band to be narrow thus a wider band suggests we need further tuning to the model.
+
+## 4.Compute and plot the 95% confidence and prediction bands the regression tree model from step 2 (fit a regression tree with the same settings and the same number of leaves as in step 2 to the resampled data) by using a parametric bootstrap, assume Normal distribution with mean as labels in the tree leaves, while varience is residual varience. Consider the width of the confidence band and comment whether results of the regression model in step 2 seem to be reliable. Does it look like only 5% of data are outside the prediction band? Should it be?
+
+
+```{r}
+
+set.seed(12345)
+
+
+  model <- tree(data = d, 
+                EX~MET, 
+                control = tree.control(nobs=NROW(data), minsize = 8))
+  
+  model_purned <- prune.tree(model, k = 3)
+  
+  compare_data <- predict(model_purned, newdata = d)
+
+
+mle=lm(Price~Area, data=data2)
+
+f1=function(d){
+  
+  res <- tree(data = d, 
+                EX~MET, 
+                control = tree.control(nobs=NROW(data), minsize = 8)) #fit the model
+  
+  
+    model_purned <- prune.tree(model, k = 3)
+    
+    
+  #predict values for all Area values from the original data
+  priceP = predict(model_purned, newdata = d)
+  
+  n=NROW(d)
+  predictedP=rnorm(n, priceP, sd(mle$residuals))
+  return(predictedP)
+}
+
+rng=function(data, mle) {
+  data1=data.frame(Price=data$Price, Area=data$Area)
+  n=length(data$Price)
+#generate new Price
+  data1$Price=rnorm(n,predict(mle, newdata=data1),sd(mle$residuals))
+  return(data1)
+}
+
+
+res=boot(data2, statistic=f1, R=10000, mle=mle,ran.gen=rng, sim="parametric")
+
+
+
+```
+
+## 5.Consider the histogram of residuals from step 2 and suggest what kind of bootstrap is actually more appropriate here.
+```{r}
+
+```
+
+# Assignment 4
+```{r}
+rm(list=ls())
+NIR_data <- read.csv2("NIRSpectra.csv")
+```
+
+## 1.Conduct a standard PCA by using the feature space and provide a plot explaining how much variation is explained by each feature. Does the plot show how many PC should be extracted? Select the minimal number of components explaining at least 99% of the total variance. Provide also a plot of the scores in the coordinates (PC1, PC2). Are there unusual diesel fuels according to this plot?
+```{r}
+
+pca_data =  select(NIR_data,-c(Viscosity))
+pca_result = prcomp(pca_data)
+
+# showing the contribution of each PCA components
+summary(pca_result)
+
+# plots PCA components and the eignen vectors
+factoextra::fviz_eig(pca_result)
+
+# pca components and the viscocity
+pca_result_data = cbind(first_component = pca_result$x[,1],
+                                second_component = pca_result$x[,2],
+                                Viscosity = NIR_data$Viscosity)
+
+pca_result_data = as.data.frame(pca_result_data)
+
+# plotting the data variation and the viscocity
+ggplot(data = pca_result_data, aes(x = first_component, y = second_component)) +
+  geom_point(aes(y = Viscosity)) + ggtitle("PCA components vs. Viscosity")
+
+
+# showing the components of the PCA components
+factoextra::fviz_pca_var(pca_result,
+             col.var = "contrib", # Color by contributions to the PC
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE     # Avoid text overlapping
+             )
+
+
+
+
+```
+
+
+# Appendix
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+```
