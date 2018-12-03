@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 \newpage
 
-## Loading The Libraries
+### Loading The Libraries
 ```{r, message=FALSE, echo = FALSE}
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(xlsx, ggplot2, MASS, tidyr, dplyr, reshape2, gridExtra, 
@@ -91,8 +91,10 @@ credit_tree <- tree(good_bad~., data=train, split = c("deviance"))
 credit_tree_purned_train <- prune.tree(credit_tree, method = c("deviance"))
 credit_tree_purned_valid <- prune.tree(credit_tree, newdata = valid ,method = c("deviance"))
 
-result_train <- cbind(credit_tree_purned_train$size, credit_tree_purned_train$dev, "Train") 
-result_valid <- cbind(credit_tree_purned_valid$size, credit_tree_purned_valid$dev, "Valid") 
+result_train <- cbind(credit_tree_purned_train$size, 
+                      credit_tree_purned_train$dev, "Train") 
+result_valid <- cbind(credit_tree_purned_valid$size, 
+                      credit_tree_purned_valid$dev, "Valid") 
 
 result <- as.data.frame(rbind(result_valid, result_train))
 colnames(result) <- c("Leaf", "Deviance", "Type")
@@ -102,7 +104,8 @@ result$Deviance <- as.numeric(as.character(result$Deviance))
 
 # plot of deviance vs. number of leafs
 ggplot(data = result, aes(x = Leaf, y = Deviance, colour = Type)) + 
-  geom_point() + geom_line() + ggtitle("Plot of Deviance vs. Tree Depth (Shows Deviance least at 7)")
+  geom_point() + geom_line() + 
+  ggtitle("Plot of Deviance vs. Tree Depth (Shows Deviance least at 7)")
 
 # prune the tree to the required depth
 credit_tree_sniped <- prune.tree(credit_tree, best=7)
@@ -176,10 +179,14 @@ predict_prune_test_prob <- predict(credit_tree_sniped, newdata = test)
 predict_naive_test_prob <- predict(credit_naive_model, newdata=test, type = "raw")
 
 # data mugging
-probability_data_naive <- as.data.frame(cbind(predict_naive_test_prob, as.character(test$good_bad), "naivebayes"))
-probability_data_tree <- as.data.frame(cbind(predict_prune_test_prob, as.character(test$good_bad), "tree"))
+probability_data_naive <- as.data.frame(cbind(predict_naive_test_prob, 
+                                              as.character(test$good_bad), "naivebayes"))
+probability_data_tree <- as.data.frame(cbind(predict_prune_test_prob, 
+                                             as.character(test$good_bad), "tree"))
+
 probability_data_combined <- rbind(probability_data_tree, probability_data_naive)
-colnames(probability_data_combined) <- c("prob_bad", "prob_good", "actual_test_class", "model")
+colnames(probability_data_combined) <- c("prob_bad", "prob_good", 
+                                         "actual_test_class", "model")
 
 # final dataset
 probability_data_combined$prob_good <- as.numeric(as.character(probability_data_combined$prob_good))
@@ -210,7 +217,8 @@ summarise(total_positive = sum(temp[actual_test_class == "good"]),
     mutate(TPR = correct_positive/total_positive, FPR = false_positive/total_negative) %>% 
   select(model, threshold, TPR, FPR)
 
-ggplot(data = final_summary, aes(x = FPR, y=TPR)) + geom_line(aes(colour = model)) + ggtitle("ROC curve for the Naive Bayes vs. Tree Model")
+ggplot(data = final_summary, aes(x = FPR, y=TPR)) + geom_line(aes(colour = model)) + 
+  ggtitle("ROC curve for the Naive Bayes vs. Tree Model")
 
 
 ```
@@ -360,48 +368,48 @@ The confidence bands certainly appear to be bumpy and not smooth, the confidence
 
 ```{r}
 
-set.seed(12345)
-
-
-  model <- tree(data = d, 
-                EX~MET, 
-                control = tree.control(nobs=NROW(data), minsize = 8))
-  
-  model_purned <- prune.tree(model, k = 3)
-  
-  compare_data <- predict(model_purned, newdata = d)
-
-
-mle=lm(Price~Area, data=data2)
-
-f1=function(d){
-  
-  res <- tree(data = d, 
-                EX~MET, 
-                control = tree.control(nobs=NROW(data), minsize = 8)) #fit the model
-  
-  
-    model_purned <- prune.tree(model, k = 3)
-    
-    
-  #predict values for all Area values from the original data
-  priceP = predict(model_purned, newdata = d)
-  
-  n=NROW(d)
-  predictedP=rnorm(n, priceP, sd(mle$residuals))
-  return(predictedP)
-}
-
-rng=function(data, mle) {
-  data1=data.frame(Price=data$Price, Area=data$Area)
-  n=length(data$Price)
-#generate new Price
-  data1$Price=rnorm(n,predict(mle, newdata=data1),sd(mle$residuals))
-  return(data1)
-}
-
-
-res=boot(data2, statistic=f1, R=10000, mle=mle,ran.gen=rng, sim="parametric")
+# set.seed(12345)
+# 
+# 
+#   model <- tree(data = d, 
+#                 EX~MET, 
+#                 control = tree.control(nobs=NROW(data), minsize = 8))
+#   
+#   model_purned <- prune.tree(model, k = 3)
+#   
+#   compare_data <- predict(model_purned, newdata = d)
+# 
+# 
+# mle=lm(Price~Area, data=data2)
+# 
+# f1=function(d){
+#   
+#   res <- tree(data = d, 
+#                 EX~MET, 
+#                 control = tree.control(nobs=NROW(data), minsize = 8)) #fit the model
+#   
+#   
+#     model_purned <- prune.tree(model, k = 3)
+#     
+#     
+#   #predict values for all Area values from the original data
+#   priceP = predict(model_purned, newdata = d)
+#   
+#   n=NROW(d)
+#   predictedP=rnorm(n, priceP, sd(mle$residuals))
+#   return(predictedP)
+# }
+# 
+# rng=function(data, mle) {
+#   data1=data.frame(Price=data$Price, Area=data$Area)
+#   n=length(data$Price)
+# #generate new Price
+#   data1$Price=rnorm(n,predict(mle, newdata=data1),sd(mle$residuals))
+#   return(data1)
+# }
+# 
+# 
+# res=boot(data2, statistic=f1, R=10000, mle=mle,ran.gen=rng, sim="parametric")
 
 
 
