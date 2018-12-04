@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 \newpage
 
 ### Loading The Libraries
-```{r, message=FALSE, echo = FALSE}
+```{r, message=FALSE, echo = TRUE}
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(xlsx, ggplot2, MASS, tidyr, dplyr, reshape2, gridExtra, 
                tree, caret, e1071, pROC, boot, factoextra)
@@ -368,55 +368,13 @@ The confidence bands certainly appear to be bumpy and not smooth, the confidence
 
 ```{r}
 
-# set.seed(12345)
-# 
-# 
-#   model <- tree(data = d, 
-#                 EX~MET, 
-#                 control = tree.control(nobs=NROW(data), minsize = 8))
-#   
-#   model_purned <- prune.tree(model, k = 3)
-#   
-#   compare_data <- predict(model_purned, newdata = d)
-# 
-# 
-# mle=lm(Price~Area, data=data2)
-# 
-# f1=function(d){
-#   
-#   res <- tree(data = d, 
-#                 EX~MET, 
-#                 control = tree.control(nobs=NROW(data), minsize = 8)) #fit the model
-#   
-#   
-#     model_purned <- prune.tree(model, k = 3)
-#     
-#     
-#   #predict values for all Area values from the original data
-#   priceP = predict(model_purned, newdata = d)
-#   
-#   n=NROW(d)
-#   predictedP=rnorm(n, priceP, sd(mle$residuals))
-#   return(predictedP)
-# }
-# 
-# rng=function(data, mle) {
-#   data1=data.frame(Price=data$Price, Area=data$Area)
-#   n=length(data$Price)
-# #generate new Price
-#   data1$Price=rnorm(n,predict(mle, newdata=data1),sd(mle$residuals))
-#   return(data1)
-# }
-# 
-# 
-# res=boot(data2, statistic=f1, R=10000, mle=mle,ran.gen=rng, sim="parametric")
-
-
+set.seed(12345)
 
 ```
 
 ## 5.Consider the histogram of residuals from step 2 and suggest what kind of bootstrap is actually more appropriate here.
 ```{r}
+set.seed(12345)
 
 ```
 
@@ -428,12 +386,13 @@ NIR_data <- read.csv2("NIRSpectra.csv")
 
 ## 1.Conduct a standard PCA by using the feature space and provide a plot explaining how much variation is explained by each feature. Does the plot show how many PC should be extracted? Select the minimal number of components explaining at least 99% of the total variance. Provide also a plot of the scores in the coordinates (PC1, PC2). Are there unusual diesel fuels according to this plot?
 ```{r}
+set.seed(12345)
 
 pca_data =  select(NIR_data,-c(Viscosity))
 pca_result = prcomp(pca_data)
 
-# showing the contribution of each PCA components
-summary(pca_result)
+contribution <- summary(pca_result)$importance
+knitr::kable(contribution[,1:10], caption = "Contribution of PCA axis towards varience")
 
 # plots PCA components and the eignen vectors
 factoextra::fviz_eig(pca_result)
@@ -448,8 +407,16 @@ pca_result_data = as.data.frame(pca_result_data)
 # plotting the data variation and the viscocity
 ggplot(data = pca_result_data, aes(x = first_component, y = second_component)) +
   geom_point(aes(y = Viscosity)) + ggtitle("PCA components vs. Viscosity")
+```
+Analysis:
 
+From the plot of PCA component vs. Viscoity, we can see that second component of PCA is needed, this is due to the fact the most of the data is vertically spread, removing this dimension would make it impossible to differenitate the types of diesel.
 
+From the plot we can also see that there are evidently some diesel that are outliers (diesel with first_component > 0.5 and second component~4).
+
+## 2.Make trace plots of the loadings of the components selected in step 1. Is there any principle component that is explained by mainly a few original features?
+
+```{r}
 # showing the components of the PCA components
 factoextra::fviz_pca_var(pca_result,
              col.var = "contrib", # Color by contributions to the PC
@@ -457,11 +424,12 @@ factoextra::fviz_pca_var(pca_result,
              repel = TRUE     # Avoid text overlapping
              )
 
-
+U=loadings(pca_result)
+plot(U[,1], main="Traceplot, PC1")
+plot(U[,2],main="Traceplot, PC2")
 
 
 ```
-
 
 # Appendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}

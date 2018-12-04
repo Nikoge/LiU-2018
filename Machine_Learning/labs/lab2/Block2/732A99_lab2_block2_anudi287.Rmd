@@ -1,0 +1,30 @@
+---
+title: "machine learning(732A99) lab2 block2"
+author: "Anubhav Dikshit(anudi287)"
+date: "17 December 2018"
+output: 
+    pdf_document:
+      toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+\newpage
+
+### Loading The Libraries
+```{r, message=FALSE, echo = TRUE}
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(xlsx, ggplot2, MASS, tidyr, dplyr, reshape2, gridExtra, 
+               tree, caret, e1071, pROC, boot, factoextra)
+
+set.seed(12345)
+options("jtools-digits" = 2, scipen = 999)
+```
+
+
+
+# Appendix
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+```

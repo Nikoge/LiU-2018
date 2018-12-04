@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Loading The Libraries
-```{r, message=FALSE, echo = FALSE, warnings=FALSE}
+```{r, message=FALSE, echo = TRUE, warnings=FALSE}
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(mboost, randomForest, dplyr, ggplot2)
 
@@ -314,6 +314,141 @@ em_loop(4)
 ## Analysis
 
 Comparing the final plots for each of the cases, it becomes clear that when the mixture model has more components (K = 4), the EM algorithm does not perform as accurate as for fewer components (K = 2 or K = 3). The segregation between each component gets diluted as the components get higher. 
+
+## EM algo with matrix
+```{r}
+em_mat <- function(k){
+set.seed(1234567890)
+# max number of EM iterations
+max_it <- 100
+# min change in log likelihood between two consecutive EM iterations
+min_change <- 0.1
+#------------- Producing Training data and Initialization ----------------#
+# number of training points
+N <- 1000
+# number of dimensions
+D <- 10
+# training data
+x <- matrix(nrow=N, ncol=D)
+# true mixing coefficients
+true_pi <- vector(length = k)
+true_pi <- rep(1/k, k)
+# true conditional distributions
+true_mu <- matrix(nrow = k, ncol = D)
+if(k == 2){
+plot(true_mu[1,], type="o", col="blue", ylim=c(0,1))
+points(true_mu[2,], type="o", col="red")
+true_mu[1,]=c(0.5,0.6,0.4,0.7,0.3,0.8,0.2,0.9,0.1,1)
+true_mu[2,]=c(0.5,0.4,0.6,0.3,0.7,0.2,0.8,0.1,0.9,0)
+}else if(k == 3){
+plot(true_mu[1,], type="o", col="blue", ylim=c(0,1))
+points(true_mu[2,], type="o", col="red")
+points(true_mu[3,], type="o", col="green")
+true_mu[1,]=c(0.5,0.6,0.4,0.7,0.3,0.8,0.2,0.9,0.1,1)
+true_mu[2,]=c(0.5,0.4,0.6,0.3,0.7,0.2,0.8,0.1,0.9,0)
+true_mu[3,]=c(0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5)
+}else {
+plot(true_mu[1,], type="o", col="blue", ylim=c(0,1))
+points(true_mu[2,], type="o", col="red")
+points(true_mu[3,], type="o", col="green")
+points(true_mu[4,], type="o", col="yellow")
+true_mu[1,]=c(0.5,0.6,0.4,0.7,0.3,0.8,0.2,0.9,0.1,1)
+true_mu[2,]=c(0.5,0.4,0.6,0.3,0.7,0.2,0.8,0.1,0.9,0)
+true_mu[3,]=c(0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5)
+true_mu[4,]=c(0.3,0.5,0.5,0.7,0.5,0.5,0.5,0.5,0.4,0.5)}
+# Producing the training data
+for(n in 1:N) {
+l <- sample(1:k,1,prob=true_pi)
+for(d in 1:D) {
+x[n,d] <- rbinom(1,1,true_mu[l,d])
+}
+}
+# fractional component assignments
+z <- matrix(nrow = N, ncol = k)
+# mixing coefficients
+pi <- vector(length = k)
+# conditional distributions
+mu <- matrix(nrow = k, ncol = D)
+# log likelihood of the EM iterations
+llik <- vector(length = max_it)
+# Random initialization of the paramters
+pi <- runif(k,0.49,0.51)
+pi <- pi / sum(pi)
+for(i in 1:k) {
+mu[i,] <- runif(D,0.49,0.51)
+}
+#----------------------- Iteration stage -----------------------#
+for(it in 1:max_it) {
+if(k == 2){
+plot(mu[1,], type="o", col="blue", ylim=c(0,1))
+points(mu[2,], type="o", col="red")
+}else if(k == 3){
+plot(mu[1,], type="o", col="blue", ylim=c(0,1))
+points(mu[2,], type="o", col="red")
+points(mu[3,], type="o", col="green")
+}else{
+plot(mu[1,], type="o", col="blue", ylim=c(0,1))
+points(mu[2,], type="o", col="red")
+points(mu[3,], type="o", col="green")
+points(mu[4,], type="o", col="yellow")}
+Sys.sleep(0.5)
+# E-step: Computation of the fractional component assignments
+# Updating z matrix
+p_Xn_MUn <- exp(x %*% log(t(mu)) + (1 - x) %*% log(1 - t(mu)))
+numerator <- matrix(rep(pi,N), ncol = k, byrow = TRUE) * p_Xn_MUn
+denominator <- rowSums(numerator)
+Z_nk <- numerator/denominator
+# Updating pi
+pi <- colSums(Z_nk)/N
+# Updating mu
+mu <- (t(Z_nk) %*% x)/colSums(Z_nk)
+#Log likelihood computation.
+llik[it] <- sum(Z_nk * ((x %*% log(t(mu)) + (1 - x) %*% log(1 - t(mu))
+) + matrix(rep(pi,N), ncol = k, byrow = TRUE)))
+cat("iteration: ", it, "log likelihood: ", llik[it], "\n")
+flush.console()
+# Stop if the log likelihood has not changed significantly
+if(it >= 2){
+if((llik[it] - llik[it-1]) < min_change){break()}
+}
+#M-step: ML parameter estimation from the data and fractional component assignments
+# pi_ML
+pi_ML <- pi
+#mu_ML
+mu_ML <- mu
+}
+#----------------------- output stage -----------------------#
+df <- data.frame(Iteration = 1:length(llik[which(llik != 0.000)])
+, log_likelihood = llik[which(llik != 0.000)])
+plot <- ggplot(data = df) +
+geom_point(mapping = aes(x = Iteration, y = log_likelihood),
+color = 'black') +
+geom_line(mapping = aes(x = Iteration, y = log_likelihood),
+color = 'black', size = 1) +
+ggtitle('Maximum likelihood vs Number of iterations') +
+theme(plot.title = element_text(hjust = 0.5)) +
+theme_light()
+output <- list(pi_ML = pi_ML,
+mu_ML = mu_ML,
+plot = plot
+)
+output
+}
+
+EM_2 <- em_mat(2)
+EM_2$plot
+EM_2$pi_ML
+EM_2$mu_ML
+EM_3 <- em_mat(3)
+EM_3$plot
+EM_3$pi_ML
+EM_3$mu_ML
+EM_4 <- em_mat(4)
+EM_4$plot
+EM_4$pi_ML
+EM_4$mu_ML
+```
+
 
 
 # Appendix
