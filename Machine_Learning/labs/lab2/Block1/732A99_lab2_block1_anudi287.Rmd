@@ -365,10 +365,37 @@ The confidence bands certainly appear to be bumpy and not smooth, the confidence
 
 ## 4.Compute and plot the 95% confidence and prediction bands the regression tree model from step 2 (fit a regression tree with the same settings and the same number of leaves as in step 2 to the resampled data) by using a parametric bootstrap, assume Normal distribution with mean as labels in the tree leaves, while varience is residual varience. Consider the width of the confidence band and comment whether results of the regression model in step 2 seem to be reliable. Does it look like only 5% of data are outside the prediction band? Should it be?
 
-
 ```{r}
-
 set.seed(12345)
+
+mle=prune.tree(state_tree_regression, k = 3)
+
+# Original vs. Fitted values
+compare_data <- predict(mle, newdata = state_data)
+compare_data <- cbind(compare_data, state_data$EX)
+compare_data <- as.data.frame(compare_data)
+colnames(compare_data) <- c("predicted_value", "actual_value")
+compare_data$residual <- compare_data$actual_value -  compare_data$predicted_value
+
+rng=function(data, mle) {
+  data1=data.frame(Price=data$Price, Area=compare_data$residual)
+  n=length(data$Price)
+#generate new Price
+  data1$Price=rnorm(n,predict(mle, newdata=data1),sd(mle$residuals))
+  return(data1)
+}
+
+f1=function(data1){
+  res=lm(Price~Area, data=data1) #fit linear model
+  #predict values for all Area values from the original data
+  priceP=predict(res,newdata=data2) 
+  return(priceP)
+}
+
+res=boot(data2, statistic=f1, R=1000, mle=mle,ran.gen=rng, sim="parametric")
+
+
+
 
 ```
 
@@ -470,8 +497,29 @@ From the 1st plot is evident that there are no few features which form the core 
 ```{r}
 set.seed(12345)
 
+# X -> pre-processed data matrix
+# K -> pre-whitening matrix that projects data onto the first n.compprincipal components.
+# W -> estimated un-mixing matrix (see definition in details)
+# A -> estimated mixing matrix
+# S -> estimated source matrix
+
+X <- as.matrix(pca_result_data[,1:2])
+
+ICA_extraction <- fastICA(X, 2, alg.typ = "parallel", fun = "logcosh", alpha = 1,
+method = "R", row.norm = FALSE, maxit = 200,
+tol = 0.0001, verbose = TRUE)
+
+
+par(mfcol = c(2, 3))
+plot(1:395, X[,1 ], type = "l", main = "Mixed Signals",
+xlab = "", ylab = "")
+plot(1:395, X[,2 ], type = "l", xlab = "", ylab = "")
+plot(1:395, ICA_extraction$S[,1 ], type = "l", main = "ICA source estimates",
+xlab = "", ylab = "")
 
 ```
+
+
 
 # Appendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
