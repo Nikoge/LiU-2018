@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r, message=FALSE, echo = TRUE}
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(xlsx, ggplot2, MASS, tidyr, dplyr, reshape2, gridExtra, 
-               tree, caret, e1071, pROC, boot, factoextra)
+               tree, caret, e1071, pROC, boot, factoextra, fastICA)
 
 set.seed(12345)
 options("jtools-digits" = 2, scipen = 999)
@@ -392,7 +392,8 @@ pca_data =  select(NIR_data,-c(Viscosity))
 pca_result = prcomp(pca_data)
 
 contribution <- summary(pca_result)$importance
-knitr::kable(contribution[,1:10], caption = "Contribution of PCA axis towards varience")
+knitr::kable(contribution[,1:5], 
+             caption = "Contribution of PCA axis towards varience explaination")
 
 # plots PCA components and the eignen vectors
 factoextra::fviz_eig(pca_result)
@@ -407,26 +408,67 @@ pca_result_data = as.data.frame(pca_result_data)
 # plotting the data variation and the viscocity
 ggplot(data = pca_result_data, aes(x = first_component, y = second_component)) +
   geom_point(aes(y = Viscosity)) + ggtitle("PCA components vs. Viscosity")
-```
-Analysis:
 
-From the plot of PCA component vs. Viscoity, we can see that second component of PCA is needed, this is due to the fact the most of the data is vertically spread, removing this dimension would make it impossible to differenitate the types of diesel.
 
-From the plot we can also see that there are evidently some diesel that are outliers (diesel with first_component > 0.5 and second component~4).
-
-## 2.Make trace plots of the loadings of the components selected in step 1. Is there any principle component that is explained by mainly a few original features?
-
-```{r}
-# showing the components of the PCA components
+# showing the score of PCA component
 factoextra::fviz_pca_var(pca_result,
              col.var = "contrib", # Color by contributions to the PC
              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
              repel = TRUE     # Avoid text overlapping
              )
 
-U=loadings(pca_result)
-plot(U[,1], main="Traceplot, PC1")
-plot(U[,2],main="Traceplot, PC2")
+```
+Analysis:
+
+From the plot of PCA component vs. Viscoity, we can see that 2 components are needed (second component of PCA is needed), this is due to the fact the most of the data is vertically spread, removing this dimension would make it impossible to differenitate the types of diesel.
+
+The minimum number of components that account for 99% of the total varience is 2, mainly PC1 and PC2.
+
+From the plot we can also see that there are evidently some diesel that are outliers (diesel with first_component > 0.5 and second component~4).
+
+## 2.Make trace plots of the loadings of the components selected in step 1. Is there any principle component that is explained by mainly a few original features?
+
+```{r}
+set.seed(12345)
+
+# creating extra columns
+aload <- abs(pca_result$rotation[,1:2])
+components <- sweep(aload, 2, colSums(aload), "/")
+components <- as.data.frame(components)
+components$feature_name <- rownames(components)
+components$feature_index <- 1:nrow(components)
+
+components <- components %>% arrange(-PC1)
+components$contribution_PC1 <- cumsum(components$PC1)
+
+ggplot(data = components, aes(x = feature_index, y = contribution_PC1)) + 
+  geom_point() + 
+  ggtitle("Traceplot of feature index vs. contribution towards PC1")
+
+components <- components %>% arrange(-PC2)
+components$contribution_PC2 <- cumsum(components$PC2)
+
+ggplot(data = components, aes(x = feature_index, y = contribution_PC2)) + 
+  geom_point() + 
+  ggtitle("Traceplot of feature index vs. contribution towards PC2")
+
+
+knitr::kable(components[1:10,], 
+             caption = "Contribution of Features towards the Principle Components")
+
+```
+
+
+Analysis: 
+
+From the above three plots we see that towards the first principle components axis (93.3% varience accounted) the feature index till 110 are the main contributers(positive contribution), while for the second component(6.3% varience accounted for) we have feature index 25-45 and 85-100 as the main components.The corresponding feature name can be accessed by viewing the table used for plot, a sample of the few columns is shown above.
+
+From the 1st plot is evident that there are no few features which form the core essence of the PCA components, thus the PCA components is made up of many (20+) features atleast and they cannot be limited to few original features.
+
+##3. Perform Independent Component Analysis with the number of components selected in step 1 (set seed 12345). Check the documentation for the fastICA method in R and do the following: a.Compute W(prime) = K.W and present the columns of W(prime) in the form of trace plots. Compare with the trace plots in step2 and make conclusion.What kind of measure is represented by the matrix W(prime.), b. Make a plot of the scores of the first two latent features and compare it with the score plot from step 1.
+
+```{r}
+set.seed(12345)
 
 
 ```
