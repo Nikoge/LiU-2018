@@ -34,12 +34,12 @@ credit_data$good_bad <- as.factor(credit_data$good_bad)
 
 n=NROW(credit_data)
 set.seed(12345) 
-id=sample(1:n, floor(n*0.4)) 
+id=sample(1:n, floor(n*0.5)) 
 train=credit_data[id,] 
 
 id1=setdiff(1:n, id)
 set.seed(12345) 
-id2=sample(id1, floor(n*0.3)) 
+id2=sample(id1, floor(n*0.25)) 
 valid=credit_data[id2,]
 
 id3=setdiff(id1,id2)
@@ -327,36 +327,45 @@ From the histogram we can see that the histogram has higher values on the left o
 
 set.seed(12345)
 
-# function to obtain R-Squared from the data
-rsq <- function(data, indices) {
-  d <- data[indices,] # allows boot to select sample
+# computing bootstrap samples
+bootstrap <- function(data, indices){
+  data <- state_data[indices,]
   
-  model <- tree(data = d, 
-                EX~MET, 
-                control = tree.control(nobs=NROW(data), minsize = 8))
+  model <- tree(data = data, 
+       EX~MET, 
+       control = tree.control(nobs=NROW(data),
+                              minsize = 8))
   
   model_purned <- prune.tree(model, k = 3)
-  
-  compare_data <- predict(model_purned, newdata = d)
-
-  return(compare_data)
+  final_fit_boot <- predict(model_purned, newdata = state_data)
+  return(final_fit_boot)
 }
-# bootstrapping with 1000 replications
-results <- boot(data=state_data, statistic=rsq, R=1000)
 
-e=envelope(results) #compute confidence bands
+res <- boot(state_data, bootstrap, R=1000) #make bootstrap
+e <- envelope(res) 
 
-compare_data_non_para_boot <- compare_data
-compare_data_non_para_boot$MET <- state_data$MET
-compare_data_non_para_boot$lower_bound <- e$point[2,]
-compare_data_non_para_boot$upper_bound <- e$point[1,]
-compare_data_non_para_boot$actual_value <- state_data$EX
+state_tree_regression <- tree(data = state_data, EX~MET, 
+                              control = tree.control(nobs=NROW(state_data), 
+                                                     minsize = 8))
 
-ggplot(data=compare_data_non_para_boot, aes(x = MET, y = actual_value)) + 
-  geom_point(aes(y=actual_value)) +
-  geom_line(aes(y=upper_bound), colour="red") +  # first layer
-  geom_line(aes(y=lower_bound), colour="red") +
-  ggtitle("EX value along with 95% CI band")
+# puring the tree for leaf size of 3
+state_cv_tree_purned <- prune.tree(state_tree_regression, k = 3)
+
+predict_for_ci <- predict(state_cv_tree_purned, state_data)
+
+data_for_ci <- cbind(upper_bound = e$point[1,], 
+                     lower_bound = e$point[2,],
+                     EX = state_data$EX,
+                     MET = state_data$MET,
+                     predicted_value = predict_for_ci) %>% as.data.frame()
+
+#plot cofidence bands
+
+ggplot(data=data_for_ci, aes(x = MET, y = EX)) + 
+  geom_point(aes(x = MET,y=EX)) +
+  geom_line(aes(x = MET, y=predicted_value), colour="blue") + 
+  geom_ribbon(aes(x = MET, ymin=lower_bound, ymax=upper_bound),alpha = 0.3) +
+  ggtitle("EX value along with 95% Confidence band")
 
 ```
 
@@ -370,44 +379,43 @@ The confidence bands certainly appear to be bumpy and not smooth, the confidence
 set.seed(12345)
 
 mle=prune.tree(state_tree_regression, k = 3)
-
-# Original vs. Fitted values
-compare_data <- predict(mle, newdata = state_data)
-compare_data <- cbind(compare_data, state_data$EX)
-compare_data <- as.data.frame(compare_data)
-colnames(compare_data) <- c("predicted_value", "actual_value")
-compare_data$residual <- compare_data$actual_value -  compare_data$predicted_value
+#data2 = state_data
 
 rng=function(data, mle) {
-  
-      model <- tree(data = data, 
-                EX~MET, 
-                control = tree.control(nobs=NROW(data), minsize = 8))
-  
-  model_purned <- prune.tree(model, k = 3)
-  
-  data1=data.frame(MET=state_data$MET, residual=compare_data$residual)
-  n=length(compare_data$actual_value)
+  data1=data.frame(EX=data$EX, MET=data$MET)
+  n=length(data$EX)
 #generate new Price
-  data1$Price=rnorm(n, predict(mle, newdata=data1), sd(mle$residuals))
+  data1$Price=rnorm(n, predict(mle, newdata=data1), sd(summary(mle)$residuals))
   return(data1)
 }
 
 f1=function(data1){
-    model <- tree(data = data1, 
-                EX~MET, 
-                control = tree.control(nobs=NROW(data1), minsize = 8))
+    model <- tree(data = data1, EX~MET, 
+       control = tree.control(nobs=NROW(data1),
+                              minsize = 8))
   
-  model_purned <- prune.tree(model, k = 3)
-  
-  compare_data <- predict(model_purned, newdata = data1)
-  
-  
+  res <- prune.tree(model, k = 3)
+  #predict values for all Area values from the original data
+  priceP=predict(res,newdata=state_data) 
+  return(priceP)
 }
 
-res=boot(state_data, statistic=f1, R=1000, mle=mle, ran.gen=rng, sim="parametric")
+res_para = boot(state_data, statistic=f1, R=1000, mle=mle, ran.gen=rng, sim="parametric")
+e1 <- envelope(res_para) 
 
 
+data_for_ci_para <- cbind(upper_bound = e1$point[1,], 
+                     lower_bound = e1$point[2,],
+                     EX = state_data$EX,
+                     MET = state_data$MET,
+                     predicted_value = predict_for_ci) %>% as.data.frame()
+
+
+ggplot(data=data_for_ci_para, aes(x = MET, y = EX)) + 
+  geom_point(aes(x = MET,y=EX)) +
+  geom_line(aes(x = MET, y=predicted_value), colour="blue") + 
+  geom_ribbon(aes(x = MET, ymin=lower_bound, ymax=upper_bound),alpha = 0.3) +
+  ggtitle("EX value along with 95% Confidence band")
 
 
 ```
