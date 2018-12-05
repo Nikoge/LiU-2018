@@ -350,12 +350,13 @@ compare_data_non_para_boot <- compare_data
 compare_data_non_para_boot$MET <- state_data$MET
 compare_data_non_para_boot$lower_bound <- e$point[2,]
 compare_data_non_para_boot$upper_bound <- e$point[1,]
+compare_data_non_para_boot$actual_value <- state_data$EX
 
 ggplot(data=compare_data_non_para_boot, aes(x = MET, y = actual_value)) + 
-  geom_point(aes(y=predicted_value)) +
+  geom_point(aes(y=actual_value)) +
   geom_line(aes(y=upper_bound), colour="red") +  # first layer
   geom_line(aes(y=lower_bound), colour="red") +
-  ggtitle("Predicted EX value along with 95% CI band")
+  ggtitle("EX value along with 95% CI band")
 
 ```
 
@@ -378,21 +379,33 @@ colnames(compare_data) <- c("predicted_value", "actual_value")
 compare_data$residual <- compare_data$actual_value -  compare_data$predicted_value
 
 rng=function(data, mle) {
-  data1=data.frame(Price=data$Price, Area=compare_data$residual)
-  n=length(data$Price)
+  
+      model <- tree(data = data, 
+                EX~MET, 
+                control = tree.control(nobs=NROW(data), minsize = 8))
+  
+  model_purned <- prune.tree(model, k = 3)
+  
+  data1=data.frame(MET=state_data$MET, residual=compare_data$residual)
+  n=length(compare_data$actual_value)
 #generate new Price
-  data1$Price=rnorm(n,predict(mle, newdata=data1),sd(mle$residuals))
+  data1$Price=rnorm(n, predict(mle, newdata=data1), sd(mle$residuals))
   return(data1)
 }
 
 f1=function(data1){
-  res=lm(Price~Area, data=data1) #fit linear model
-  #predict values for all Area values from the original data
-  priceP=predict(res,newdata=data2) 
-  return(priceP)
+    model <- tree(data = data1, 
+                EX~MET, 
+                control = tree.control(nobs=NROW(data1), minsize = 8))
+  
+  model_purned <- prune.tree(model, k = 3)
+  
+  compare_data <- predict(model_purned, newdata = data1)
+  
+  
 }
 
-res=boot(data2, statistic=f1, R=1000, mle=mle,ran.gen=rng, sim="parametric")
+res=boot(state_data, statistic=f1, R=1000, mle=mle, ran.gen=rng, sim="parametric")
 
 
 
