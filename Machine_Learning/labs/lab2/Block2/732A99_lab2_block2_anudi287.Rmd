@@ -13,7 +13,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 \newpage
 
-### Loading The Libraries
+# Assignment 1
+
+## Loading The Libraries
 ```{r, message=FALSE, echo = TRUE}
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(xlsx, ggplot2, MASS, tidyr, dplyr, reshape2, gridExtra, 
@@ -23,6 +25,17 @@ set.seed(12345)
 options("jtools-digits" = 2, scipen = 999)
 ```
 
+##1. Use time series plots to visually inspect how the mortality and influenza number vary with time (use Time as X axis). By using this plot, comment how the amounts of influenza cases are related to mortality rates.
+
+```{r}
+set.seed(12345)
+
+# Importing data
+flu_data = read.xlsx("influenza.xlsx", sheetName = "Raw data")
+
+ggplot(flu_data, aes(x=Time, y = Influenza)) + geom_line()
+
+```
 
 
 # Appendix

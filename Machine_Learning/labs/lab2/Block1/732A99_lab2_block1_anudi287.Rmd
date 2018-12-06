@@ -71,13 +71,13 @@ conf_tree_gini <- table(test$good_bad, predict_tree_gini)
 names(dimnames(conf_tree_gini)) <- c("Actual Test", "Predicted Test")
 caret::confusionMatrix(conf_tree_gini)
 ```
-Analysis: On the Training dataset model with 'deviance' had a misclassfication rate of 18.7% while the model with 'gini' split had the misclassification rate of 22.8%.
+Analysis: On the Training dataset model with 'deviance' had a misclassfication rate of 21.05% while the model with 'gini' split had the misclassification rate of 23.68%.
 
-For the test dataset we see that the model with 'deviance' type of split has a accuracy of 67% or misclassifiaction rate of 33%, we see that to predict 'good' the accuracy is 73.08% but for predicting bad its just 53.26%. Thus our our model is heavily baised towards predicting cases as 'good'.
+For the test dataset we see that the model with 'deviance' type of split has a accuracy of 73.2% or misclassifiaction rate of 26.8%, we see that to predict 'good' the accuracy is 89.08% but for predicting bad its just 36.84%. Thus our our model is heavily baised towards predicting cases as 'good'.
 
-For the test dataset we see that the model with 'gini' type of split has a accuracy of 62.7% or misclassifiaction rate of 37.3%, we also see that to predict 'good' the accuracy is 78.8% but for predicting bad its just 26%. Thus our model is heavily baised towards predicting cases as 'good' even more than the model which uses 'deviance' to split variable.
+For the test dataset we see that the model with 'gini' type of split has a accuracy of 63.6% or misclassifiaction rate of 36.4%, we also see that to predict 'good' the accuracy is 81.03% but for predicting bad its just 18.97%. Thus our model is heavily baised towards predicting cases as 'good' even more than the model which uses 'deviance' to split variable.
 
-Both our models would lead to many bad loan applicants to be given loans which is never a good thing, however among the model the one using 'deviance' mode for split is better by 27%.
+Both our models would lead to many bad loan applicants to be given loans which is never a good thing, however among the model the one using 'deviance' mode for split is better by 9.6%.
 
 Thus we will select model using 'deviance' for further model building.
 
@@ -108,7 +108,7 @@ ggplot(data = result, aes(x = Leaf, y = Deviance, colour = Type)) +
   ggtitle("Plot of Deviance vs. Tree Depth (Shows Deviance least at 7)")
 
 # prune the tree to the required depth
-credit_tree_sniped <- prune.tree(credit_tree, best=7)
+credit_tree_sniped <- prune.tree(credit_tree, best=4)
 
 plot(credit_tree_sniped)
 text(credit_tree_sniped)
@@ -123,11 +123,11 @@ caret::confusionMatrix(conf_prune_tree_test)
 ```
 
 Analysis: 
-Choosing optimal depth tree we get that '7' as the best depth. The variables used in the best tree are- duration, history, savings, amount.
+Choosing optimal depth tree we get that '4' as the best depth. The variables used in the best tree are- duration, history, savings.
 
-From the tree structure we can see that the following variables are best to split on, 'duration' < 43.5 then 'savings' < 4, 'history' < 1.5 and finally 'amount'.
+From the tree structure we can see that the following variables are best to split on, 'savings' < 2.5 then 'duration' < 43.5 and 'history' < 1.5.
 
-The accuracy on the model trained on 'train' dataset is (77% and misclassification 23%) and on the 'test' dataset accuracy is 73.67%, thus the misclassification rate is 26.33%. We see that model predicts 'good' applicants very well (accuracy of 90%) while it classifies 'bad' applicant way badly (accuracy is 34.78%).
+The accuracy on the model trained on 'train' dataset is accuracy 73.2% and misclassifiaction 26.8% while on the 'test' dataset accuracy is 74.4%, thus the misclassification rate is 25.6%. We see that model predicts 'good' applicants very well (accuracy of 96.55%) while it classifies 'bad' applicant way badly (accuracy is 23.68%).
 
 Thus this model would be very bad for the business and would likely to run the business bankrupt.
 
@@ -152,18 +152,17 @@ caret::confusionMatrix(conf_naive_test)
 ```
 Analysis:
 
-For the train dataset using NaiveBayes method we get accuracy 73% or misclassification of 27%, here we also notice that the accuracy of class 'bad' is 54% while for class 'good' is 80%, thus the model is more balanced in predicting, thus its still baised in predict one class over the other.
+For the train dataset using NaiveBayes method we get accuracy 70% or misclassification of 30%, here we also notice that the accuracy of class 'bad' is 64.63% while for class 'good' is 72.24%, thus the model is more balanced in predicting, thus its still baised in predict one class over the other.
 
-For the test dataset using NaiveBayes method we get accuracy 71% or misclassification of 29%, here we also notice that the accuracy of class 'bad' is 54% while for class 'good' is 78%, thus the model is almost the same compared to train.
+For the test dataset using NaiveBayes method we get accuracy 68.4% or misclassification of 31.6%, here we also notice that the accuracy of class 'bad' is 60.53% while for class 'good' is 71.84%, thus the model is almost the same compared to train.
 
-Compared to step3, we see that for the 'train' dataset the optimal tree has accuracy of 77% while it is 73% on the 'test' dataset. For the NaiveBayes model, accuracy on the 'train' dataset is 73% and while it is 71% on the 'test' datatset.
+Compared to step3, we see that for the 'train' dataset the optimal tree has accuracy of 73.2% while it is 74.4% on the 'test' dataset. For the NaiveBayes model, accuracy on the 'train' dataset is 70% and while it is 68.4% on the 'test' datatset.
 
-Accuracy is only part of the story what we see is better here is that this model classifies 'bad' customers better better for both train and test dataset than decision tree (54% for both train and test for naive compared 38% train, 34% test for decision tree).
+Accuracy is only part of the story what we see is better here is that this model classifies 'bad' customers better better for both train and test dataset than decision tree (60+% for both train and test for naive compared 36.84% train, 23.68% test for decision tree).
 
 Thus the model is better to be used for the business than the one in the step3, the risk of providing loans to bad applicant is lesser than the previous model but its still not good enough!
 
-## 5. Use the optimal tree and the Naïve Bayes model to classify the test data by using the following principle: where prob(Y|'good')=A, where A=0.05,0.10,.....0.95.
-Compute the TPR and FPR values for the two models and plot the corresponding ROC curves. Conclusion?
+## 5. Use the optimal tree and the Naïve Bayes model to classify the test data by using the following principle: where prob(Y|'good')=A, where A=0.05,0.10,.....0.95. Compute the TPR and FPR values for the two models and plot the corresponding ROC curves. Conclusion?
 
 ```{r}
 set.seed(12345)
@@ -222,7 +221,7 @@ ggplot(data = final_summary, aes(x = FPR, y=TPR)) + geom_line(aes(colour = model
 
 
 ```
-Analysis: We find that 'naivebayes' model is better than 'tree' model for across varying threshold values.
+Analysis: We find that 'naivebayes' model is better than 'tree' model for almost across varying threshold values, except the higher values of threshold(0.75+). Thus the decision of using NaiveBayes model here is further reinforced using the ROC curve.
 
 ## 6. Repeat Naïve Bayes classification as it was in step 4 but use the following loss matrix (good loss 1, bad loss 10) and report the confusion matrix for the training and test data. Compare the results with the results from step 4 and discuss how the rates has changed and why.
 ```{r}
@@ -252,6 +251,11 @@ caret::confusionMatrix(conf_naive_test)
 
 
 ```
+Analysis: We see a major drop in accuracy for both train and test cases for using the new loss matrix, the accuracy for train is 45.4% and for test cases its 49.2%, this was 70% and 68.4% respectively.
+
+The biggest difference is in recognizing the bad customers, where the accuracy is 93.20% and 93.42% for the train and test cases respectively. This implies our model identifies 'bad' customers with a very high accuracy while it suffers to detect 'good' customers (accuracy of 25% and 29%). This is actually good for business because its many times more important to identify the bad customers instead of good customer(minimize risk).
+
+The change in the accuracy is due to loss matrix where we have ensured that a customer is considered 'good' customer only if the probability of them being a 'good'customer is 10 times greater than them being a 'bad' customer.
 
 # Assignment 3
 
