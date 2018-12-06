@@ -528,11 +528,13 @@ set.seed(12345)
 # A -> estimated mixing matrix
 # S -> estimated source matrix
 
-X <- as.matrix(pca_result_data[,1:2])
+X <- as.matrix(pca_data)
 
 ICA_extraction <- fastICA(X, 2, alg.typ = "parallel", fun = "logcosh", alpha = 1,
 method = "R", row.norm = FALSE, maxit = 200,
 tol = 0.0001, verbose = TRUE)
+
+K_prime <- ICA_extraction$K %*% ICA_extraction$W
 
 
 par(mfcol = c(2, 3))

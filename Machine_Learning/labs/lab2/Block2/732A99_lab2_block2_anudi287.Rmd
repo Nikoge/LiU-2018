@@ -18,11 +18,17 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Loading The Libraries
 ```{r, message=FALSE, echo = TRUE}
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(xlsx, ggplot2, MASS, tidyr, dplyr, reshape2, gridExtra, 
-               tree, caret, e1071, pROC, boot, factoextra)
+pacman::p_load(xlsx, ggplot2, tidyr, dplyr, reshape2, gridExtra, 
+               mgcv)
 
 set.seed(12345)
 options("jtools-digits" = 2, scipen = 999)
+
+# colours (colour blind friendly)
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+## Making title in the center
+theme_update(plot.title = element_text(hjust = 0.5))
 ```
 
 ##1. Use time series plots to visually inspect how the mortality and influenza number vary with time (use Time as X axis). By using this plot, comment how the amounts of influenza cases are related to mortality rates.
@@ -32,8 +38,37 @@ set.seed(12345)
 
 # Importing data
 flu_data = read.xlsx("influenza.xlsx", sheetName = "Raw data")
+flu_data$Time_fixed <- as.Date(paste(flu_data$Year, flu_data$Week, 1, sep="-"), "%Y-%U-%u")
+flu_data$influ_perc <- (flu_data$Influenza/flu_data$Mortality) * 100
 
-ggplot(flu_data, aes(x=Time, y = Influenza)) + geom_line()
+# Plot
+
+p1 <- ggplot(flu_data, aes(x=Time_fixed, y = Mortality)) + 
+  geom_line(color = "#999999", size = 1) +
+    scale_fill_brewer() +
+  ggtitle("Time series of Mortality") 
+
+p2 <- ggplot(flu_data, aes(x=Time_fixed, y = Influenza)) + 
+  geom_line(color = "#E69F00", size = 1) +
+      scale_fill_brewer() +
+  ggtitle("Time series of Influenza") 
+
+p3 <- ggplot(flu_data, aes(x=Time_fixed, y = influ_perc)) + 
+  geom_line(color = "#56B4E9", size = 1) + 
+      scale_fill_brewer() +
+  ggtitle("Time series of % Mortalitiy due to Influenza") 
+
+gridExtra::grid.arrange(p1, p2, ncol=1)
+p3
+
+```
+Analsis: From the plots is we can defintely see that Influenza and Mortalitiy in the given dataset are in sync, everytime Mortality peaks so does influenza, however the magnitiude of peaking is not in sync, that is the highest cases of mortaility were observed in '1996' while for influenza its in year '2000'.
+
+From the third plot, we can see the percentage of mortalitiy due to influenza, here also the peaks match with the other plots, suggests that these two events are closely correleated.
+
+##2. Use gam() function from mgcv package to fit a GAM model in which Mortality is normally distributed and modelled as a linear function of Year and spline function of Week, and make sure that the model parameters are selected by the generalized cross-validation. Report the underlying probabilistic model.
+
+```{r}
 
 ```
 
