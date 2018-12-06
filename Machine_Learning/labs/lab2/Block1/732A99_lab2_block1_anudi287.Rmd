@@ -346,7 +346,7 @@ bootstrap <- function(data, indices){
 }
 
 res <- boot(state_data, bootstrap, R=1000) #make bootstrap
-e <- envelope(res) 
+e <- envelope(res, level = 0.95) 
 
 state_tree_regression <- tree(data = state_data, EX~MET, 
                               control = tree.control(nobs=NROW(state_data), 
@@ -388,37 +388,59 @@ mle=prune.tree(state_tree_regression, k = 3)
 rng=function(data, mle) {
   data1=data.frame(EX=data$EX, MET=data$MET)
   n=length(data$EX)
+  pred <- predict(mle, newdata = data1)
+  residual <- data1$EX - pred
 #generate new Price
-  data1$Price=rnorm(n, predict(mle, newdata=data1), sd(summary(mle)$residuals))
+  data1$EX=rnorm(n, pred, sd(residual))
   return(data1)
 }
 
-f1=function(data1){
-    model <- tree(data = data1, EX~MET, 
-       control = tree.control(nobs=NROW(data1),
+# computing bootstrap samples
+conf.fun <- function(data){
+  model <- tree(data = data, 
+       EX~MET, 
+       control = tree.control(nobs=NROW(data),
                               minsize = 8))
   
-  res <- prune.tree(model, k = 3)
-  #predict values for all Area values from the original data
-  priceP=predict(res,newdata=state_data) 
-  return(priceP)
+  model_purned <- prune.tree(model, k = 3)
+  final_fit_boot <- predict(model_purned, newdata = state_data)
+  return(final_fit_boot)
 }
 
-res_para = boot(state_data, statistic=f1, R=1000, mle=mle, ran.gen=rng, sim="parametric")
-e1 <- envelope(res_para) 
 
+# computing bootstrap samples
+pred.fun <- function(data){
+  model <- tree(data = data, 
+       EX~MET, 
+       control = tree.control(nobs=NROW(data),
+                              minsize = 8))
+  
+  model_purned <- prune.tree(model, k = 3)
+  final_fit_boot <- predict(model_purned, newdata = state_data)
+  final_fit <- rnorm(n = length(final_fit_boot),  mean = final_fit_boot, sd=sd(residuals(mle)))
+  return(final_fit)
+}
+
+
+conf_para = boot(state_data, statistic=conf.fun, R=1000, mle=mle, ran.gen=rng, sim="parametric")
+pred_para = boot(state_data, statistic=pred.fun, R=1000, mle=mle, ran.gen=rng, sim="parametric")
+
+e1 <- envelope(conf_para, level = 0.95) 
+e2 <- envelope(pred_para, level = 0.95) 
 
 data_for_ci_para <- cbind(upper_bound = e1$point[1,], 
                      lower_bound = e1$point[2,],
+                     upper_bound_pred = e2$point[1,], 
+                     lower_bound_pred = e2$point[2,],
                      EX = state_data$EX,
                      MET = state_data$MET,
                      predicted_value = predict_for_ci) %>% as.data.frame()
-
 
 ggplot(data=data_for_ci_para, aes(x = MET, y = EX)) + 
   geom_point(aes(x = MET,y=EX)) +
   geom_line(aes(x = MET, y=predicted_value), colour="blue") + 
   geom_ribbon(aes(x = MET, ymin=lower_bound, ymax=upper_bound),alpha = 0.3) +
+  geom_ribbon(aes(x = MET, ymin=lower_bound_pred, ymax=upper_bound_pred),alpha = 0.3)
   ggtitle("EX value along with 95% Confidence band")
 
 
