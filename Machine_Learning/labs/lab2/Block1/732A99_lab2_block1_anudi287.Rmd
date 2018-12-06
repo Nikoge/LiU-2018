@@ -21,6 +21,10 @@ pacman::p_load(xlsx, ggplot2, MASS, tidyr, dplyr, reshape2, gridExtra,
 
 set.seed(12345)
 options("jtools-digits" = 2, scipen = 999)
+
+# colours (colour blind friendly)
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
 ```
 
 # Assignment 2
@@ -248,8 +252,6 @@ caret::confusionMatrix(conf_naive_train)
 conf_naive_test <- table(test$good_bad, test$predicted_class)
 names(dimnames(conf_naive_test)) <- c("Actual Test", "Predicted Test")
 caret::confusionMatrix(conf_naive_test)
-
-
 ```
 Analysis: We see a major drop in accuracy for both train and test cases for using the new loss matrix, the accuracy for train is 45.4% and for test cases its 49.2%, this was 70% and 68.4% respectively.
 
@@ -295,13 +297,18 @@ text(state_cv_tree_purned)
 
 # Original vs. Fitted values
 compare_data <- predict(state_cv_tree_purned, newdata = state_data)
-compare_data <- cbind(compare_data, state_data$EX)
+compare_data <- cbind(compare_data, state_data$EX, state_data$MET)
 compare_data <- as.data.frame(compare_data)
-colnames(compare_data) <- c("predicted_value", "actual_value")
-compare_data$residual <- compare_data$actual_value -  compare_data$predicted_value
+colnames(compare_data) <- c("predicted_value", "EX", "MET")
+compare_data$residual <- compare_data$EX -  compare_data$predicted_value
 
 # plots
-ggplot(compare_data, aes(x = actual_value, y =  predicted_value)) + 
+ggplot(data=compare_data, aes(x = MET, y = EX)) + 
+  geom_point(aes(x = MET,y=EX)) +
+  geom_line(aes(x = MET, y=predicted_value), colour="blue") + 
+  ggtitle("EX value along with Predicted Value")
+
+ggplot(compare_data, aes(x = EX, y =  predicted_value)) + 
   geom_point() +
   ggtitle("Plot of Actual vs. Predicted Value")
 
@@ -313,7 +320,6 @@ ggplot(data = compare_data, aes(x = residual)) +
   geom_histogram(aes(y = ..density..), binwidth = 8) +
   geom_density(colour = "red") +
   ggtitle("Histogram of Residual")
-
 ```
 
 Analysis:
@@ -328,7 +334,6 @@ From the histogram we can see that the histogram has higher values on the left o
 ## 3. Compute and plot the 95% confidence bands for the regression tree model from step 2 (fit a regression tree with the same settings and the same number of leaves as in step 2 to the resampled data) by using a non-parametric bootstrap. Comment whether the band is smooth or bumpy and try to explain why. Consider the width of the confidence band and comment whether results of the regression model in step 2 seem to be reliable.
 
 ```{r}
-
 set.seed(12345)
 
 # computing bootstrap samples
@@ -347,16 +352,13 @@ bootstrap <- function(data, indices){
 
 res <- boot(state_data, bootstrap, R=1000) #make bootstrap
 e <- envelope(res, level = 0.95) 
-
 state_tree_regression <- tree(data = state_data, EX~MET, 
                               control = tree.control(nobs=NROW(state_data), 
                                                      minsize = 8))
 
 # puring the tree for leaf size of 3
 state_cv_tree_purned <- prune.tree(state_tree_regression, k = 3)
-
 predict_for_ci <- predict(state_cv_tree_purned, state_data)
-
 data_for_ci <- cbind(upper_bound = e$point[1,], 
                      lower_bound = e$point[2,],
                      EX = state_data$EX,
@@ -370,7 +372,6 @@ ggplot(data=data_for_ci, aes(x = MET, y = EX)) +
   geom_line(aes(x = MET, y=predicted_value), colour="blue") + 
   geom_ribbon(aes(x = MET, ymin=lower_bound, ymax=upper_bound),alpha = 0.3) +
   ggtitle("EX value along with 95% Confidence band")
-
 ```
 
 Analysis:
@@ -428,6 +429,12 @@ pred_para = boot(state_data, statistic=pred.fun, R=1000, mle=mle, ran.gen=rng, s
 e1 <- envelope(conf_para, level = 0.95) 
 e2 <- envelope(pred_para, level = 0.95) 
 
+
+# puring the tree for leaf size of 3
+state_cv_tree_purned <- prune.tree(state_tree_regression, k = 3)
+predict_for_ci <- predict(state_cv_tree_purned, state_data)
+
+
 data_for_ci_para <- cbind(upper_bound = e1$point[1,], 
                      lower_bound = e1$point[2,],
                      upper_bound_pred = e2$point[1,], 
@@ -440,11 +447,17 @@ ggplot(data=data_for_ci_para, aes(x = MET, y = EX)) +
   geom_point(aes(x = MET,y=EX)) +
   geom_line(aes(x = MET, y=predicted_value), colour="blue") + 
   geom_ribbon(aes(x = MET, ymin=lower_bound, ymax=upper_bound),alpha = 0.3) +
-  geom_ribbon(aes(x = MET, ymin=lower_bound_pred, ymax=upper_bound_pred),alpha = 0.3)
-  ggtitle("EX value along with 95% Confidence band")
-
-
+  geom_ribbon(aes(x = MET, ymin=lower_bound_pred, ymax=upper_bound_pred), alpha = 0.3) +
+  ggtitle("EX value along with 95% Confidence(dark grey) and Prediction band")
 ```
+
+Analysis:
+
+From the plot we see that the width of the 'confidence band'(darker grey) is narrower compared to non-parametric. We also notice that most of the data is at in the 'confidence band', thus I believe that our regression model does make sense.
+
+We can defintely see that most of the data is under the 'prediction band' more than 95%, thus we can reasonably expect that less than 5% of the data is outside of the 'prediction band'. Based on our assumption of data is normally distributed it does makes sense for prediction band to contain 95% of the data.
+
+
 
 ## 5.Consider the histogram of residuals from step 2 and suggest what kind of bootstrap is actually more appropriate here.
 ```{r}
@@ -453,14 +466,13 @@ set.seed(12345)
 ```
 
 # Assignment 4
-```{r}
-rm(list=ls())
-NIR_data <- read.csv2("NIRSpectra.csv")
-```
 
 ## 1.Conduct a standard PCA by using the feature space and provide a plot explaining how much variation is explained by each feature. Does the plot show how many PC should be extracted? Select the minimal number of components explaining at least 99% of the total variance. Provide also a plot of the scores in the coordinates (PC1, PC2). Are there unusual diesel fuels according to this plot?
 ```{r}
+rm(list=ls())
+
 set.seed(12345)
+NIR_data <- read.csv2("NIRSpectra.csv")
 
 pca_data =  select(NIR_data,-c(Viscosity))
 pca_result = prcomp(pca_data)
@@ -556,18 +568,18 @@ ICA_extraction <- fastICA(X, 2, alg.typ = "parallel", fun = "logcosh", alpha = 1
 method = "R", row.norm = FALSE, maxit = 200,
 tol = 0.0001, verbose = TRUE)
 
-K_prime <- ICA_extraction$K %*% ICA_extraction$W
+W_prime <- ICA_extraction$K %*% ICA_extraction$W
 
 
-par(mfcol = c(2, 3))
-plot(1:395, X[,1 ], type = "l", main = "Mixed Signals",
-xlab = "", ylab = "")
-plot(1:395, X[,2 ], type = "l", xlab = "", ylab = "")
-plot(1:395, ICA_extraction$S[,1 ], type = "l", main = "ICA source estimates",
-xlab = "", ylab = "")
+#trace plots
+plot(W_prime, main = "Trace plot of W` Matrix")
+
+#plots
+plot(ICA_extraction$X, main = "Pre-processed data")
+plot(ICA_extraction$X%*%ICA_extraction$K, main = "PCA components")
+plot(ICA_extraction$S, main = "ICA components") 
 
 ```
-
 
 
 # Appendix
