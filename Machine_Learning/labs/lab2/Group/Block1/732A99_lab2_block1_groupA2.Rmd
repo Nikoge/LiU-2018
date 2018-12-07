@@ -1,7 +1,7 @@
 ---
-title: "machine learning(732A99) lab2"
-author: "Anubhav Dikshit(anudi287)"
-date: "10 December 2018"
+title: "732A99_lab2_block1_A2"
+author: "Anubhav Dikshit(anudi287), Lennart Schilling(lensc874), Thijs Quast(thiqu264)"
+date: "26 November 2018"
 output: 
     pdf_document:
       toc: true
@@ -10,6 +10,21 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+```{r, message=FALSE, echo = FALSE}
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(xlsx, glmnet, MASS, jtools, huxtable, ggplot2, 
+               ggthemes, gridExtra, ROCR, broom, caret, e1071,
+               kknn, tidyr, dplyr,reshape2, glmnet)
+
+options("jtools-digits" = 2, scipen = 999)
+
+```
+
+
+### Contributions
+
+During the lab, Lennart focused on assignment 2, Thijs focused on assignment 3 and Anuhav focused on assignment 4. All codes and analysis was indepedently done and is also reflected in the individual reports.
 
 \newpage
 
