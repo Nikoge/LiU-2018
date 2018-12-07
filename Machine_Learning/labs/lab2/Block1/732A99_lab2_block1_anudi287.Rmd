@@ -567,14 +567,13 @@ plot(W_prime[,1], main = "Trace plot of W` Matrix")
 plot(W_prime[,2], main = "Trace plot of W` Matrix")
 
 # pca components and the viscocity
-ICA_result_data = cbind(first_component = W_prime[,1],
-                        second_component = W_prime[,2],
+ICA_result_data = cbind(first_component = ICA_extraction$S[,1],
+                        second_component = ICA_extraction$S[,2],
                         Viscosity = NIR_data$Viscosity) %>% as.data.frame()
 
 # plotting the data variation and the viscocity
 ggplot(data = ICA_result_data, aes(x = first_component, y = second_component)) +
   geom_point(aes(y = Viscosity)) + ggtitle("ICA components vs. Viscosity")
-
 
 ```
 
