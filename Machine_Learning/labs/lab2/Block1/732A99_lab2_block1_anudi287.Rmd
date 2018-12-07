@@ -522,20 +522,13 @@ components <- as.data.frame(components)
 components$feature_name <- rownames(components)
 components$feature_index <- 1:nrow(components)
 
-components <- components %>% arrange(-PC1)
-components$contribution_PC1 <- cumsum(components$PC1)
-
-ggplot(data = components, aes(x = feature_index, y = contribution_PC1)) + 
+ggplot(data = components, aes(x = feature_index, y = PC1)) + 
   geom_point() + 
-  ggtitle("Traceplot of feature index vs. contribution towards PC1")
+  ggtitle("Traceplot of feature index vs. PC1")
 
-components <- components %>% arrange(-PC2)
-components$contribution_PC2 <- cumsum(components$PC2)
-
-ggplot(data = components, aes(x = feature_index, y = contribution_PC2)) + 
+ggplot(data = components, aes(x = feature_index, y = PC2)) + 
   geom_point() + 
-  ggtitle("Traceplot of feature index vs. contribution towards PC2")
-
+  ggtitle("Traceplot of feature index vs. PC2")
 
 knitr::kable(components[1:10,], 
              caption = "Contribution of Features towards the Principle Components")
@@ -575,8 +568,8 @@ plot(W_prime[,2], main = "Trace plot of W` Matrix")
 
 # pca components and the viscocity
 ICA_result_data = cbind(first_component = W_prime[,1],
-                                second_component = W_prime[,2],
-                                Viscosity = NIR_data$Viscosity) %>% as.data.frame()
+                        second_component = W_prime[,2],
+                        Viscosity = NIR_data$Viscosity) %>% as.data.frame()
 
 # plotting the data variation and the viscocity
 ggplot(data = ICA_result_data, aes(x = first_component, y = second_component)) +
