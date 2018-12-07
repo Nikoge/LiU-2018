@@ -21,10 +21,9 @@ options("jtools-digits" = 2, scipen = 999)
 
 ```
 
-
 ### Contributions
 
-During the lab, Lennart focused on assignment 2, Thijs focused on assignment 3 and Anuhav focused on assignment 4. All codes and analysis was indepedently done and is also reflected in the individual reports.
+During the lab, Anubhav focused on assignment 2, Lennart focused on assignment 3 and Thijs focused on assignment 4. All codes and analysis was indepedently done and is also reflected in the individual reports.
 
 \newpage
 
@@ -38,7 +37,8 @@ set.seed(12345)
 options("jtools-digits" = 2, scipen = 999)
 
 # colours (colour blind friendly)
-cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", 
+               "#D55E00", "#CC79A7")
 
 ```
 
@@ -47,22 +47,21 @@ cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2",
 ## 2.1 Import the data to R and divide into training/validation/test as 50/25/25: use data partitioning code specified in Lecture 1e.
 ```{r}
 set.seed(12345)
-credit_data <- read.xlsx("creditscoring.xls", sheetName = "credit")
-credit_data$good_bad <- as.factor(credit_data$good_bad)
 
-
-n=NROW(credit_data)
-set.seed(12345) 
-id=sample(1:n, floor(n*0.5)) 
-train=credit_data[id,] 
-
-id1=setdiff(1:n, id)
-set.seed(12345) 
-id2=sample(id1, floor(n*0.25)) 
-valid=credit_data[id2,]
-
-id3=setdiff(id1,id2)
-test=credit_data[id3,] 
+data <- read.xlsx("creditscoring.xls", sheetName = "credit")
+# changing class of dependent variable good_bad
+data$good_bad = as.factor(data$good_bad)
+# dividing data into train (50%), validation (25%) and test set (25%)
+n = dim(data)[1]
+set.seed(12345)
+id = sample(1:n, floor(n*0.5))
+train = data[id,]
+id1 = setdiff(1:n, id)
+set.seed(12345)
+id2 = sample(id1, floor(n*0.25))
+valid = data[id2,]
+id3 = setdiff(id1,id2)
+test = data[id3,]
 ```
 
 ## 2.2 Fit a decision tree to the training data by using the following measures of impurity: a. Deviance b. Gini index and report the misclassification rates for the training and test data. Choose the measure providing the better results for the following steps.
@@ -70,17 +69,33 @@ test=credit_data[id3,]
 ```{r}
 set.seed(12345)
 
+fitDecisionTree = function(testData, splitMethod) {
+# fitting decision tree
+decisionTreeFit = tree(formula = good_bad ~ ., data = train, split = splitMethod)
+# getting prediction results
+yFit = predict(object = decisionTreeFit, newdata = testData, type = "class")
+# printing misclassification rate
+paste0("Misclassification rate: ", mean(yFit != as.character(testData$good_bad)))
+}
+
+
+fitDecisionTree(testData = train, splitMethod = "deviance")
+fitDecisionTree(testData = test, splitMethod = "deviance")
+fitDecisionTree(testData = train, splitMethod = "gini")
+fitDecisionTree(testData = test, splitMethod = "gini")
+
+# fitting tree with measure providing better results ("deviance")
+unprunedTree = tree(formula = good_bad ~ ., data = train, split = "deviance")
+
+
 # Create a decision tree model
 credit_tree_deviance <- tree(good_bad~., data=train, split = c("deviance"))
 credit_tree_gini <- tree(good_bad~., data=train, split = c("gini"))
 
-# Visualize the decision tree with rpart.plot
-summary(credit_tree_deviance)
-summary(credit_tree_gini)
-
 # predicting on the test dataset to get the misclassification rate.
 predict_tree_deviance <- predict(credit_tree_deviance, newdata = test, type = "class")
 predict_tree_gini <- predict(credit_tree_gini, newdata = test, type = "class")
+
 
 conf_tree_deviance <- table(test$good_bad, predict_tree_deviance)
 names(dimnames(conf_tree_deviance)) <- c("Actual Test", "P2redicted Test")
@@ -90,6 +105,7 @@ conf_tree_gini <- table(test$good_bad, predict_tree_gini)
 names(dimnames(conf_tree_gini)) <- c("Actual Test", "Predicted Test")
 caret::confusionMatrix(conf_tree_gini)
 ```
+
 Analysis: On the Training dataset model with 'deviance' had a misclassfication rate of 21.05% while the model with 'gini' split had the misclassification rate of 23.68%.
 
 For the test dataset we see that the model with 'deviance' type of split has a accuracy of 73.2% or misclassifiaction rate of 26.8%, we see that to predict 'good' the accuracy is 89.08% but for predicting bad its just 36.84%. Thus our our model is heavily baised towards predicting cases as 'good'.
@@ -155,7 +171,6 @@ Thus this model would be very bad for the business and would likely to run the b
 ```{r}
 #Fitting the Naive Bayes model
 credit_naive_model = naiveBayes(good_bad ~., data=train)
-credit_naive_model
 
 #Prediction on the dataset
 predict_naive_train = predict(credit_naive_model, newdata=train, type = "class")
@@ -236,6 +251,7 @@ summarise(total_positive = sum(temp[actual_test_class == "good"]),
   select(model, threshold, TPR, FPR)
 
 ggplot(data = final_summary, aes(x = FPR, y=TPR)) + geom_line(aes(colour = model)) + 
+  geom_abline(intercept = 0, slope = 1) +
   ggtitle("ROC curve for the Naive Bayes vs. Tree Model")
 
 
@@ -302,11 +318,20 @@ state_tree_regression <- tree(data = state_data, EX~MET,
                                                      minsize = 8))
 
 state_cv_tree <- cv.tree(state_tree_regression, FUN  = prune.tree)
-plot(state_cv_tree)
+
+
+temp <- cbind(size = state_cv_tree$size, deviance = state_cv_tree$dev) %>% as.data.frame()
+
+ggplot(data = temp, aes(x = size, y = deviance)) + 
+         geom_point() +
+         geom_line() +
+         theme_bw() +
+ggtitle("Deviance vs. number of leaves")
+
 # The best size is either 3 or 4
 
 # puring the tree for leaf size of 3
-state_cv_tree_purned <- prune.tree(state_tree_regression, k = 3)
+state_cv_tree_purned <- prune.tree(state_tree_regression, best = 3)
 plot(state_cv_tree_purned, main="Pruned Tree for the given dataset")
 text(state_cv_tree_purned)
 
@@ -331,10 +356,15 @@ ggplot(compare_data, aes(x = predicted_value, y = residual)) +
   geom_point() + geom_abline(slope=0, intercept=0) +
   ggtitle("Plot of Predicted Value vs. Residual")
 
-ggplot(data = compare_data, aes(x = residual)) + 
-  geom_histogram(aes(y = ..density..), binwidth = 8) +
-  geom_density(colour = "red") +
-  ggtitle("Histogram of Residual")
+# Residuals
+ggplot(data = compare_data, aes(residual)) +
+geom_histogram(col="black",aes(fill=..count..),bins = 30) +
+scale_fill_gradient("Count", low = "grey", high = "black") +
+theme_bw() +
+ggtitle("Histogram of residuals") +
+labs(x="Residual", y="Count")
+
+
 ```
 
 Analysis:
@@ -360,7 +390,7 @@ bootstrap <- function(data, indices){
        control = tree.control(nobs=NROW(data),
                               minsize = 8))
   
-  model_purned <- prune.tree(model, k = 3)
+  model_purned <- prune.tree(model, best = 3)
   final_fit_boot <- predict(model_purned, newdata = state_data)
   return(final_fit_boot)
 }
@@ -372,7 +402,7 @@ state_tree_regression <- tree(data = state_data, EX~MET,
                                                      minsize = 8))
 
 # puring the tree for leaf size of 3
-state_cv_tree_purned <- prune.tree(state_tree_regression, k = 3)
+state_cv_tree_purned <- prune.tree(state_tree_regression, best = 3)
 predict_for_ci <- predict(state_cv_tree_purned, state_data)
 data_for_ci <- cbind(upper_bound = e$point[1,], 
                      lower_bound = e$point[2,],
@@ -398,7 +428,7 @@ The confidence bands certainly appear to be bumpy and not smooth, the confidence
 ```{r}
 set.seed(12345)
 
-mle=prune.tree(state_tree_regression, k = 3)
+mle=prune.tree(state_tree_regression, best = 3)
 #data2 = state_data
 
 rng=function(data, mle) {
@@ -418,7 +448,7 @@ conf.fun <- function(data){
        control = tree.control(nobs=NROW(data),
                               minsize = 8))
   
-  model_purned <- prune.tree(model, k = 3)
+  model_purned <- prune.tree(model, best = 3)
   final_fit_boot <- predict(model_purned, newdata = state_data)
   return(final_fit_boot)
 }
@@ -431,7 +461,7 @@ pred.fun <- function(data){
        control = tree.control(nobs=NROW(data),
                               minsize = 8))
   
-  model_purned <- prune.tree(model, k = 3)
+  model_purned <- prune.tree(model, best = 3)
   final_fit_boot <- predict(model_purned, newdata = state_data)
   final_fit <- rnorm(n = length(final_fit_boot),  mean = final_fit_boot, sd=sd(residuals(mle)))
   return(final_fit)
@@ -446,7 +476,7 @@ e2 <- envelope(pred_para, level = 0.95)
 
 
 # puring the tree for leaf size of 3
-state_cv_tree_purned <- prune.tree(state_tree_regression, k = 3)
+state_cv_tree_purned <- prune.tree(state_tree_regression, best = 3)
 predict_for_ci <- predict(state_cv_tree_purned, state_data)
 
 
@@ -473,12 +503,22 @@ From the plot we see that the width of the 'confidence band'(darker grey) is nar
 We can defintely see that most of the data is under the 'prediction band' more than 95%, thus we can reasonably expect that less than 5% of the data is outside of the 'prediction band'. Based on our assumption of data is normally distributed it does makes sense for prediction band to contain 95% of the data.
 
 
-
 ## 5.Consider the histogram of residuals from step 2 and suggest what kind of bootstrap is actually more appropriate here.
 ```{r}
 set.seed(12345)
 
+# Residuals
+ggplot(data = compare_data, aes(residual)) +
+geom_histogram(col="black",aes(fill=..count.., y = ..density..),bins = 30) +
+scale_fill_gradient("Count", low = "grey", high = "black") +
+geom_density(colour = "red") +
+theme_bw() +
+ggtitle("Histogram of residuals")
+
 ```
+Analysis:
+
+Judging from the density plot we can say that the density resembles that of a 'Beta Distribution' thus a known distribution is fit better using parametric bootstrap.
 
 # Assignment 4
 
@@ -496,17 +536,29 @@ contribution <- summary(pca_result)$importance
 knitr::kable(contribution[,1:5], 
              caption = "Contribution of PCA axis towards varience explaination")
 
-# plots PCA components and the eignen vectors
-factoextra::fviz_eig(pca_result)
+eigenvalues = pca_result$sdev^2
+
+# plotting proportion of variation for principal components
+plotData = as.data.frame(cbind(pc = 1:3,
+variationProportion = eigenvalues[1:3]/sum(eigenvalues),
+cummulative = cumsum(eigenvalues[1:3]/sum(eigenvalues))))
+
+ggplot(data = plotData) +
+geom_col(aes(x = pc, y = variationProportion), width = 0.3, fill = "grey70") +
+geom_line(data = plotData,
+aes(x = pc, y = cummulative)) +
+geom_text(aes(x = pc, y = cummulative, label = round(cummulative, 3)), size = 4,
+position = "identity", vjust = 1.5) +
+theme_bw() +
+ggtitle("Proportion of variation for principal components")
 
 # pca components and the viscocity
 pca_result_data = cbind(first_component = pca_result$x[,1],
-                                second_component = pca_result$x[,2],
-                                Viscosity = NIR_data$Viscosity) %>% as.data.frame()
+                                second_component = pca_result$x[,2]) %>% as.data.frame()
 
 # plotting the data variation and the viscocity
 ggplot(data = pca_result_data, aes(x = first_component, y = second_component)) +
-  geom_point(aes(y = Viscosity)) + ggtitle("PCA components vs. Viscosity")
+  geom_point() + ggtitle("Score Plot of PCA components")
 
 
 # showing the score of PCA component
@@ -537,20 +589,13 @@ components <- as.data.frame(components)
 components$feature_name <- rownames(components)
 components$feature_index <- 1:nrow(components)
 
-components <- components %>% arrange(-PC1)
-components$contribution_PC1 <- cumsum(components$PC1)
-
-ggplot(data = components, aes(x = feature_index, y = contribution_PC1)) + 
+ggplot(data = components, aes(x = feature_index, y = PC1)) + 
   geom_point() + 
-  ggtitle("Traceplot of feature index vs. contribution towards PC1")
+  ggtitle("Traceplot of feature index vs. PC1")
 
-components <- components %>% arrange(-PC2)
-components$contribution_PC2 <- cumsum(components$PC2)
-
-ggplot(data = components, aes(x = feature_index, y = contribution_PC2)) + 
+ggplot(data = components, aes(x = feature_index, y = PC2)) + 
   geom_point() + 
-  ggtitle("Traceplot of feature index vs. contribution towards PC2")
-
+  ggtitle("Traceplot of feature index vs. PC2")
 
 knitr::kable(components[1:10,], 
              caption = "Contribution of Features towards the Principle Components")
@@ -560,9 +605,9 @@ knitr::kable(components[1:10,],
 
 Analysis: 
 
-From the above three plots we see that towards the first principle components axis (93.3% varience accounted) the feature index till 110 are the main contributers(positive contribution), while for the second component(6.3% varience accounted for) we have feature index 25-45 and 85-100 as the main components.The corresponding feature name can be accessed by viewing the table used for plot, a sample of the few columns is shown above.
+While for PC1, the loadings of the variables do not differ too much (maximum loading ~ 0.11, minimum loading ~ 0.075), for PC the loadings differ extremely. This principal component is explained mainly by the variables with a high index (on the right of the plot). Here, the maximum loading (~ 0.35) is much higher than for most of the other variables.
 
-From the 1st plot is evident that there are no few features which form the core essence of the PCA components, thus the PCA components is made up of many (20+) features atleast and they cannot be limited to few original features.
+From these two plots is evident that there are no few features(<5) which form the core essence of the PCA components, thus the PCA components is made up of many (20+) features atleast and they cannot be limited to few original features.
 
 ##3. Perform Independent Component Analysis with the number of components selected in step 1 (set seed 12345). Check the documentation for the fastICA method in R and do the following: a.Compute W(prime) = K.W and present the columns of W(prime) in the form of trace plots. Compare with the trace plots in step2 and make conclusion.What kind of measure is represented by the matrix W(prime.), b. Make a plot of the scores of the first two latent features and compare it with the score plot from step 1.
 
@@ -589,17 +634,23 @@ plot(W_prime[,1], main = "Trace plot of W` Matrix")
 plot(W_prime[,2], main = "Trace plot of W` Matrix")
 
 # pca components and the viscocity
-ICA_result_data = cbind(first_component = W_prime[,1],
-                                second_component = W_prime[,2],
-                                Viscosity = NIR_data$Viscosity) %>% as.data.frame()
+ICA_result_data = cbind(first_component = ICA_extraction$S[,1],
+                        second_component = ICA_extraction$S[,2],
+                        Viscosity = NIR_data$Viscosity) %>% as.data.frame()
 
-# plotting the data variation and the viscocity
+# plotting the data variation
 ggplot(data = ICA_result_data, aes(x = first_component, y = second_component)) +
-  geom_point(aes(y = Viscosity)) + ggtitle("ICA components vs. Viscosity")
-
+  geom_point() + ggtitle("Score Plot for ICA components")
 
 ```
 
+Analysis: 
+
+Comparing with the trace plots from step 2, we see that ICA trace plots are almost a (flipped using horizontal axis) flipped image of the PCA trace plots.
+
+The W`(multipled matrix) represents the loadings of the ICA components, which are very similar to the PCA loadings.
+
+Comparing the Score plots here we find that the plot is again a flipped version of the score plot from PCA (flipped along vertical axis).
 
 # Appendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
