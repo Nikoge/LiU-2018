@@ -25,7 +25,8 @@ set.seed(12345)
 options("jtools-digits" = 2, scipen = 999)
 
 # colours (colour blind friendly)
-cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", 
+               "#D55E00", "#CC79A7")
 
 ## Making title in the center
 theme_update(plot.title = element_text(hjust = 0.5))
@@ -46,16 +47,19 @@ flu_data$influ_perc <- (flu_data$Influenza/flu_data$Mortality) * 100
 p1 <- ggplot(flu_data, aes(x=Time_fixed, y = Mortality)) + 
   geom_line(color = "#999999", size = 1) +
     scale_fill_brewer() +
+      theme_light() +
   ggtitle("Time series of Mortality") 
 
 p2 <- ggplot(flu_data, aes(x=Time_fixed, y = Influenza)) + 
   geom_line(color = "#E69F00", size = 1) +
       scale_fill_brewer() +
+      theme_light() +
   ggtitle("Time series of Influenza") 
 
 p3 <- ggplot(flu_data, aes(x=Time_fixed, y = influ_perc)) + 
   geom_line(color = "#56B4E9", size = 1) + 
       scale_fill_brewer() +
+      theme_light() +
   ggtitle("Time series of % Mortalitiy due to Influenza") 
 
 gridExtra::grid.arrange(p1, p2, ncol=1)
@@ -70,35 +74,114 @@ From the third plot, we can see the percentage of mortalitiy due to influenza, h
 ```{r}
 
 gam_model <- mgcv::gam(data = flu_data, Mortality~Year+s(Week), method = "GCV.Cp")
-
+summary(gam_model)
 #plot the fit
-plot(gam_model, main= "Plot of GAM fit on Flu Data")
+
+p4 <- plot(gam_model, main= "Plot of GAM fit on Flu Data")
 ```
 
-## 3. Plot predicted and observed mortality against time for the fitted model and comment on the quality of the fit. Investigate the output of the GAM model and report which terms appear to be significant in the model. Is there a trend in mortality change from one year to another? Plot the spline component and interpret the plot.
+##3. Plot predicted and observed mortality against time for the fitted model and comment on the quality of the fit. Investigate the output of the GAM model and report which terms appear to be significant in the model. Is there a trend in mortality change from one year to another? Plot the spline component and interpret the plot.
 
 ```{r}
 temp <- flu_data
 temp$Fitted_Mortality <- gam_model$fitted.values
 
-p4 <- ggplot(data=temp, aes(x = Time_fixed, y = Fitted_Mortality)) +
+p5 <- ggplot(data=temp, aes(x = Time_fixed, y = Fitted_Mortality)) +
    geom_line(color = "#009E73", size = 1) +
     scale_fill_brewer() +
+      theme_light() +
   ggtitle("Time series of Fitted Mortality")  
 
-grid.arrange(p1,p4, nrow = 2)
+grid.arrange(p1, p5, nrow = 2)
 
 summary(gam_model)
 gam.check(gam_model,pch=19,cex=.3)
 
-
 s=interp(temp$Year,temp$Week, fitted(gam_model))
 persp3d(s$x, s$y, s$z, col="red")
+```
+Analysis: From the plot of residuals we can see that the resisuals are normally distributed. Thus this is a good fit.
 
+
+##4. Examine how the penalty factor of the spline function in the GAM model from step 2 influences the estimated deviance of the model. Make plots of the predicted and observed mortality against time for cases of very high and very low penalty factors. What is the relation of the penalty factor to the degrees of freedom? Do your results confirm this relationship?
+
+```{r, warning=FALSE}
+model_deviance <- NULL
+for(k in seq(from = 1, to = 20, by = 1))
+{
+gam_model <- mgcv::gam(data = flu_data, Mortality~Year+s(Week, k=k), method = "GCV.Cp")
+temp <- cbind(gam_model$deviance, gam_model$fitted.values, gam_model$y, flu_data$Time_fixed,  
+              k, sum(influence(gam_model)))
+
+model_deviance <- rbind(temp, model_deviance)
+}
+model_deviance <- as.data.frame(model_deviance)
+colnames(model_deviance) <- c("Deviance", "Predicted_Mortality", "Mortality", "Time", 
+                              "penalty_factor", "degree_of_freedom")
+model_deviance$Time <- as.Date(model_deviance$Time, origin = '1970-01-01')
+
+
+# plot of deviance
+p6 <- ggplot(data=model_deviance, aes(x = penalty_factor, y = Deviance)) +
+geom_point() +
+  geom_line() +
+      theme_light() +
+ggtitle("Plot of Deviance of Model vs. Penalty Factor")
+p6
+
+# plot of degree of freedom
+p7 <- ggplot(data=model_deviance, aes(x = penalty_factor, y = degree_of_freedom)) +
+geom_point() +
+  geom_line() +
+      theme_light() +
+ggtitle("Plot of degree_of_freedom of Model vs. Penalty Factor")
+p7
+
+model_deviance_wide <- melt(model_deviance[,c("Time", "penalty_factor", 
+                                              "Mortality", "Predicted_Mortality")], 
+                            id.vars = c("Time", "penalty_factor")) %>% 
+  filter(penalty_factor %in% c("1","5","15", "20"))
+
+# plot of predicted vs. observed mortality
+p8 <- ggplot(data=model_deviance_wide[model_deviance_wide$penalty_factor == 1,], 
+             aes(x= Time, y = value)) + 
+  geom_point(aes(color = variable), size=0.7) +
+  scale_color_manual(values=c("#E69F00", "#009E73")) +
+  theme_light() +
+  ggtitle("Plot of Mortality vs. Time(Penalty 1)")
+
+p9 <- ggplot(data=model_deviance_wide[model_deviance_wide$penalty_factor == 20,], 
+             aes(x= Time, y = value)) + 
+  geom_point(aes(color = variable), size=0.7) +
+  scale_color_manual(values=c("#E69F00", "#009E73")) +
+    theme_light() +
+  ggtitle("Plot of Mortality vs. Time(Penalty 20)")
+
+p8
+p9
+
+```
+
+### Analysis: theortical maximum degree of freedom is k-1.
+
+##5. Use the model obtained in step 2 and plot the residuals and the influenza values against time (in one plot). Is the temporal pattern in the residuals correlated to the outbreaks of influenza?
+
+```{r}
+gam_model <- mgcv::gam(data = flu_data, Mortality~Year+s(Week), method = "GCV.Cp")
+
+temp <- flu_data
+temp <- cbind(temp, gam_model$residuals)
+
+#ggplot(data =temp)
 
 
 ```
 
+##6. Fit a GAM model in R in which mortality is be modelled as an additive function of the spline functions of year, week, and the number of confirmed cases of influenza. Use the output of this GAM function to conclude whether or not the mortality is influenced by the outbreaks of influenza. Provide the plot of the original and fitted Mortality against Time and comment whether the model seems to be better than the previous GAM models.
+
+```{r}
+
+```
 
 # Appendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
