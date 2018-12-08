@@ -19,7 +19,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r, message=FALSE, echo = TRUE}
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(xlsx, ggplot2, tidyr, dplyr, reshape2, gridExtra, 
-               mgcv,rgl,akima)
+               mgcv,rgl,akima,pamr)
 
 set.seed(12345)
 options("jtools-digits" = 2, scipen = 999)
@@ -170,14 +170,77 @@ p9
 gam_model <- mgcv::gam(data = flu_data, Mortality~Year+s(Week), method = "GCV.Cp")
 
 temp <- flu_data
-temp <- cbind(temp, gam_model$residuals)
+temp <- cbind(temp, residuals = gam_model$residuals)
 
-#ggplot(data =temp)
+
+p10 <- ggplot(data = temp, aes(x = Time_fixed)) +
+  geom_line(aes( y = Influenza, color = "Influenza")) +
+  geom_line(aes(y = residuals, color = "residuals")) +
+      theme_light() +
+  scale_color_manual(values=c(Influenza = "#009E73", residuals = "#E69F00")) +
+  labs(y = "Influenza / Residual") +
+  ggtitle("Plot of Influenza Residual vs. Time")
+
+p10
+  
+```
+
+##6. Fit a GAM model in R in which mortality is be modelled as an additive function of the spline functions of year, week, and the number of confirmed cases of influenza. Use the output of this GAM function to conclude whether or not the mortality is influenced by the outbreaks of influenza. Provide the plot of the original and fitted Mortality against Time and comment whether the model seems to be better than the previous GAM models.
+
+```{r}
+#gam_model_additive <- mgcv::gam(data = flu_data, Mortality~s(Year)+s(Week), method = "GCV.Cp")
+```
+
+# Assignment 2
+
+##1. Divide data into training and test sets (70/30) without scaling. Perform nearest shrunken centroid classification of training data in which the threshold is chosen by cross-validation. Provide a centroid plot and interpret it. How many features were selected by the method? List the names of the 10 most contributing features and comment whether it is reasonable that they have strong effect on the discrimination between the conference mails and other mails? Report the test error.
+
+```{r, message=FALSE}
+rm(list=ls())
+gc()
+data <- read.csv(file = "data.csv", sep = ";", header = TRUE)
+```
+
+```{r}
+n=NROW(data)
+data$Conference <- as.factor(data$Conference)
+set.seed(12345) 
+id=sample(1:n, floor(n*0.7)) 
+train=data[id,] 
+test = data[-id,]
+
+
+rownames(data)=1:nrow(data)
+x=t(data[,-4703])
+y=data[[4703]]
+
+mydata=list(x=x,y=as.factor(y),geneid=as.character(1:nrow(x)), genenames=rownames(x))
+model=pamr.train(mydata,threshold=seq(0,4, 0.1))
+# 
+# pamr.plotcen(model, mydata, threshold=1)
+# pamr.plotcen(model, mydata, threshold=2.5)
+# 
+# a=pamr.listgenes(model,mydata,threshold=2.5)
+# cat( paste( colnames(data)[as.numeric(a[,1])], collapse='\n' ) )
+
+cvmodel=pamr.cv(model, mydata)
+print(cvmodel)
+pamr.plotcv(cvmodel)
+pamr.plotcen(model, mydata,  threshold = 0.9)
+important_gen <- as.data.frame(pamr.listgenes(model, mydata, threshold = 0.9))
+
+
 
 
 ```
 
-##6. Fit a GAM model in R in which mortality is be modelled as an additive function of the spline functions of year, week, and the number of confirmed cases of influenza. Use the output of this GAM function to conclude whether or not the mortality is influenced by the outbreaks of influenza. Provide the plot of the original and fitted Mortality against Time and comment whether the model seems to be better than the previous GAM models.
+##2. Compute the test error and the number of the contributing features for the following methods fitted to the training data: a. Elastic net with the binomial response and alpha = 0.5 in which penalty is selected by the cross-validation. b. Support vector machine with "vanilladot" kernel. Compare the results of these models with the results of the nearest shrunken centroids (make a comparative table). Which model would you prefer and why?
+
+```{r}
+
+```
+
+##3. Implement Benjamini-Hochberg method for the original data, and use t.test() for computing p-values. Which features correspond to the rejected hypotheses? Interpret the result.
 
 ```{r}
 
