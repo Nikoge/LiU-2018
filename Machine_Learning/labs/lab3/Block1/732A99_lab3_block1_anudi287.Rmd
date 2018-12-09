@@ -1,0 +1,84 @@
+---
+title: "machine learning(732A99) lab3"
+author: "Anubhav Dikshit(anudi287)"
+date: "17 December 2018"
+output: 
+    pdf_document:
+      toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+\newpage
+
+### Loading The Libraries
+```{r, message=FALSE, echo = TRUE}
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(geosphere, kernlab, neuralnet, geosphere, data.table)
+
+set.seed(12345)
+options("jtools-digits" = 2, scipen = 999)
+
+# colours (colour blind friendly)
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", 
+               "#D55E00", "#CC79A7")
+
+```
+
+# Assignment 1
+
+##1. Implement a kernel method to predict the hourly temperatures for a date and place in Sweden.To do so, you are provided with the files stations.csv and temps50k.csv. These files contain information about weather stations and temperature measurements in the stations at different days and times. The data have been kindly provided by the Swedish Meteorological and Hydrological Institute (SMHI).
+
+```{r}
+rm(list=ls())
+set.seed(1234567890)
+stations <- read.csv("stations.csv")
+temps <- read.csv("temps50k.csv")
+st <- merge(stations,temps,by="station_number")
+rm(temps, stations)
+
+# adding the points to the database
+a <- 58.4274 # The point to predict (up to the students)
+b <- 14.826
+
+time_seq <- as.data.frame(seq(from=as.POSIXct("2013-11-04 0:00", tz="UTC"), 
+                to=as.POSIXct("2013-11-04 24:00", tz="UTC"), by="120 min"))
+
+time_seq <- as.data.table(time_seq)
+colnames(time_seq) <- "new_date_time" 
+st <- as.data.table(st)
+st_new <- setkey(st[,c(k=1,.SD)],k)[time_seq[,c(k=1,.SD)],allow.cartesian=TRUE][,k:=NULL]
+rm(st, time_seq)
+
+
+st_new$new_date <- as.Date(st_new$new_date_time)
+st_new$new_time <- format(st_new$new_date_time,"%H:%M:%S")
+
+
+st_new$h_distance <-  distHaversine(p1 = c(b,a), p2 = st_new[,c("longitude", "latitude")],
+                                          r=6378137)
+
+st_new$h_date <- difftime(st_new$new_date, st_new$date, units = c("days"))
+st_new$h_time <- difftime(strptime(paste(st_new$new_date, st_new$new_time),"%Y-%m-%d %H:%M:%S"),
+                          strptime(paste(st_new$new_date, st_new$time),"%Y-%m-%d %H:%M:%S"),
+                          units = c("hour"))
+
+st_new$hd_dist <- difftime(st_new$new_date_time, 
+                           as.POSIXct(paste(st_new$date, st_new$time), format="%Y-%m-%d %H:%M:%S"),
+                          units = c("hour"))
+
+## removing any negative dates and time
+st_new$posterior_flag <- ifelse(st_new$h_distance > 0 & st_new$hd_dist > 0, "retain", "drop")
+
+temp <- vector(length=length(times))
+# Students' code here
+plot(temp, type="o")
+
+
+```
+
+# Appendix
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+```

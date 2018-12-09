@@ -19,7 +19,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r, message=FALSE, echo = TRUE}
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(xlsx, ggplot2, tidyr, dplyr, reshape2, gridExtra, 
-               mgcv,rgl,akima,pamr)
+               mgcv, rgl, akima, pamr, caret, glmnet, kernlab)
 
 set.seed(12345)
 options("jtools-digits" = 2, scipen = 999)
@@ -201,7 +201,7 @@ gc()
 data <- read.csv(file = "data.csv", sep = ";", header = TRUE)
 ```
 
-```{r}
+```{r, message=FALSE, warning=FALSE, results=FALSE}
 n=NROW(data)
 data$Conference <- as.factor(data$Conference)
 set.seed(12345) 
@@ -209,34 +209,70 @@ id=sample(1:n, floor(n*0.7))
 train=data[id,] 
 test = data[-id,]
 
+rownames(train)=1:nrow(train)
+x=t(train[,-4703])
+y=train[[4703]]
 
-rownames(data)=1:nrow(data)
-x=t(data[,-4703])
-y=data[[4703]]
+rownames(test)=1:nrow(test)
+x_test=t(test[,-4703])
+y_test=test[[4703]]
 
-mydata=list(x=x,y=as.factor(y),geneid=as.character(1:nrow(x)), genenames=rownames(x))
+mydata = list(x=x,y=as.factor(y),geneid=as.character(1:nrow(x)), genenames=rownames(x))
+mydata_test = list(x=x_test,y=as.factor(y_test),geneid=as.character(1:nrow(x)), genenames=rownames(x))
 model=pamr.train(mydata,threshold=seq(0,4, 0.1))
-# 
-# pamr.plotcen(model, mydata, threshold=1)
-# pamr.plotcen(model, mydata, threshold=2.5)
-# 
-# a=pamr.listgenes(model,mydata,threshold=2.5)
-# cat( paste( colnames(data)[as.numeric(a[,1])], collapse='\n' ) )
 
 cvmodel=pamr.cv(model, mydata)
-print(cvmodel)
-pamr.plotcv(cvmodel)
-pamr.plotcen(model, mydata,  threshold = 0.9)
 important_gen <- as.data.frame(pamr.listgenes(model, mydata, threshold = 0.9))
+predicted_scc_test <- pamr.predict(model, newx = x_test, threshold = 0.9)
+```
 
-
-
+```{r}
+pamr.plotcv(cvmodel)
+pamr.plotcen(model, mydata, threshold = 0.9)
+conf_scc <- table(y_test, predicted_scc_test)
+names(dimnames(conf_scc)) <- c("Actual Test", "Predicted Srunken Centroid Test")
+result_scc <- caret::confusionMatrix(conf_scc)
+caret::confusionMatrix(conf_scc)
 
 ```
 
 ##2. Compute the test error and the number of the contributing features for the following methods fitted to the training data: a. Elastic net with the binomial response and alpha = 0.5 in which penalty is selected by the cross-validation. b. Support vector machine with "vanilladot" kernel. Compare the results of these models with the results of the nearest shrunken centroids (make a comparative table). Which model would you prefer and why?
 
 ```{r}
+x = train[,-4703] %>% as.matrix()
+y = train[,4703]
+
+x_test = test[,-4703] %>% as.matrix()
+y_test = test[,4703]
+
+cvfit = cv.glmnet(x=x, y=y, alpha = 0.5, family =   "binomial")
+predicted_elastic_test <- predict.cv.glmnet(cvfit, newx = x_test, s = "lambda.min", type = "class")
+
+conf_elastic_net <- table(y_test, predicted_elastic_test)
+names(dimnames(conf_elastic_net)) <- c("Actual Test", "Predicted ElasticNet Test")
+result_elastic_net <- caret::confusionMatrix(conf_elastic_net)
+caret::confusionMatrix(conf_elastic_net)
+
+
+# svm
+svm_fit <- kernlab::ksvm(x, y, kernel="vanilladot", scale = FALSE, type = "C-svc")
+predicted_svm_test <- predict(svm_fit, x_test, type="response")
+
+conf_svm_tree <- table(y_test, predicted_svm_test)
+names(dimnames(conf_svm_tree)) <- c("Actual Test", "Predicted SVM Test")
+result_svm <- caret::confusionMatrix(conf_svm_tree)
+caret::confusionMatrix(conf_svm_tree)
+
+# creating table
+final_result <- cbind(result_scc$overall[[1]]*100, 
+                      result_elastic_net$overall[[1]]*100, 
+                      result_svm$overall[[1]] *100) %>% as.data.frame()
+
+colnames(final_result) <- c("Accuracy of Nearest Shrunken Centroid Model", 
+                                   "Accuracy of ElasticNet", 
+                                   "Accuracy SVM Model")
+
+knitr::kable(final_result, caption = "Accuracy of Model on Test dataset")
 
 ```
 
