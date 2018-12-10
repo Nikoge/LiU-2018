@@ -43,14 +43,8 @@ rm(temps, stations)
 ### defining the function
 ```{r}
 kernel_method <- function(df, date, loc_long, loc_lat, h1, h2, h3) {
-# adding the points to the database
-# loc_lat <- 55.3836 # The point to predict (up to the students)
-# loc_long <- 12.8203
-# date <- "2013-11-04"
-# h1 <- 30
-# h2 <- 0.01
-# h3 <- 500
 
+set.seed(1234567890)
 start <- as.POSIXct(date)
 interval <- 60
 end <- start + as.difftime(1, units="days")
@@ -112,10 +106,10 @@ result <- rbind(temp,result)
 result <- as.data.frame(result) 
 result <- merge(x =result, y = time_seq, by.x = "i", by.y = "time_index", all.x = TRUE)
 result$additive_temp <- as.numeric(result$additive_temp)
-result$additive_temp <- as.numeric(result$mult_temp)
+result$mult_temp <- as.numeric(result$mult_temp)
 
-p1 <- ggplot(data=result, aes(x=new_date_time, y = additive_temp)) + geom_point() + ggtitle("Predicted Temperature")
-p2 <- ggplot(data=result, aes(x=new_date_time, y = mult_temp)) + geom_point() + ggtitle("Predicted Temperature")
+p1 <- ggplot(data=result, aes(x=new_date_time, y = additive_temp)) + geom_point() + ggtitle("Predicted Temperature using Additive")
+p2 <- ggplot(data=result, aes(x=new_date_time, y = mult_temp)) + geom_point() + ggtitle("Predicted Temperature using Multiplicative")
 
 final <- list(p1,p2)
 return(final)
@@ -127,7 +121,17 @@ return(final)
 ```{r}
 kernel_method(df=st, date = "2013-11-04", loc_long = 55.3836, loc_lat = 12.8203, h1 = 30, h2 = 0.01, h3 = 0.01) 
 ```
+# Assignment 2
 
+## Use the function ksvm from the R package kernlab to learn a SVM for classifying the spam dataset that is included with the package. Consider the radial basis function kernel (also known as Gaussian) with a width of 0.05. For the C parameter, consider values 0.5, 1 and 5. This implies that you have to consider three models.
+
+```{r}
+rm(list=ls())
+set.seed(1234567890)
+
+data <- data(spam)
+
+```
 
 # Appendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
