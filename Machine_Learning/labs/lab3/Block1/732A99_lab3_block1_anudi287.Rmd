@@ -63,11 +63,11 @@ st_new$new_time <- format(st_new$new_date_time,"%H:%M:%S")
 st_new$h_distance <-  distHaversine(p1 = c(b,a), p2 = st_new[,c("longitude", "latitude")],
                                           r=6378137)
 
-st_new$h_date <- abs(difftime(st_new$new_date, st_new$date, units = c("days")))
+st_new$h_date <- as.numeric(abs(difftime(st_new$new_date, st_new$date, units = c("days"))))
 
-st_new$h_time <- difftime(strptime(paste(st_new$new_date, st_new$new_time),"%Y-%m-%d %H:%M:%S"),
+st_new$h_time <- as.numeric(abs(difftime(strptime(paste(st_new$new_date, st_new$new_time),"%Y-%m-%d %H:%M:%S"),
                           strptime(paste(st_new$new_date, st_new$time),"%Y-%m-%d %H:%M:%S"),
-                          units = c("hour"))
+                          units = c("hour"))))
 
 st_new$hd_dist <- difftime(st_new$new_date_time, 
                            st_new$date_time,
@@ -76,12 +76,51 @@ st_new$hd_dist <- difftime(st_new$new_date_time,
 ## removing any negative dates and time
 st_new$posterior_flag <- as.factor(ifelse(st_new$h_distance > 0 & st_new$hd_dist > 0, "retain", "drop"))
 
-temp <- vector(length=length(times))
-# Students' code here
-plot(temp, type="o")
+
+## calculating kernel distance and choosing guassian kernel
+h1 <- 30
+h2 <- 0.01
+h3 <- 0.00001
+st_new$h_distance_kernel <- exp(-(st_new$h_distance/h1)^2)
+st_new$h_date_kernel <- exp(-(st_new$h_date/h2)^2)
+st_new$h_time_kernel <- exp(-(st_new$h_time/h3)^2)
+
+ 
+
+
 
 
 ```
+
+```{r}
+rm(list=ls())
+set.seed(1234567890)
+stations <- read.csv("stations.csv")
+temps <- read.csv("temps50k.csv")
+st <- merge(stations,temps,by="station_number")
+rm(temps, stations)
+
+temperature_function <- function(df, date, b,a){
+b <- 
+a <-  
+df <- st  
+
+
+  
+place_dist <-  geosphere::distHaversine(p1 = c(b,a), p2 = df[,c("longitude", "latitude")],r=6378137) 
+days_dist <- as.numeric(abs(difftime(with(df, as.POSIXct(paste(date, time))), date, units = c("days"))))
+hour_dist <- as.numeric(abs(difftime(strptime(date, df$new_time),"%Y-%m-%d %H:%M:%S"),
+                          strptime(paste(date, df$time),"%Y-%m-%d %H:%M:%S"),
+                          units = c("hour"))))
+
+  
+}
+
+
+
+```
+
+
 
 # Appendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}

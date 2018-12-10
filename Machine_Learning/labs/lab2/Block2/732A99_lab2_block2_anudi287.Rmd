@@ -107,11 +107,13 @@ Analysis: From the plot of residuals we can see that the resisuals are normally 
 
 ```{r, warning=FALSE}
 model_deviance <- NULL
-for(k in seq(from = 1, to = 20, by = 1))
+for(sp in c(0.001, 0.01, 0.1, 1, 10))
 {
-gam_model <- mgcv::gam(data = flu_data, Mortality~Year+s(Week, k=k), method = "GCV.Cp")
+  k=length(unique(flu_data$Week))
+  
+gam_model <- mgcv::gam(data = flu_data, Mortality~Year+s(Week, k=k, sp=sp), method = "GCV.Cp")
 temp <- cbind(gam_model$deviance, gam_model$fitted.values, gam_model$y, flu_data$Time_fixed,  
-              k, sum(influence(gam_model)))
+              sp, sum(influence(gam_model)))
 
 model_deviance <- rbind(temp, model_deviance)
 }
@@ -139,23 +141,22 @@ p7
 
 model_deviance_wide <- melt(model_deviance[,c("Time", "penalty_factor", 
                                               "Mortality", "Predicted_Mortality")], 
-                            id.vars = c("Time", "penalty_factor")) %>% 
-  filter(penalty_factor %in% c("1","5","15", "20"))
+                            id.vars = c("Time", "penalty_factor"))
 
 # plot of predicted vs. observed mortality
-p8 <- ggplot(data=model_deviance_wide[model_deviance_wide$penalty_factor == 1,], 
+p8 <- ggplot(data=model_deviance_wide[model_deviance_wide$penalty_factor == 0.001,], 
              aes(x= Time, y = value)) + 
   geom_point(aes(color = variable), size=0.7) +
   scale_color_manual(values=c("#E69F00", "#009E73")) +
   theme_light() +
-  ggtitle("Plot of Mortality vs. Time(Penalty 1)")
+  ggtitle("Plot of Mortality vs. Time(Penalty 0.001)")
 
-p9 <- ggplot(data=model_deviance_wide[model_deviance_wide$penalty_factor == 20,], 
+p9 <- ggplot(data=model_deviance_wide[model_deviance_wide$penalty_factor == 10,], 
              aes(x= Time, y = value)) + 
   geom_point(aes(color = variable), size=0.7) +
   scale_color_manual(values=c("#E69F00", "#009E73")) +
     theme_light() +
-  ggtitle("Plot of Mortality vs. Time(Penalty 20)")
+  ggtitle("Plot of Mortality vs. Time(Penalty 10)")
 
 p8
 p9
@@ -167,7 +168,9 @@ p9
 ##5. Use the model obtained in step 2 and plot the residuals and the influenza values against time (in one plot). Is the temporal pattern in the residuals correlated to the outbreaks of influenza?
 
 ```{r}
-gam_model <- mgcv::gam(data = flu_data, Mortality~Year+s(Week), method = "GCV.Cp")
+
+k=length(unique(flu_data$Week))
+gam_model <- mgcv::gam(data = flu_data, Mortality~Year+s(Week, k=k), method = "GCV.Cp")
 
 temp <- flu_data
 temp <- cbind(temp, residuals = gam_model$residuals)
@@ -189,6 +192,30 @@ p10
 
 ```{r}
 #gam_model_additive <- mgcv::gam(data = flu_data, Mortality~s(Year)+s(Week), method = "GCV.Cp")
+
+k1 = length(unique(flu_data$Year))
+k2 = length(unique(flu_data$Week))
+k3 = length(unique(flu_data$Influenza))
+
+gam_model_additive <- gam(Mortality ~ s(Year, k=k1) + 
+                                     s(Week, k=k2) +
+                                    s(Influenza, k=k3), 
+                          data = flu_data)
+
+
+flu_data$fitted.values = gam_model_additive$fitted.values
+
+                    
+p11 <- ggplot(data = flu_data, aes(x = Time_fixed)) +
+  geom_line(aes( y = Mortality, color = "Mortality")) +
+  geom_line(aes(y = fitted.values, color = "fitted.values")) +
+      theme_light() +
+  scale_color_manual(values=c(Mortality = "#009E73", fitted.values = "#E69F00")) +
+  labs(y = "Mortality / fitted.values") +
+  ggtitle("Plot of Mortality and Fitted vs. Time")
+
+p11
+                    
 ```
 
 # Assignment 2
