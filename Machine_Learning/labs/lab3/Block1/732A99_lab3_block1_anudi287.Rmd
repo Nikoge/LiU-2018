@@ -16,7 +16,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ### Loading The Libraries
 ```{r, message=FALSE, echo = TRUE}
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(geosphere, kernlab, neuralnet, geosphere, data.table)
+pacman::p_load(geosphere, kernlab, neuralnet, geosphere, data.table, ggplot2)
 
 set.seed(12345)
 options("jtools-digits" = 2, scipen = 999)
@@ -42,6 +42,8 @@ rm(temps, stations)
 # adding the points to the database
 a <- 58.4274 # The point to predict (up to the students)
 b <- 14.826
+st$date_time <- with(st, as.POSIXct(paste(date, time)))
+
 
 time_seq <- as.data.frame(seq(from=as.POSIXct("2013-11-04 0:00", tz="UTC"), 
                 to=as.POSIXct("2013-11-04 24:00", tz="UTC"), by="120 min"))
@@ -57,20 +59,22 @@ st_new$new_date <- as.Date(st_new$new_date_time)
 st_new$new_time <- format(st_new$new_date_time,"%H:%M:%S")
 
 
+
 st_new$h_distance <-  distHaversine(p1 = c(b,a), p2 = st_new[,c("longitude", "latitude")],
                                           r=6378137)
 
-st_new$h_date <- difftime(st_new$new_date, st_new$date, units = c("days"))
+st_new$h_date <- abs(difftime(st_new$new_date, st_new$date, units = c("days")))
+
 st_new$h_time <- difftime(strptime(paste(st_new$new_date, st_new$new_time),"%Y-%m-%d %H:%M:%S"),
                           strptime(paste(st_new$new_date, st_new$time),"%Y-%m-%d %H:%M:%S"),
                           units = c("hour"))
 
 st_new$hd_dist <- difftime(st_new$new_date_time, 
-                           as.POSIXct(paste(st_new$date, st_new$time), format="%Y-%m-%d %H:%M:%S"),
+                           st_new$date_time,
                           units = c("hour"))
 
 ## removing any negative dates and time
-st_new$posterior_flag <- ifelse(st_new$h_distance > 0 & st_new$hd_dist > 0, "retain", "drop")
+st_new$posterior_flag <- as.factor(ifelse(st_new$h_distance > 0 & st_new$hd_dist > 0, "retain", "drop"))
 
 temp <- vector(length=length(times))
 # Students' code here
