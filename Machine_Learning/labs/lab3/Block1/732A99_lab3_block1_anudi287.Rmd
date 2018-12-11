@@ -16,7 +16,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ### Loading The Libraries
 ```{r, message=FALSE, echo = TRUE}
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(geosphere, kernlab, neuralnet, geosphere, data.table, ggplot2)
+pacman::p_load(geosphere, kernlab, geosphere, ggplot2,caret)
 
 set.seed(12345)
 options("jtools-digits" = 2, scipen = 999)
@@ -64,8 +64,10 @@ df_new$h_distance <-  distHaversine(p1 = c(loc_long,loc_lat), p2 = df_new[,c("lo
 
 df_new$h_date <- as.numeric(abs(difftime(df_new$new_date, df_new$date, units = c("days"))))
 
-df_new$h_time <- as.numeric(abs(difftime(strptime(paste(df_new$new_date, df_new$new_time),"%Y-%m-%d %H:%M:%S"),
-                          strptime(paste(df_new$new_date, df_new$time),"%Y-%m-%d %H:%M:%S"),
+df_new$h_time <- as.numeric(abs(difftime(strptime(paste(df_new$new_date, 
+                                                        df_new$new_time),"%Y-%m-%d %H:%M:%S"),
+                          strptime(paste(df_new$new_date, df_new$time),
+                                   "%Y-%m-%d %H:%M:%S"),
                           units = c("hour"))))
 
 
@@ -85,8 +87,11 @@ df_new$h_time_kernel <- exp(-(df_new$h_time/h3)^2)
 df_new$total_additive_dist <- (df_new$h_distance_kernel + df_new$h_date_kernel + df_new$h_time_kernel)
 df_new$total_mul_dist <- (df_new$h_distance_kernel * df_new$h_date_kernel * df_new$h_time_kernel)
 
-df_new$additive_num <- ifelse(df_new$posterior_flag == "retain", df_new$total_additive_dist*df_new$air_temperature, 0)
-df_new$mul_num <- ifelse(df_new$posterior_flag == "retain", df_new$total_mul_dist*df_new$air_temperature, 0)
+df_new$additive_num <- ifelse(df_new$posterior_flag == "retain", 
+                              df_new$total_additive_dist*df_new$air_temperature, 0)
+
+df_new$mul_num <- ifelse(df_new$posterior_flag == "retain", 
+                         df_new$total_mul_dist*df_new$air_temperature, 0)
 
 df_new$additive_den <- ifelse(df_new$posterior_flag == "retain", df_new$total_additive_dist, 0)
 df_new$mul_den <- ifelse(df_new$posterior_flag == "retain", df_new$total_mul_dist, 0)
@@ -108,8 +113,11 @@ result <- merge(x =result, y = time_seq, by.x = "i", by.y = "time_index", all.x 
 result$additive_temp <- as.numeric(result$additive_temp)
 result$mult_temp <- as.numeric(result$mult_temp)
 
-p1 <- ggplot(data=result, aes(x=new_date_time, y = additive_temp)) + geom_point() + ggtitle("Predicted Temperature using Additive")
-p2 <- ggplot(data=result, aes(x=new_date_time, y = mult_temp)) + geom_point() + ggtitle("Predicted Temperature using Multiplicative")
+p1 <- ggplot(data=result, aes(x=new_date_time, y = additive_temp)) + geom_point() + 
+  ggtitle("Predicted Temperature using Additive")
+
+p2 <- ggplot(data=result, aes(x=new_date_time, y = mult_temp)) + geom_point() + 
+  ggtitle("Predicted Temperature using Multiplicative")
 
 final <- list(p1,p2)
 return(final)
@@ -119,7 +127,8 @@ return(final)
 
 ### calling function
 ```{r}
-kernel_method(df=st, date = "2013-11-04", loc_long = 55.3836, loc_lat = 12.8203, h1 = 30, h2 = 0.01, h3 = 0.01) 
+kernel_method(df=st, date = "2000-05-08", loc_long = 59.8953, 
+              loc_lat = 17.5935, h1 = 30, h2 = 0.01, h3 = 0.01) 
 ```
 # Assignment 2
 
@@ -172,6 +181,9 @@ names(dimnames(conf_model_0.05)) <- c("Actual Test", "P2redicted Test")
 caret::confusionMatrix(conf_model_0.05)
 
 ```
+Analysis:
+
+From the summary of the three models build we can see that the accuracy of models are 90.83%, 70.22%, 66.57% respectively. Accuracy is only half the story, as a good spam detection should never classify a good mail has 'spam', which is something that model2 and model3 are doing. However in model 3 the accuracy is least thus, given a choice i would select model2 has the best model despite the lower accuracy.
 
 # Appendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
