@@ -129,7 +129,47 @@ kernel_method(df=st, date = "2013-11-04", loc_long = 55.3836, loc_lat = 12.8203,
 rm(list=ls())
 set.seed(1234567890)
 
-data <- data(spam)
+data(spam)
+
+## create test and training set
+index <- sample(1:dim(spam)[1])
+spamtrain <- spam[index[1:floor(dim(spam)[1]/2)], ]
+spamtest <- spam[index[((ceiling(dim(spam)[1]/2)) + 1):dim(spam)[1]], ]
+
+
+## train a support vector machine
+model_0.05 <- ksvm(type~., data=spamtrain,
+               kernel="rbfdot",
+               kpar=list(sigma=0.05),
+               C=0.5)
+
+model_1.0 <- ksvm(type~.,data=spamtrain,
+               kernel="rbfdot",
+               kpar=list(sigma=1.0),
+               C=0.5)
+
+model_5.0 <- ksvm(type~.,data=spamtrain,
+               kernel="rbfdot",
+               kpar=list(sigma=5),
+               C=0.5)
+
+model_0.05
+model_1.0
+model_5.0
+
+# confusion table
+
+conf_model_0.05 <- table(spamtest[,58], predict(model_0.05,spamtest[,-58]))
+names(dimnames(conf_model_0.05)) <- c("Actual Test", "P2redicted Test")
+caret::confusionMatrix(conf_model_0.05)
+
+conf_model_1.0 <- table(spamtest[,58], predict(model_1.0,spamtest[,-58]))
+names(dimnames(conf_model_1.0)) <- c("Actual Test", "P2redicted Test")
+caret::confusionMatrix(conf_model_1.0)
+
+conf_model_0.05 <- table(spamtest[,58], predict(model_5.0,spamtest[,-58]))
+names(dimnames(conf_model_0.05)) <- c("Actual Test", "P2redicted Test")
+caret::confusionMatrix(conf_model_0.05)
 
 ```
 
