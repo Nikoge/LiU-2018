@@ -1,0 +1,242 @@
+---
+title: "Lab2block2"
+author: "Thijs Quast"
+date: "10-12-2018"
+output: pdf_document
+toc: TRUE
+---
+\newpage
+# Assignment 1
+## 1.1
+```{r}
+library(readxl)
+options(scipen = 999)
+influenza <- read_xlsx("influenza.xlsx")
+
+library(ggplot2)
+plot <- ggplot(data = influenza, aes(x = Time, y = Mortality, color = "Mortality")) + 
+  geom_line() +
+  geom_line(aes(y = Influenza, color = "Influenza")) + ggtitle("Mortality and Influenza occurences over time")
+
+plot
+```
+When looking at the plot of Mortality and Influenza cases over time, one can see a similarity in the patterns. When Influenze reaches a spike, so does the Mortality rate. From such a plot one is then tempted to argue that Influenza causes the mortality to rate to go up. Given that Influenza is a disease, I would say it is reasonable to argue that spikes in Influenza cases lead to spikes in the Mortality rate.
+
+## 1.2
+```{r}
+library(mgcv)
+hist(influenza$Mortality, breaks = 20)
+gam <- gam(Mortality ~ s(Week) + Year, data = influenza)
+summary(gam)
+```
+
+The default values of the function assumes a normal distribution and smoothing parameters are obtained using generalized cross validation. The underlying probabilistic model is:
+
+$$ Mortality = N(\mu, \sigma^2) $$
+$$ g(\mu) = Intercept + Beta_{year} * Year + s(Week) $$
+In this situation g is a link function with a normal distribution.
+
+
+## 1.3
+```{r}
+gam_pred <- predict.gam(gam, newdata = influenza)
+influenza <- cbind(influenza, gam_pred)
+
+plot_gam <- ggplot(data = influenza, aes(x = Time, y = Mortality, color = "Mortality")) + 
+  geom_line() +
+  geom_line(aes(y = gam_pred, color = "gam_pred")) + ggtitle("Actual versus predicted mortality rates")
+plot_gam
+```
+
+The predicted values for Mortality are shown in the red line, whereas actual values are shown in the blue line. The patterns of both line correspond, meaning the model estimates the dependent variable in a good way. Therefore I would say the fit is good. Still it has to be mentioned that the fitted values do not fully capture the extremes of the actual mortality rate.
+
+Results from step 1.2 imply that the parametric coefficients are insignificantly different from zero, therefore we cannot assume the coefficients have an influence on the target variable. However, the smoothing terms result in a significant p value for the Week variable. Meaning, week has a significant influence on the target variable. Given the adjusted R-squared value, 66.1% of the variance is explained by this model. 
+
+The plot above show that Mortality rates peak each year. Therefore I would say there is not trend in mortality rate from one year to another. I would rather say, mortality rates show the same trend within each year, namely a peak at a certain time of the year.
+
+```{r}
+plot(gam)
+```
+The plot of the spline component shows how the response variable (Mortality) varies with the weeks of the year. Clearly, at the beginning and end of the year mortality rates are very much higher than in the middel of the year. When one thinks of this, this makes sense. Most likely will people suffer from influenzia in winter periods, thus the beginning and end of the calendar year, whereas in summer, the middle of the calendar year, people suffer less from influenzia, and thus less people die. 
+
+The curves in the shape is due to the fact that smoothing factors were implented in the model, and is due to non-linearity in the data. Dotted lines around the line represent standard errors of the fit.
+
+## 1.4
+```{r}
+gamma_df <- data.frame(influenza$Mortality, influenza$Time)
+gammas <- c(0.001, 10)
+j <- 3
+k <- length(unique(influenza$Week))
+gamma_list <- list()
+x <- 1
+
+for (i in gammas){
+gamma <- gam(Mortality ~ s(Week, k = k, sp = i) + Year, data = influenza)
+gamma_pred <- predict.gam(gamma, newdata = influenza)
+gamma_df[, j] <- gamma_pred
+j <- j + 1
+gamma_list[[x]] <- gamma
+x <- x+1
+}
+
+colnames(gamma_df) <- c("Mortality", "Time", "sp_0.001", "sp_10")
+```
+
+```{r}
+gammas <- ggplot(data = gamma_df, aes(x = Time, y = Mortality, color = "Mortality")) + 
+  geom_line() +
+  geom_point(aes(y = sp_0.001, color = "0.001")) +
+  geom_point(aes(y = sp_10, color = "10"))
+gammas
+```
+```{r}
+lapply(gamma_list, summary)
+```
+
+A gamma model with a small penalty factor results in more degrees of freedom and higher percentage of deviance explained than the gamma model with a high penalty factor. Therefore the penalty factor negatively relates to deviance and degrees of freedom. The fact that this relationship holds can be seen from the plot above, in which a penalty factor of 10 shows a severly worse fit to the data.
+
+## 1.5
+```{r}
+residuals <- influenza$Mortality - gam_pred
+df2 <- data.frame(cbind(influenza$Time, influenza$Influenza, residuals))
+colnames(df2) <- c("Time", "Influenza", "residuals")
+
+residuals_plot <- ggplot(data = df2, aes(x = Time, y = Influenza, color = "Influenza")) + 
+  geom_line() +
+  geom_line(aes(y = residuals, color = "residuals")) + ggtitle("Residuals versus Influenza occurences")
+
+residuals_plot
+```
+
+Some of the beaks in Influenza outbreaks correspond to peaks in the residuals of the fitted model. Still, however, a lot of variance in the residuals is not correlated to Influenza outbreaks. Therefore, I would say that the Influenza outbreaks are not correlated to the residuals.
+
+## 1.6 
+```{r}
+additive_gam <- gam(Mortality ~ s(Year, k=length(unique(influenza$Year))) + s(Week, k=length(unique(influenza$Week))) + s(Influenza, k=length(unique(influenza$Influenza))), data = influenza)
+
+additive_pred <- predict.gam(additive_gam, newdata = influenza)
+```
+
+```{r}
+influenza <- cbind(influenza, additive_pred)
+plot_additive <- ggplot(data = influenza, aes(x = Time, y = Mortality, color = "Mortality")) + 
+  geom_line() +
+  geom_line(aes(y = additive_pred, color = "additive_pred")) + ggtitle("Predicted mortality rate versus actual mortality rate over time")
+plot_additive
+```
+The additive GAM model clearly has the best fit. Much of the variance of the data is captured by the model, given the R-squared statistic of 0.819. Given that the GAM models in step 2 and step 4 do not include the influenza variable from the dataset, and the the model above does, one can say that most likely mortality is influenced by the outbreaks of influenza. 
+
+# Assignment 2
+## 2.1
+```{r}
+library(readr)
+data <- read.csv2(file = "data.csv", sep = ";", header = TRUE, fileEncoding = "ISO-8859-1")
+data$Conference = as.factor(data$Conference)
+n <- dim(data)[1]
+set.seed(12345)
+id <- sample(1:n, floor(n*0.7))
+train <- data[id,]
+test <- data[-id,]
+
+rownames(train) <- 1:nrow(train)
+x_train <- t(train[,-4703])
+y_train <- train[[4703]]
+
+rownames(test) <- 1:nrow(test)
+x_test <- t(test[, -4703])
+y_test <- test[[4703]]
+
+library(pamr)
+mydata_train <- list(x=x_train,y=as.factor(y_train),geneid=as.character(1:nrow(x_train)), genenames=rownames(x_train))
+mydata_test <- list(x=x_test,y=as.factor(y_test),geneid=as.character(1:nrow(x_train)), genenames=rownames(x_train))
+model <- pamr.train(mydata_train,threshold=seq(0,4, 0.1))
+
+cvmodel <- pamr.cv(model, mydata_train)
+```
+
+```{r, fig.height=9}
+pamr.plotcen(model, mydata_train, threshold = 1.3)
+pamr.plotcv(cvmodel)
+```
+
+```{r}
+predicted <- pamr.predict(model, newx = x_test, threshold = 1)
+conf_matrix <- table(y_test, predicted)
+conf_matrix
+test_error <- (conf_matrix[2,1] + conf_matrix[1,2])/nrow(test)
+test_error
+```
+## 2.2
+```{r}
+library(glmnet)
+
+x_train <- as.matrix(train[,-4703])
+y_train <- train[,4703]
+
+x_test <- as.matrix(test[,-4703])
+y_test <- test[,4703]
+
+cv_elastic <- cv.glmnet(x=x_train, y=y_train, alpha = 0.5, family = "binomial")
+predict_elastic <- predict.cv.glmnet(cv_elastic, newx = x_test, s = "lambda.min", type = "class")
+
+elastic_conf <- table(y_test, predict_elastic)
+elastic_error <- (elastic_conf[2,1] + elastic_conf[1,2]) / nrow(test)
+
+coefficients <- coef(cv_elastic, s = "lambda.min")
+variables <- data.frame(coefficients@Dimnames[[1]][coefficients@i + 1], coefficients@x)
+colnames(variables) <- c("Variable", "Coefficient")
+
+elastic_conf
+elastic_error
+variables
+```
+
+```{r}
+library(kernlab)
+
+svm_model <-ksvm(x_train, y_train, kernel="vanilladot", scale = FALSE, type = "C-svc")
+predicted_svm <- predict(svm_model, x_test, type="response")
+
+svm_conf <- table(y_test, predicted_svm)
+svm_error <- (svm_conf[2,1] + svm_conf[1,2]) / nrow(test)
+
+coefficients_svm <- coef(svm_model)
+coefficients_svm <- length(coefficients_svm[[1]])
+
+svm_conf
+svm_error
+coefficients_svm
+```
+```{r}
+final_errors <- cbind("Error of Nearest Shrunken Centroid Model" = test_error, "Error of ElasticNet" = elastic_error, "Error of Support Vector Machine" = svm_error)
+
+knitr::kable(final_errors, caption = "Error terms of three different models")
+```
+
+Comparing all models, the support vector machine model results in the lowest error. Therefore I would prefer this model.
+
+## 2.3
+```{r}
+p_value <- c()
+for (i in 1:4702){
+  x <- data[,i]
+  res <- t.test(x ~ Conference, data = data, alternative = "two.sided")
+  p <- res$p.value
+  p_value[i] <- p 
+}
+p_value <- as.data.frame(p_value)
+p_value$reject_flag <- as.factor(ifelse(p_value$p_value <0.05, "Retain", "Drop"))
+p_value$column_index <- row.names(p_value)
+
+keep <- ifelse(p_value$reject_flag == "Retain", as.numeric(p_value$column_index), NA)
+keep <- na.omit(keep)
+
+rejected <- colnames(data[,keep])
+rejected
+```
+
+For all abovementioned features, according to Bejamini-Hochberg method, their p-values are lower than the threshold of 0.05. This means that all these features have a significant influence on the target variable.
+
+# Appendix
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+```
