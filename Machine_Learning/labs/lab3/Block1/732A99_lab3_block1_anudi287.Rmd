@@ -58,15 +58,17 @@ rm(df)
 
 df_new$new_date <- as.Date(df_new$new_date_time)
 df_new$new_time <- format(df_new$new_date_time,"%H:%M:%S")
+df_new$loc_long <- loc_long
+df_new$loc_lat <-  loc_lat
 
-df_new$h_distance <-  distHaversine(p1 = c(loc_long,loc_lat), p2 = df_new[,c("longitude", "latitude")],
-                                          r=6378137)
+
+df_new$h_distance <-  abs(distHaversine(p1 = df_new[,c("loc_long", "loc_lat")], p2 = df_new[,c("longitude", "latitude")]))
 
 df_new$h_date <- as.numeric(abs(difftime(df_new$new_date, df_new$date, units = c("days"))))
 
 df_new$h_time <- as.numeric(abs(difftime(strptime(paste(df_new$new_date, 
-                                                        df_new$new_time),"%Y-%m-%d %H:%M:%S"),
-                          strptime(paste(df_new$new_date, df_new$time),
+                                                      df_new$new_time),"%Y-%m-%d%H:%M:%S"),
+                                         strptime(paste(df_new$new_date, df_new$time),
                                    "%Y-%m-%d %H:%M:%S"),
                           units = c("hour"))))
 
@@ -88,10 +90,14 @@ df_new$total_additive_dist <- (df_new$h_distance_kernel + df_new$h_date_kernel +
 df_new$total_mul_dist <- (df_new$h_distance_kernel * df_new$h_date_kernel * df_new$h_time_kernel)
 
 df_new$additive_num <- ifelse(df_new$posterior_flag == "retain", 
-                              df_new$total_additive_dist*df_new$air_temperature, 0)
+                              df_new$h_distance_kernel*df_new$air_temperature +
+                                df_new$h_date_kernel*df_new$air_temperature + 
+                                df_new$h_time_kernel*df_new$air_temperature,0)
 
 df_new$mul_num <- ifelse(df_new$posterior_flag == "retain", 
-                         df_new$total_mul_dist*df_new$air_temperature, 0)
+                         (df_new$h_distance_kernel*df_new$air_temperature) *
+                                (df_new$h_date_kernel*df_new$air_temperature) * 
+                                (df_new$h_time_kernel*df_new$air_temperature),0)
 
 df_new$additive_den <- ifelse(df_new$posterior_flag == "retain", df_new$total_additive_dist, 0)
 df_new$mul_den <- ifelse(df_new$posterior_flag == "retain", df_new$total_mul_dist, 0)
@@ -127,9 +133,16 @@ return(final)
 
 ### calling function
 ```{r}
-kernel_method(df=st, date = "2000-05-08", loc_long = 59.8953, 
-              loc_lat = 17.5935, h1 = 30, h2 = 0.01, h3 = 0.01) 
+kernel_method(df=st, date = "2000-05-08", loc_long = 17.6935, 
+              loc_lat = 59.9953, h1 = 30000, h2 = 2, h3 = 5) 
 ```
+Analysis: A good width for the distance is 30Kms, the reasoning behind this is that temperature in Linkoping and Norrkoping tend to be similar but they vary by a few degree, given that sweden is way up north the temperature flucations will be less senstive to distance than compared to equator, thus 30Kms tend to be reasonable.
+
+The width for the distance for day is 2, because I have personally experienced days where one days its freezing and next day I am sweating, thus 2 days is what I have choosen for my width. 
+
+For the width of time, considering the shorter winter days I do expect 3 hour of the time to be ideal window for temperature.
+
+
 # Assignment 2
 
 ## Use the function ksvm from the R package kernlab to learn a SVM for classifying the spam dataset that is included with the package. Consider the radial basis function kernel (also known as Gaussian) with a width of 0.05. For the C parameter, consider values 0.5, 1 and 5. This implies that you have to consider three models.

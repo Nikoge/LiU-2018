@@ -46,6 +46,7 @@ flu_data$influ_perc <- (flu_data$Influenza/flu_data$Mortality) * 100
 
 p1 <- ggplot(flu_data, aes(x=Time_fixed, y = Mortality)) + 
   geom_line(color = "#999999", size = 1) +
+  geom_smooth(method = "loess") +
     scale_fill_brewer() +
       theme_light() +
   ggtitle("Time series of Mortality") 
@@ -76,17 +77,14 @@ From the third plot, we can see the percentage of mortalitiy due to influenza, h
 gam_model <- mgcv::gam(data = flu_data, Mortality~Year+s(Week), method = "GCV.Cp")
 summary(gam_model)
 #plot the fit
-
-p4 <- plot(gam_model, main= "Plot of GAM fit on Flu Data")
-gam_model$coefficients
-predict.gam(gam_model, type = "link")
 ```
 
-### Analysis: 
+Analysis: 
 The underlying probablistic equation of the model is given by:
 
 $$ Mortality = N(\mu, \sigma^2) $$
 $$ g(\mu) = Intercept + Beta_{year} * Year + s(Week)  $$
+Where g is the link function, in our case its the normal distribution
 
 ##3. Plot predicted and observed mortality against time for the fitted model and comment on the quality of the fit. Investigate the output of the GAM model and report which terms appear to be significant in the model. Is there a trend in mortality change from one year to another? Plot the spline component and interpret the plot.
 
@@ -110,8 +108,16 @@ plot(gam_model)
 # s=interp(temp$Year,temp$Week, fitted(gam_model))
 # persp3d(s$x, s$y, s$z, col="red")
 ```
-Analysis: From the plot of residuals we can see that the resisuals are normally distributed. Thus this is a good fit.
 
+Analysis: 
+
+We see that the predicted mortality a cyclical component (repeating function), while the true mortality varyies with time. Thus this is not a very good model.
+
+From the model summary we can see that the p-value of the spline of Week is less than 0.05 while the p-values of Intercept and Year is more than 0.5 (A low p-value (< 0.05) indicates that you can reject the null hypothesis).
+
+We see that there is a trend component of Mortality is overall decreasing, we also see that peaks of mortality decreases thrice and rise again.  
+
+From the plot of spline component, we can see that there are 5 knots or 5 components.
 
 ##4. Examine how the penalty factor of the spline function in the GAM model from step 2 influences the estimated deviance of the model. Make plots of the predicted and observed mortality against time for cases of very high and very low penalty factors. What is the relation of the penalty factor to the degrees of freedom? Do your results confirm this relationship?
 
@@ -170,10 +176,13 @@ p9 <- ggplot(data=model_deviance_wide[model_deviance_wide$penalty_factor == 10,]
 
 p8
 p9
-
 ```
 
-### Analysis: theortical maximum degree of freedom is k-1.
+Analysis: 
+
+Penalty factor in the model determines the complexity of the model, higher the penalty factor the more the model will have bias and hence lesser the complexity. We can see that as the penalty factor increases the degree of freedom decreases.
+
+From the plots of degree of freedom vs. penalty factor we see that our result to confirm our hypothesis.
 
 ##5. Use the model obtained in step 2 and plot the residuals and the influenza values against time (in one plot). Is the temporal pattern in the residuals correlated to the outbreaks of influenza?
 
@@ -197,6 +206,10 @@ p10 <- ggplot(data = temp, aes(x = Time_fixed)) +
 p10
   
 ```
+
+Analysis:
+
+
 
 ##6. Fit a GAM model in R in which mortality is be modelled as an additive function of the spline functions of year, week, and the number of confirmed cases of influenza. Use the output of this GAM function to conclude whether or not the mortality is influenced by the outbreaks of influenza. Provide the plot of the original and fitted Mortality against Time and comment whether the model seems to be better than the previous GAM models.
 
@@ -293,11 +306,11 @@ tmp_coeffs <- coef(cvfit, s = "lambda.min")
 elastic_variable <- data.frame(name = tmp_coeffs@Dimnames[[1]][tmp_coeffs@i + 1], coefficient = tmp_coeffs@x)
 elastic_variable
 
-
 conf_elastic_net <- table(y_test, predicted_elastic_test)
 names(dimnames(conf_elastic_net)) <- c("Actual Test", "Predicted ElasticNet Test")
 result_elastic_net <- caret::confusionMatrix(conf_elastic_net)
 caret::confusionMatrix(conf_elastic_net)
+
 
 
 # svm
