@@ -119,13 +119,17 @@ result <- merge(x =result, y = time_seq, by.x = "i", by.y = "time_index", all.x 
 result$additive_temp <- as.numeric(result$additive_temp)
 result$mult_temp <- as.numeric(result$mult_temp)
 
-p1 <- ggplot(data=result, aes(x=new_date_time, y = additive_temp)) + geom_point() + 
-  ggtitle("Predicted Temperature using Additive")
+p1 <- ggplot(data=result, aes(x=new_date_time)) + 
+  geom_point(aes(y = additive_temp)) +
+  geom_point(aes(y = mult_temp)) +
+  geom_line(aes(y = additive_temp, color = "Additive")) + 
+  geom_line(aes(y = mult_temp, color = "Multiplicative")) + 
+  scale_color_manual(values=c("#E69F00", "#56B4E9")) +
+  ylab("predicted temperature") +
+  theme_bw() +
+  ggtitle("Predicted Temperature using Kernels")
 
-p2 <- ggplot(data=result, aes(x=new_date_time, y = mult_temp)) + geom_point() + 
-  ggtitle("Predicted Temperature using Multiplicative")
-
-final <- list(p1,p2)
+final <- list(p1)
 return(final)
 }
 
