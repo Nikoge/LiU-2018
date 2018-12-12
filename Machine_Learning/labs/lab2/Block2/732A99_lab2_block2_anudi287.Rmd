@@ -117,7 +117,7 @@ From the model summary we can see that the p-value of the spline of Week is less
 
 We see that there is a trend component of Mortality is overall decreasing, we also see that peaks of mortality decreases thrice and rise again.  
 
-From the plot of spline component, we can see that there are 5 knots or 5 components.
+From the plot of spline component, we can see that there are 5 knots or 5 components. Clearly, at the beginning and end of the year mortality rates are very much higher than in the middel of the year. When one thinks of this, this makes sense. Influenzia affects people more in winter periods, thus the beginning and end of the calendar year, whereas in summer, the middle of the calendar year, people suffer less from influenzia, and thus less people die. 
 
 ##4. Examine how the penalty factor of the spline function in the GAM model from step 2 influences the estimated deviance of the model. Make plots of the predicted and observed mortality against time for cases of very high and very low penalty factors. What is the relation of the penalty factor to the degrees of freedom? Do your results confirm this relationship?
 
@@ -225,6 +225,7 @@ gam_model_additive <- gam(Mortality ~ s(Year, k=k1) +
                                     s(Influenza, k=k3), 
                           data = flu_data)
 
+gam_model_additive
 
 flu_data$fitted.values = gam_model_additive$fitted.values
 
@@ -240,6 +241,10 @@ p11 <- ggplot(data = flu_data, aes(x = Time_fixed)) +
 p11
                     
 ```
+
+Analysis:
+
+The additive GAM model clearly has the best fit. Much of the variance of the data is captured by the model. Given that the GAM models in step 2 and step 4 do not include the influenza variable from the dataset, and the the model above does, one can say that most likely mortality is influenced by the outbreaks of influenza. 
 
 # Assignment 2
 
