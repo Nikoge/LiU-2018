@@ -36,7 +36,7 @@ pacman::p_load(xlsx, ggplot2, tidyr, dplyr, reshape2, gridExtra,
                mgcv, rgl, akima, pamr, caret, glmnet, kernlab)
 
 set.seed(12345)
-options("jtools-digits" = 2, scipen = 999)
+options("jtools-digits" = 2, scipen = 999, width=80)
 
 # colours (colour blind friendly)
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", 
@@ -94,11 +94,12 @@ summary(gam_model)
 ```
 
 Analysis: 
-The underlying probablistic equation of the model is given by:
 
+Using the default parameter settings within the *gam*-function implies that *Mortality* is normally distributed (*family=gaussian()*). Also, since *method = "GCV.Cp"*, this leads to the usage of GCV (*Generalized Cross Validation score*) related to the smoothing parameter estimation.
+The underlying probabilistic model can be written as:
 $$ Mortality = N(\mu, \sigma^2) $$
-$$ g(\mu) = Intercept + Beta_{year} * Year + s(Week)  $$
-Where g is the link function, in our case its the normal distribution
+$$ \hat{Mortality} = Intercept + \beta_1Year + s(Week) + \epsilon	  $$
+where $$ \epsilon = N(0, \sigma^2) .$$
 
 ##3. Plot predicted and observed mortality against time for the fitted model and comment on the quality of the fit. Investigate the output of the GAM model and report which terms appear to be significant in the model. Is there a trend in mortality change from one year to another? Plot the spline component and interpret the plot.
 
@@ -175,6 +176,7 @@ model_deviance_wide <- melt(model_deviance[,c("Time", "penalty_factor",
 p8 <- ggplot(data=model_deviance_wide[model_deviance_wide$penalty_factor == 0.001,], 
              aes(x= Time, y = value)) + 
   geom_point(aes(color = variable), size=0.7) +
+  geom_line(aes(color = variable), size=0.7) +
   scale_color_manual(values=c("#E69F00", "#009E73")) +
   theme_light() +
   ggtitle("Plot of Mortality vs. Time(Penalty 0.001)")
@@ -182,6 +184,7 @@ p8 <- ggplot(data=model_deviance_wide[model_deviance_wide$penalty_factor == 0.00
 p9 <- ggplot(data=model_deviance_wide[model_deviance_wide$penalty_factor == 10,], 
              aes(x= Time, y = value)) + 
   geom_point(aes(color = variable), size=0.7) +
+    geom_line(aes(color = variable), size=0.7) +
   scale_color_manual(values=c("#E69F00", "#009E73")) +
     theme_light() +
   ggtitle("Plot of Mortality vs. Time(Penalty 10)")
@@ -266,7 +269,7 @@ The additive GAM model clearly has the best fit. Much of the variance of the dat
 
 ##1. Divide data into training and test sets (70/30) without scaling. Perform nearest shrunken centroid classification of training data in which the threshold is chosen by cross-validation. Provide a centroid plot and interpret it. How many features were selected by the method? List the names of the 10 most contributing features and comment whether it is reasonable that they have strong effect on the discrimination between the conference mails and other mails? Report the test error.
 
-```{r, message=FALSE}
+```{r, message=FALSE, warning=FALSE, results=FALSE}
 rm(list=ls())
 gc()
 data <- read.csv(file = "data.csv", sep = ";", header = TRUE)
@@ -377,7 +380,7 @@ knitr::kable(final_result, caption = "Comparsion of Models on Test dataset")
 
 Analysis: 
 
-39 variables were selected by the elastic net model as the features for classifying the mails as conference, while the svm model selects 43 features to classify the mails.
+33 variables were selected by the elastic net model as the features for classifying the mails as conference, while the svm model selects 43 features to classify the mails.
 
 From the model comparsion we see that overall choosing SVM gives us the best accuracy, while Nearest Centroid Model and Elastic Net model both have the same accuracy, however this is not a strong point given the low number of samples. From the coefficents of the elastic net we can see that the features choosen from the elastic net are far more reasonable than the once choosen by Nearest Centroid model, thus Elastic Net features selection is superior to Nearest Centroid model in quality and quantity too.
 
@@ -409,7 +412,6 @@ Analysis:
 From the above table we can see that 281 features had significant p-values (more than 0.05), some of the features do make sense to in their ability to distinguish mails pertaining to conferences, such as 'committee', 'conference', 'international', 'keynote', 'manuscripts' etc. 
 
 Thus we see that even a simple and time tested techniques like t test can be used to get a sense of the important features for model building. Although this method does help us its still selects far too many features than the other methods that we have seen and implemented uptill now.
-
 
 # Appendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
