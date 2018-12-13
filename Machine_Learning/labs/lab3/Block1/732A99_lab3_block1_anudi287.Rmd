@@ -171,20 +171,17 @@ model_0.05 <- ksvm(type~., data=spamtrain,
 
 model_1.0 <- ksvm(type~.,data=spamtrain,
                kernel="rbfdot",
-               kpar=list(sigma=1.0),
-               C=0.5)
+               kpar=list(sigma=0.05),
+               C=1.0)
 
 model_5.0 <- ksvm(type~.,data=spamtrain,
                kernel="rbfdot",
-               kpar=list(sigma=5),
-               C=0.5)
+               kpar=list(sigma=0.05),
+               C=5.0)
 
 model_0.05
 model_1.0
 model_5.0
-
-x <- as.matrix(spamtrain[,-58])
-
 
 # confusion table
 
@@ -200,12 +197,12 @@ conf_model_0.05 <- table(spamtest[,58], predict(model_5.0,spamtest[,-58]))
 names(dimnames(conf_model_0.05)) <- c("Actual Test", "P2redicted Test")
 caret::confusionMatrix(conf_model_0.05)
 
-
-
 ```
 Analysis:
 
-From the summary of the three models build we can see that the accuracy of models are 90.83%, 70.22%, 66.57% respectively. Accuracy is only half the story, as a good spam detection should never classify a good mail has 'spam', which is something that model2 and model3 are doing. However in model 3 the accuracy is least thus, given a choice i would select model2 has the best model despite the lower accuracy.
+From the summary of the three models build we can see that the accuracy of models are 90.83%, 91.61%, 91.70% respectively. Accuracy is only half the story, as a good spam detection should never classify a good mail has 'spam', which is something that model1 is doing. However in model 1 also has the least accuracy however its marginally bad. Given a choice i would select model1 has the best model despite the lower accuracy.
+
+Purpose of the 'C' parameter:- C is the cost parameter which penalizes large residuals. So a larger cost will result in a more flexible model with fewer misclassifications. In effect the cost parameter allows you to adjust the bias/variance trade-off. The greater the cost parameter, the more variance in the model and the less bias.The greater the cost, the fewer misclassifications are allowed. Note that here we penalize the residuals resulting in higher variance and lower bias.
 
 # Appendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
