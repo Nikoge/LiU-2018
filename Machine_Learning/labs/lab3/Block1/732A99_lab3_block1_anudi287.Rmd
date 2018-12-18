@@ -140,7 +140,24 @@ return(final)
 kernel_method(df=st, date = "2000-05-08", loc_long = 17.6935, 
               loc_lat = 59.9953, h1 = 30000, h2 = 2, h3 = 5) 
 ```
-Analysis: A good width for the distance is 30Kms, the reasoning behind this is that temperature in Linkoping and Norrkoping tend to be similar but they vary by a few degree, given that sweden is way up north the temperature flucations will be less senstive to distance than compared to equator, thus 30Kms tend to be reasonable.
+### high values
+```{r}
+kernel_method(df=st, date = "2000-05-08", loc_long = 17.6935, 
+              loc_lat = 59.9953, h1 = 30000, h2 = 100, h3 = 30) 
+```
+
+### low values
+```{r}
+kernel_method(df=st, date = "2000-05-08", loc_long = 17.6935, 
+              loc_lat = 59.9953, h1 = 10, h2 = 0.05, h3 = 0.05) 
+```
+
+
+Analysis: 
+
+As evident from the plots using extreme values makes either multicative model or additive model (either terms tend to zero or all terms converge to one).
+
+A good width for the distance is 30Kms, the reasoning behind this is that temperature in Linkoping and Norrkoping tend to be similar but they vary by a few degree, given that sweden is way up north the temperature flucations will be less senstive to distance than compared to equator, thus 30Kms tend to be reasonable.
 
 The width for the distance for day is 2, because I have personally experienced days where one days its freezing and next day I am sweating, thus 2 days is what I have choosen for my width. 
 
