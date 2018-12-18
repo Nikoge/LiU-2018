@@ -210,7 +210,7 @@ p10
 
 Analysis: 
 
-Some of the beaks in Influenza outbreaks correspond to peaks in the residuals of the fitted model. Still,
+Some of the peaks in Influenza outbreaks correspond to peaks in the residuals of the fitted model. Still,
 however, a lot of variance in the residuals is not correlated to Influenza outbreaks. Therefore, I would say
 that the Influenza outbreaks are not correlated to the residuals.
 
@@ -389,7 +389,8 @@ p_value$column_index <- row.names(p_value)
 
 keep <- ifelse(p_value$reject_flag == "Retain", as.numeric(p_value$column_index), NA)
 keep <- na.omit(keep)
-colnames(data[,keep])
+keep <- colnames(data[,keep])
+keep
 
 ```
 

@@ -22,7 +22,7 @@ pacman::p_load(xlsx, ggplot2, tidyr, dplyr, reshape2, gridExtra,
                mgcv, rgl, akima, pamr, caret, glmnet, kernlab)
 
 set.seed(12345)
-options("jtools-digits" = 2, scipen = 999)
+options("jtools-digits" = 2, scipen = 999, width=80)
 
 # colours (colour blind friendly)
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", 
@@ -80,11 +80,12 @@ summary(gam_model)
 ```
 
 Analysis: 
-The underlying probablistic equation of the model is given by:
 
+Using the default parameter settings within the *gam*-function implies that *Mortality* is normally distributed (*family=gaussian()*). Also, since *method = "GCV.Cp"*, this leads to the usage of GCV (*Generalized Cross Validation score*) related to the smoothing parameter estimation.
+The underlying probabilistic model can be written as:
 $$ Mortality = N(\mu, \sigma^2) $$
-$$ g(\mu) = Intercept + Beta_{year} * Year + s(Week)  $$
-Where g is the link function, in our case its the normal distribution
+$$ \hat{Mortality} = Intercept + \beta_1Year + s(Week) + \epsilon	  $$
+where $$ \epsilon = N(0, \sigma^2) .$$
 
 ##3. Plot predicted and observed mortality against time for the fitted model and comment on the quality of the fit. Investigate the output of the GAM model and report which terms appear to be significant in the model. Is there a trend in mortality change from one year to another? Plot the spline component and interpret the plot.
 
@@ -111,11 +112,9 @@ plot(gam_model)
 
 Analysis: 
 
-We see that the predicted mortality a cyclical component (repeating function), while the true mortality varyies with time. Thus this is not a very good model.
+We see that the predicted mortality a cyclical component (repeating function), while the true mortality varyies with time. Thus this is not a very good model this is further supported by the fact that our adjusted R^2 is just 66.1%, thus our model accounts for only about 66% of varience.
 
-From the model summary we can see that the p-value of the spline of Week is less than 0.05 while the p-values of Intercept and Year is more than 0.5 (A low p-value (< 0.05) indicates that you can reject the null hypothesis).
-
-We see that there is a trend component of Mortality is overall decreasing, we also see that peaks of mortality decreases thrice and rise again.  
+From the model summary we can see that the p-value of the spline of Week is less than 0.05 while the p-values of Intercept and Year is more than 0.5 (A low p-value (< 0.05) indicates that you can reject the null hypothesis).We see that there is a trend component of Mortality is overall decreasing, we also see that peaks of mortality decreases thrice and rise again.  
 
 From the plot of spline component, we can see that there are 5 knots or 5 components. Clearly, at the beginning and end of the year mortality rates are very much higher than in the middel of the year. When one thinks of this, this makes sense. Influenzia affects people more in winter periods, thus the beginning and end of the calendar year, whereas in summer, the middle of the calendar year, people suffer less from influenzia, and thus less people die. 
 
@@ -163,6 +162,7 @@ model_deviance_wide <- melt(model_deviance[,c("Time", "penalty_factor",
 p8 <- ggplot(data=model_deviance_wide[model_deviance_wide$penalty_factor == 0.001,], 
              aes(x= Time, y = value)) + 
   geom_point(aes(color = variable), size=0.7) +
+  geom_line(aes(color = variable), size=0.7) +
   scale_color_manual(values=c("#E69F00", "#009E73")) +
   theme_light() +
   ggtitle("Plot of Mortality vs. Time(Penalty 0.001)")
@@ -170,6 +170,7 @@ p8 <- ggplot(data=model_deviance_wide[model_deviance_wide$penalty_factor == 0.00
 p9 <- ggplot(data=model_deviance_wide[model_deviance_wide$penalty_factor == 10,], 
              aes(x= Time, y = value)) + 
   geom_point(aes(color = variable), size=0.7) +
+    geom_line(aes(color = variable), size=0.7) +
   scale_color_manual(values=c("#E69F00", "#009E73")) +
     theme_light() +
   ggtitle("Plot of Mortality vs. Time(Penalty 10)")
@@ -207,7 +208,11 @@ p10
   
 ```
 
-Analysis:
+Analysis: 
+
+Some of the beaks in Influenza outbreaks correspond to peaks in the residuals of the fitted model. Still,
+however, a lot of variance in the residuals is not correlated to Influenza outbreaks. Therefore, I would say
+that the Influenza outbreaks are not correlated to the residuals.
 
 
 
@@ -225,7 +230,7 @@ gam_model_additive <- gam(Mortality ~ s(Year, k=k1) +
                                     s(Influenza, k=k3), 
                           data = flu_data)
 
-gam_model_additive
+summary(gam_model_additive)
 
 flu_data$fitted.values = gam_model_additive$fitted.values
 
@@ -244,13 +249,13 @@ p11
 
 Analysis:
 
-The additive GAM model clearly has the best fit. Much of the variance of the data is captured by the model. Given that the GAM models in step 2 and step 4 do not include the influenza variable from the dataset, and the the model above does, one can say that most likely mortality is influenced by the outbreaks of influenza. 
+The additive GAM model clearly has the best fit. Much of the variance of the data (81.9% is the adjusted R^2) is captured by the model. Given that the GAM models in step 2 and step 4 do not include the influenza variable from the dataset, and the the model above does, one can say that most likely mortality is influenced by the outbreaks of influenza. 
 
 # Assignment 2
 
 ##1. Divide data into training and test sets (70/30) without scaling. Perform nearest shrunken centroid classification of training data in which the threshold is chosen by cross-validation. Provide a centroid plot and interpret it. How many features were selected by the method? List the names of the 10 most contributing features and comment whether it is reasonable that they have strong effect on the discrimination between the conference mails and other mails? Report the test error.
 
-```{r, message=FALSE}
+```{r, message=FALSE, warning=FALSE, results=FALSE}
 rm(list=ls())
 gc()
 data <- read.csv(file = "data.csv", sep = ";", header = TRUE)
@@ -286,6 +291,14 @@ predicted_scc_test <- pamr.predict(model, newx = x_test, threshold = 1.3)
 pamr.plotcv(cvmodel)
 pamr.plotcen(model, mydata, threshold = 1.3)
 ```
+### important features
+```{r}
+## List the significant genes
+NROW(important_gen)
+knitr::kable(colnames(data[,head(important_gen$id,10)]), caption = "Important feaures selected by Nearest Shrunken Centroids ")
+
+```
+
 
 ### confusion table
 ```{r}
@@ -295,6 +308,13 @@ result_scc <- caret::confusionMatrix(conf_scc)
 caret::confusionMatrix(conf_scc)
 
 ```
+Analysis: 
+
+From the plot of thershold vs. misclassification error we can see that for the thershold value of 1.3, the class error is lowest.
+
+231 features were selected by this model as the most important features. The top ten features of the model are given by the table above. Only few features make sense considering the dataset is of the year 2011, thus words like call for 2012 should be for the conference calls of 2012. Same is the case with the words like X10th, also refers to Xth conference, however rest of the features make little sense.
+
+The test error is just 10% (accuracy is 90%) and the ability of our model to classify non-conference is 100%, while its ability to classifiy conference mail is 80%, the accuracy along with low number of samples hints that our model may very well be overfitted.
 
 ##2. Compute the test error and the number of the contributing features for the following methods fitted to the training data: a. Elastic net with the binomial response and alpha = 0.5 in which penalty is selected by the cross-validation. b. Support vector machine with "vanilladot" kernel. Compare the results of these models with the results of the nearest shrunken centroids (make a comparative table). Which model would you prefer and why?
 
@@ -309,14 +329,12 @@ cvfit = cv.glmnet(x=x, y=y, alpha = 0.5, family =   "binomial")
 predicted_elastic_test <- predict.cv.glmnet(cvfit, newx = x_test, s = "lambda.min", type = "class")
 tmp_coeffs <- coef(cvfit, s = "lambda.min")
 elastic_variable <- data.frame(name = tmp_coeffs@Dimnames[[1]][tmp_coeffs@i + 1], coefficient = tmp_coeffs@x)
-elastic_variable
+knitr::kable(elastic_variable, caption = "Contributing features in the elastic model")
 
 conf_elastic_net <- table(y_test, predicted_elastic_test)
 names(dimnames(conf_elastic_net)) <- c("Actual Test", "Predicted ElasticNet Test")
 result_elastic_net <- caret::confusionMatrix(conf_elastic_net)
 caret::confusionMatrix(conf_elastic_net)
-
-
 
 # svm
 svm_fit <- kernlab::ksvm(x, y, kernel="vanilladot", scale = FALSE, type = "C-svc")
@@ -333,13 +351,27 @@ final_result <- cbind(result_scc$overall[[1]]*100,
                       result_elastic_net$overall[[1]]*100, 
                       result_svm$overall[[1]] *100) %>% as.data.frame()
 
-colnames(final_result) <- c("Accuracy of Nearest Shrunken Centroid Model", 
-                                   "Accuracy of ElasticNet", 
-                                   "Accuracy SVM Model")
+features_count <- cbind(NROW(important_gen), NROW(elastic_variable), length(svm_fit@coef[[1]]))
 
-knitr::kable(final_result, caption = "Accuracy of Model on Test dataset")
+final_result <- rbind(final_result, features_count)
+
+colnames(final_result) <- c("Nearest Shrunken Centroid Model", 
+                            "ElasticNet Model", "SVM Model")
+
+rownames(final_result) <- c("Accuracy", "Number of Features")
+
+knitr::kable(final_result, caption = "Comparsion of Models on Test dataset")
 
 ```
+
+Analysis: 
+
+33 variables were selected by the elastic net model as the features for classifying the mails as conference, while the svm model selects 43 features to classify the mails.
+
+From the model comparsion we see that overall choosing SVM gives us the best accuracy, while Nearest Centroid Model and Elastic Net model both have the same accuracy, however this is not a strong point given the low number of samples. From the coefficents of the elastic net we can see that the features choosen from the elastic net are far more reasonable than the once choosen by Nearest Centroid model, thus Elastic Net features selection is superior to Nearest Centroid model in quality and quantity too.
+
+We also know for a fact the SVM has regularization built into we see that SVM has the benefits of the elastic net too(partial).Thus my choice is the SVM Model which has the least features and highest accuracy.
+
 
 ##3. Implement Benjamini-Hochberg method for the original data, and use t.test() for computing p-values. Which features correspond to the rejected hypotheses? Interpret the result.
 
@@ -360,6 +392,12 @@ keep <- na.omit(keep)
 colnames(data[,keep])
 
 ```
+
+Analysis:
+
+From the above table we can see that 281 features had significant p-values (more than 0.05), some of the features do make sense to in their ability to distinguish mails pertaining to conferences, such as 'committee', 'conference', 'international', 'keynote', 'manuscripts' etc. 
+
+Thus we see that even a simple and time tested techniques like t test can be used to get a sense of the important features for model building. Although this method does help us its still selects far too many features than the other methods that we have seen and implemented uptill now.
 
 # Appendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}

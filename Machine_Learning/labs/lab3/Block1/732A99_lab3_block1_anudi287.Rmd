@@ -186,15 +186,15 @@ model_5.0
 # confusion table
 
 conf_model_0.05 <- table(spamtest[,58], predict(model_0.05,spamtest[,-58]))
-names(dimnames(conf_model_0.05)) <- c("Actual Test", "P2redicted Test")
+names(dimnames(conf_model_0.05)) <- c("Actual Test", "Predicted Test")
 caret::confusionMatrix(conf_model_0.05)
 
 conf_model_1.0 <- table(spamtest[,58], predict(model_1.0,spamtest[,-58]))
-names(dimnames(conf_model_1.0)) <- c("Actual Test", "P2redicted Test")
+names(dimnames(conf_model_1.0)) <- c("Actual Test", "Predicted Test")
 caret::confusionMatrix(conf_model_1.0)
 
 conf_model_0.05 <- table(spamtest[,58], predict(model_5.0,spamtest[,-58]))
-names(dimnames(conf_model_0.05)) <- c("Actual Test", "P2redicted Test")
+names(dimnames(conf_model_0.05)) <- c("Actual Test", "Predicted Test")
 caret::confusionMatrix(conf_model_0.05)
 
 ```

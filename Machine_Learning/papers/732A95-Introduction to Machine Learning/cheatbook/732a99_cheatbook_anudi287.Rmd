@@ -1,0 +1,310 @@
+---
+title: "732A99 chetabook"
+author: "Anubhav Dikshit(anudi287)"
+date: "26 November 2018"
+output: 
+    pdf_document:
+      toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Simple Tasks
+
+## library and other
+```{r}
+
+library(ggplot2) # plots
+library(tree) # decision tree
+library(caret) # summary and confusion table
+library(kknn) # kknn
+library(xlsx) # reading excel
+library(MASS) # Step AIC
+library(jtools) # summ function
+library(dplyr) # pipelining
+library(glmnet) # lasso and ridge
+library(mgcv) # spline
+library(kernlab) # SVM
+
+# colours (colour blind friendly)
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", 
+               "#D55E00", "#CC79A7")
+```
+
+## Reading Excel
+```{r}
+data <- xlsx::read.xlsx("spambase.xlsx", sheetName= "spambase_data")
+data$Spam <- as.factor(data$Spam)
+```
+
+
+## Spliting the Datasets
+
+### Divide into train/test
+
+```{r}
+# 50-50 split
+n=nrow(data)
+set.seed(12345)
+id=sample(1:n, floor(n*0.5))
+train=data[id,]
+test=data[-id,]
+```
+
+### train/test/validation
+```{r}
+# 50-25-25 split
+n=nrow(data)
+set.seed(12345) 
+id=sample(1:n, floor(n*0.5)) 
+train=data[id,] 
+
+id1=setdiff(1:n, id)
+set.seed(12345) 
+id2=sample(id1, floor(n*0.25)) 
+valid=data[id2,]
+
+id3=setdiff(id1,id2)
+test=data[id3,] 
+```
+
+
+# Regression
+## Logistic Regression along with confusion matrix
+
+```{r}
+best_model <- glm(formula = Spam ~., family = binomial, data = train)
+summary(best_model)
+
+train$prediction_prob <- predict(best_model, newdata = train, type = "response")
+train$prediction_class_50 <- ifelse(train$prediction_prob > 0.50, 1, 0)
+
+test$prediction_prob <- predict(best_model, newdata = test, type = "response")
+test$prediction_class_50 <- ifelse(test$prediction_prob > 0.50, 1, 0)
+
+conf_train <- table(train$Spam, train$prediction_class_50)
+names(dimnames(conf_train)) <- c("Actual Train", "Predicted Train")
+caret::confusionMatrix(conf_train)
+```
+
+## Choosing the best cutoff for test
+```{r}
+cutoffs <- seq(from = 0.05, to = 0.95, by = 0.05)
+accuracy <- NULL
+
+for (i in seq_along(cutoffs)){
+    prediction <- ifelse(test$prediction_prob >= cutoffs[i], 1, 0) #Predicting for cut-off
+
+    accuracy <- c(accuracy,length(which(test$Spam == prediction))/length(prediction)*100)}
+
+cutoff_data <- as.data.frame(cbind(cutoffs, accuracy))
+
+ggplot(data = cutoff_data, aes(x = cutoffs, y = accuracy)) + 
+  geom_line() + 
+  ggtitle("Cutoff vs. Accuracy for Test Dataset")
+
+```
+
+## KNN
+```{r}
+knn_model30 <- train.kknn(Spam ~., data = train, kmax = 30)
+
+test$knn_prediction_class <- predict(knn_model30, test)
+
+conf_test2 <- table(test$Spam, test$knn_prediction_class)
+names(dimnames(conf_test2)) <- c("Actual Test", "Predicted Test")
+confusionMatrix(conf_test2)
+```
+
+## Step AIC
+```{r warning=FALSE}
+tecator_data <- read.xlsx("tecator.xlsx", sheetName = "data")
+tecator_data <- tecator_data[,2:NCOL(tecator_data)] # removing sample column
+
+
+min.model1 = lm(Fat ~ 1, data=tecator_data[,-1])
+biggest1 <- formula(lm(Fat ~.,  data=tecator_data[,-1]))
+
+step.model1 <- stepAIC(min.model1, direction ='forward', scope=biggest1, trace = FALSE)
+summ(step.model1)
+```
+
+## Ridge Regression
+```{r}
+y <- tecator_data %>% select(Fat) %>% data.matrix()
+x <- tecator_data %>% select(-c(Fat)) %>% data.matrix()
+
+lambda <- 10^seq(10, -2, length = 100)
+
+ridge_fit <- glmnet(x, y, alpha = 0, family = "gaussian", lambda = lambda)
+plot(ridge_fit, xvar = "lambda", label = TRUE, 
+     main = "Plot showing shrinkage of coefficents with rise in log of lambda")
+
+
+## Change of coefficent with respect to lambda
+result <- NULL
+for(i in lambda){
+temp <- t(coef(ridge_fit, i)) %>% as.matrix()
+temp <- cbind(temp, lambda = i)
+result <- rbind(temp, result)
+}
+result <- result %>% as.data.frame() %>% arrange(lambda)
+```
+
+## Lasso Regression
+```{r}
+lambda <- 10^seq(10, -2, length = 100)
+
+lasso_fit <- glmnet(x, y, alpha = 1, family = "gaussian", lambda = lambda)
+plot(lasso_fit, xvar = "lambda", label = TRUE, 
+     main = "Plot showing shrinkage of coefficents with rise in log of lambda")
+
+```
+
+## Regression using CV
+```{r}
+#find the best lambda from our list via cross-validation
+
+lambda_lasso <- 10^seq(10, -2, length = 100)
+lambda_lasso[101] <- 0
+lasso_cv <- cv.glmnet(x,y, alpha=1, lambda = lambda_lasso, type.measure="mse")
+coef(lasso_cv, lambda = lasso_cv$lambda.min)
+
+lasso_cv$lambda.min
+  
+## Change of coefficent with respect to lambda
+result_lasso <- NULL
+for(i in 1:length(lambda_lasso)){
+temp <- lasso_cv$cvm[i] %>% as.matrix()
+temp <- cbind(CVM_error = temp, lambda = lasso_cv$lambda[i])
+result_lasso <- rbind(temp, result_lasso)
+}
+```
+
+# Classification
+
+## Classification using Decision trees (tree lib)
+
+```{r}
+set.seed(12345)
+
+data <- read.csv("crx.csv", header = TRUE)
+data$Class <- as.factor(data$Class)
+
+# 50-50 split
+n=nrow(data)
+id=sample(1:n, floor(n*0.8))
+train=data[id,]
+test=data[-id,]
+
+tree_deviance <- tree::tree(Class~., data=train, split = c("deviance"))
+tree_gini <- tree::tree(Class~., data=train, split = c("gini"))
+
+# Visualize the decision tree with rpart.plot
+summary(tree_deviance)
+
+# predicting on the test dataset to get the misclassification rate.
+predict_tree_deviance <- predict(tree_deviance, newdata = test, type = "class")
+predict_tree_gini <- predict(tree_deviance, newdata = test, type = "class")
+
+conf_tree_deviance <- table(test$Class, predict_tree_deviance)
+names(dimnames(conf_tree_deviance)) <- c("Actual Test", "Predicted Test")
+caret::confusionMatrix(conf_tree_deviance)
+
+# plot of the tree
+plot(tree_deviance)
+text(tree_deviance)
+
+```
+## Classification using rpart
+
+```{r}
+library(rpart.plot)
+library(rpart)
+
+set.seed(12345)
+
+
+decision_tree_rpart <- rpart::rpart(data = train, formula = Class~., method = "class")
+rpart.plot::rpart.plot(decision_tree_rpart, main= "Original decision tree")
+```
+
+## prune the tree using cross validation
+```{r}
+library(ggplot2)
+
+set.seed(12345)
+cv_tree <- cv.tree(tree_deviance, FUN = prune.tree, K = 10)
+df_result <- as.data.frame(cbind(size = cv_tree$size, dev = cv_tree$dev))
+# puring the tree for leaf size of 3
+best_tree <- prune.tree(tree_deviance, best = 2)
+plot(best_tree, main="Pruned Tree for the given dataset")
+text(best_tree)
+
+
+
+ggplot(df_result, aes(x = size, y = dev)) + geom_point() + geom_line() + ggtitle("Plot of deviance vs. size")
+
+```
+
+
+## prune the tree using error
+```{r}
+set.seed(12345)
+tree_deviance <- tree::tree(Class~., data=train, split = c("deviance"))
+
+tree_prune_train <- prune.tree(tree_deviance, method = c("deviance"))
+tree_prune_valid <- prune.tree(tree_deviance, newdata = test ,method = c("deviance"))
+
+result_train <- cbind(tree_prune_train$size,
+tree_prune_train$dev, "Train")
+
+result_valid <- cbind(tree_prune_valid$size,
+tree_prune_valid$dev, "Valid")
+
+result <- as.data.frame(rbind(result_valid, result_train))
+colnames(result) <- c("Leaf", "Deviance", "Type")
+result$Leaf <- as.numeric(as.character(result$Leaf))
+result$Deviance <- as.numeric(as.character(result$Deviance))
+
+# plot of deviance vs. number of leafs
+ggplot(data = result, aes(x = Leaf, y = Deviance, colour = Type)) +
+geom_point() + geom_line() +
+ggtitle("Plot of Deviance vs. Tree Depth")
+```
+
+## GAM Model or Spline for classification
+```{r}
+set.seed(12345)
+
+# using family = binomial for classfication
+gam_model <- mgcv::gam(data=train, formula = Class~s(A3)+A9, family=binomial)
+summary(gam_model)
+plot(gam_model)
+```
+
+## SVM, width is the sigma here. kernel rbfdot is gaussian. vanilladot is linear
+```{r}
+
+data(spam)
+
+## create test and training set
+index <- sample(1:dim(spam)[1])
+spamtrain <- spam[index[1:floor(dim(spam)[1]/2)], ]
+spamtest <- spam[index[((ceiling(dim(spam)[1]/2)) + 1):dim(spam)[1]], ]
+
+spamtrain$type <- as.factor(spamtrain$type)
+
+model_0.05 <- kernlab::ksvm(type~., data=spamtrain, kernel="rbfdot", kpar=list(sigma=0.05), C=0.5)
+model_0.05
+
+conf_model_0.05 <- table(spamtrain[,58], predict(model_0.05, spamtrain[,-58]))
+names(dimnames(conf_model_0.05)) <- c("Actual Test", "P2redicted Test")
+caret::confusionMatrix(conf_model_0.05)
+```
+
+
+
+
