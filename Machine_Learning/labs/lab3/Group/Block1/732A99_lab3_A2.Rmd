@@ -11,165 +11,160 @@ toc: TRUE
 For this report Thijs and Anubhav focused on assignment 1. Lennart focused on assignment 2. All code was written individually and independently. 
 \newpage
 
-# Assignment 1 - Kernel Methods
 
-```{r, message=FALSE}
+### Loading The Libraries
+```{r, message=FALSE, echo = TRUE}
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(geosphere, kernlab, geosphere, ggplot2)
+
+set.seed(12345)
 options("jtools-digits" = 2, scipen = 999)
 
-# Import data
+# colours (colour blind friendly)
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", 
+               "#D55E00", "#CC79A7")
+
+```
+
+# Assignment 1 - Kernel Methods
+
+```{r}
 rm(list=ls())
 set.seed(1234567890)
-library(geosphere)
-library(ggplot2)
-
 stations <- read.csv("stations.csv")
 temps <- read.csv("temps50k.csv")
 st <- merge(stations,temps,by="station_number")
-
-
-myfunction <- function(st, latitude, longitude, h_distance, h_date, h_time){
-# Determine the coordinates of the location to be predicted.
-# Also, determine the gaussian distances. These are further elaborated on in the report.
-
-
-# Altering the format of dates
-date <- as.POSIXct("2013-11-04")
-end_date <- date + as.difftime(1, units="days")
-minutes <- 60
-times <- seq(from = date, by = minutes*120, to = end_date)
-times <- as.data.frame(times)
-times_nr <- c(1:13)
-times <- cbind(times, times_nr)
-
-# Merge datasets, so for each timeframe a "seperate" set of observations are available
-data <- merge(st, times, all = TRUE)
-
-data$target_latitude <- latitude
-data$target_longitude <- longitude
-data$delta_distance <- abs(distHaversine(p1 = data[,c("target_longitude", "target_latitude")], 
-                                         p2 = data[,c("longitude", "latitude")]))
-
-
-
-# Create target dates and target times
-data$target_date <- as.Date(data$times)
-data$target_time <- format(data$times,"%H:%M:%S")
-
-# Difference in dates from measurement dates to target date
-data$delta_date <- (abs(difftime(data$target_date, data$date, units = c("days"))))
-data$delta_date <- as.numeric(data$delta_date)
-
-
-# Difference in dates from measurement times to target times
-x <- strptime(paste(data$target_date, data$target_time),format = "%Y-%m-%d %H:%M:%S")
-y <- strptime(paste(data$target_date, data$time),format = "%Y-%m-%d %H:%M:%S")
-data$delta_time <- difftime(x, y, units ="hours")
-data$delta_time <- abs(data$delta_time)
-data$delta_time <- as.integer(data$delta_time)
-
-
-# Dropping timeframes which we are not asked to predict
-data <- data[!(data$times_nr=="1" | data$times_nr=="2"),]
-
-# Identifying measurements that are post target 
-data$date_and_time <- paste(data$date, data$time)
-data$diff_date_and_time <- as.numeric(difftime(data$target_date, data$date_and_time, units = c("hour")))
-
-# Dropping measurements that are post target
-data <- data[!(data$diff_date_and_time < 0 & data$delta_distance < 0), ]
-
-temp <- vector(length=length(times))
-
-# Kernal distances
-data$kernal_distance <- exp(-(data$delta_distance/h_distance)^2)
-data$kernal_date <- exp(-(data$delta_date/h_date)^2)
-data$kernal_time <- exp(-(data$delta_time/h_time)^2)
-
-# Now I compute the kernal estimations, using the formula on slide 8 lecture 3aBlock1
-
-# Kernal summation
-data$summation_numerator <- (data$kernal_distance * data$air_temperature) + 
-  (data$kernal_date * data$air_temperature) +
-  (data$kernal_time * data$air_temperature)
-
-data$summation_denominator <- data$kernal_distance + data$kernal_date + data$kernal_time
-
-# Kernal multiplication
-data$multiplication_numerator <- (data$kernal_distance) *
-  (data$kernal_date) *
-  (data$kernal_time * data$air_temperature)
-
-data$multiplication_denominator <- (data$kernal_distance * data$kernal_date * data$kernal_time)
-
-# Create empty vectors for the predicted data to be stored in.
-temp_sum <- c()
-temp_mult <- c()
-
-# Loop over each to be predicted time interval.
-for (i in times_nr){
-  sub_data <- data[data$times_nr == i,]
-  temp_sum[i] <- sum(sub_data$summation_numerator) / sum(sub_data$summation_denominator)
-  temp_mult[i] <- sum(sub_data$multiplication_numerator) / sum(sub_data$multiplication_denominator)
-}
-
-# Create an dataframe for all the results.
-temp_sum <- as.character(temp_sum)
-temp_mult <- as.character(temp_mult)
-
-outcome <- as.data.frame(cbind(temp_sum, temp_mult))
-outcome$temp_sum <- as.numeric(as.character(outcome$temp_sum))
-outcome$temp_mult <- as.numeric(as.character(outcome$temp_mult))
-outcome$count <- times$times
-
-# Plot outcomes, using ggplot2 package
-
-
-plot <- ggplot(data = outcome, aes(x = count, y = temp_sum, color = "temp_sum", group = 1)) +
-  geom_point() + geom_line()
-
-plot <- plot + geom_point(aes(y = temp_mult, color = "temp_mult", group = 1)) +
-  geom_line(aes(y = temp_mult, color = "temp_mult", group = 1))
-
-plot <- plot + scale_x_discrete()
-plot <- plot + ylab("Temperature") + xlab("Time") + ggtitle("Predicted temperature over time (Celcius)")
-return(plot)
-}
+rm(temps, stations)
 ```
 
-
+### defining the function
 ```{r}
-myfunction(st = st,latitude = 58.4274, longitude = 14.826, h_distance = 100000, h_date = 4, h_time = 2)
+kernel_method <- function(df, date, loc_long, loc_lat, h1, h2, h3) {
+
+set.seed(1234567890)
+start <- as.POSIXct(date)
+interval <- 60
+end <- start + as.difftime(1, units="days")
+time_seq <- seq(from=start, by=interval*120, to=end)
+time_seq <- as.data.frame(time_seq)
+colnames(time_seq) <- "new_date_time"
+time_seq$time_index <- rownames(time_seq)
+
+df_new <- merge.data.frame(df,time_seq,all=TRUE)
+rm(df)
+
+df_new$new_date <- as.Date(df_new$new_date_time)
+df_new$new_time <- format(df_new$new_date_time,"%H:%M:%S")
+df_new$loc_long <- loc_long
+df_new$loc_lat <-  loc_lat
+
+
+df_new$h_distance <-  abs(distHaversine(p1 = df_new[,c("loc_long", "loc_lat")], 
+                                        p2 = df_new[,c("longitude", "latitude")]))
+
+df_new$h_date <- as.numeric(abs(difftime(df_new$new_date, df_new$date, units = c("days"))))
+
+df_new$h_time <- as.numeric(abs(difftime(strptime(paste(df_new$new_date, 
+                                                      df_new$new_time),"%Y-%m-%d%H:%M:%S"),
+                                         strptime(paste(df_new$new_date, df_new$time),
+                                   "%Y-%m-%d %H:%M:%S"),
+                          units = c("hour"))))
+
+
+df_new$date_time <- paste(df_new$date, df_new$time)
+df_new$hd_dist <- as.numeric(difftime(df_new$new_date_time,
+                          df_new$date_time,
+                          units = c("hour")))
+
+## removing any negative dates and time
+df_new$posterior_flag <- as.factor(ifelse(df_new$h_distance > 0 & df_new$hd_dist > 0, "retain", "drop"))
+
+
+## calculating kernel distance and choosing guassian kernel
+df_new$h_distance_kernel <- exp(-(df_new$h_distance/h1)^2)
+df_new$h_date_kernel <- exp(-(df_new$h_date/h2)^2)
+df_new$h_time_kernel <- exp(-(df_new$h_time/h3)^2)
+df_new$total_additive_dist <- (df_new$h_distance_kernel + df_new$h_date_kernel + df_new$h_time_kernel)
+df_new$total_mul_dist <- (df_new$h_distance_kernel * df_new$h_date_kernel * df_new$h_time_kernel)
+
+df_new$additive_num <- ifelse(df_new$posterior_flag == "retain", 
+                              df_new$h_distance_kernel*df_new$air_temperature +
+                                df_new$h_date_kernel*df_new$air_temperature + 
+                                df_new$h_time_kernel*df_new$air_temperature,0)
+
+df_new$mul_num <- ifelse(df_new$posterior_flag == "retain", 
+                         (df_new$h_distance_kernel) *
+                                (df_new$h_date_kernel) * 
+                                (df_new$h_time_kernel*df_new$air_temperature),0)
+
+df_new$additive_den <- ifelse(df_new$posterior_flag == "retain", df_new$total_additive_dist, 0)
+df_new$mul_den <- ifelse(df_new$posterior_flag == "retain", df_new$total_mul_dist, 0)
+
+time = unique(time_seq$time_index)
+result <- NULL
+
+for(i in time){
+temp <- df_new[df_new$time_index == i,]
+additive_temp <- sum(temp$additive_num)/sum(temp$additive_den)
+mult_temp <- sum(temp$mul_num)/sum(temp$mul_den)
+
+temp <- cbind(additive_temp, mult_temp, i)
+result <- rbind(temp,result)
+}
+
+result <- as.data.frame(result) 
+result <- merge(x =result, y = time_seq, by.x = "i", by.y = "time_index", all.x = TRUE)
+result$additive_temp <- as.numeric(as.character(result$additive_temp))
+result$mult_temp <- as.numeric(as.character(result$mult_temp))
+
+p1 <- ggplot(data=result, aes(x=new_date_time)) + 
+  geom_point(aes(y = additive_temp)) +
+  geom_point(aes(y = mult_temp)) +
+  geom_line(aes(y = additive_temp, color = "Additive")) + 
+  geom_line(aes(y = mult_temp, color = "Multiplicative")) + 
+  scale_color_manual(values=c("#E69F00", "#56B4E9")) +
+  ylab("predicted temperature") +
+  theme_bw() +
+  ggtitle("Predicted Temperature using Kernels")
+
+final <- list(p1)
+return(final)
+}
+
 ```
+
+### calling function
+```{r, warning=FALSE}
+kernel_method(df=st, date = "2000-05-08", loc_long = 17.6935, 
+              loc_lat = 59.9953, h1 = 30000, h2 = 2, h3 = 5) 
+```
+### high values
+```{r, warning=FALSE}
+kernel_method(df=st, date = "2000-05-08", loc_long = 17.6935, 
+              loc_lat = 59.9953, h1 = 30000, h2 = 100, h3 = 30) 
+```
+
+### low values
+```{r, warning=FALSE}
+kernel_method(df=st, date = "2000-05-08", loc_long = 17.6935, 
+              loc_lat = 59.9953, h1 = 10, h2 = 0.05, h3 = 0.05) 
+```
+Analysis:
+
 For the kernel widths I have chosen the following values: 
 
-Distance: 100 kilometers
+Distance: 30 kilometers
 
-Date: 4 days
+Date: 2 days
 
-Time: 2 hours
+Time: 5 hours
+As evident from the plots using extreme values makes either multicative model or additive model (either terms tend to zero or all terms converge to one).When the widths are extremely large the values are saturated and there is no variations while when the values are really small the prediction by multiplicative effectively yields 0 while summation kernel predicted highly varying curve.
 
-When checking the weather forecasts on 17-12-2018 at 20:00 on Google, the same temperature is reported for Linkoping as it is for Stockholm. The distance between these two cities is 200 kilometers. Most likely temperatures will change a lot more severly if one travels a certain distance in a straight line from south to north than from west to east. To compensate for this, a distance measure of 100 kilometers is chosen, this seems reasonable, but a measure like this is always arbitrary. 
+A good width for the distance is 30Kms, the reasoning behind this is that temperature in Linkoping and Norrkoping tend to be similar but they vary by a few degree, given that Sweden is way up north the temperature flucations will be less senstive to distance than compared to equator, thus 30Kms tend to be reasonable.
 
-A kernel distance of 4 days seems large, however weights decrease as distance in dates increases.
+The width for the distance for day is 2, because I have personally experienced days where one days its freezing and next day I am sweating, thus 2 days is what I have choosen for my width. 
 
-Google weather predictions report per three hours. However, I argue Google has more data to available for weather predictions than the given dataset. Therefore I choose a slightly smaller time interal of 2 hours. This seems reasonable as when one wakes up, temperatues can be colder then halfway the morning (i.e. 2 hours later), around lunchtime temperatures are usually slightly higher and around 14:00 or 15:00 the warmest point of the day is reached.
-
-By definition of the computation applied for gaussian kernel distances, following the formula provided on slide 6, lecture 3a, a Gaussian kernel gives less weights to further observations.
-
-The predicted temperatures for the summation model seem to follow a reasonable pattern. Temperatures fall during the night and in the morning it is cold. During the morning, temperatures gradually rise, and the warmest point is reached in the afternoon. After this point, temperatues fall again during the night. For the multiplication model, the predicted temperatues however seem to follow a rather random pattern. 
-
-Results for both models differ, simply because of how the predictions are calculated. When one adds the kernel calculations with each other, this is a completely different thing then when multiplying them with each other. Many weights are small numbers, and if one multiplies these numbers with each other, very quickly, very small numbers arise. Which result in different predictions than when summing.
-
-### large extreme values
-```{r, warning=FALSE}
-myfunction(st = st,latitude = 58.4274, longitude = 14.826, h_distance = 300000, h_date = 300, h_time = 300)
-```
-
-### small extreme values
-```{r, warning=FALSE}
-myfunction(st = st,latitude = 58.4274, longitude = 14.826, h_distance = 10, h_date = 0.1, h_time = 0.1)
-```
-When the widths are extremely large the values are saturated and there is no variations while when the values are really small the prediction by multiplicative effectively yields 0 while summation kernel predicted highly varying curve.
+For the width of time, considering the shorter winter days I do expect 3 hour of the time to be ideal window for temperature.
 
 # Assignment 2 - Support Vector Machines
 
