@@ -95,8 +95,8 @@ df_new$additive_num <- ifelse(df_new$posterior_flag == "retain",
                                 df_new$h_time_kernel*df_new$air_temperature,0)
 
 df_new$mul_num <- ifelse(df_new$posterior_flag == "retain", 
-                         (df_new$h_distance_kernel*df_new$air_temperature) *
-                                (df_new$h_date_kernel*df_new$air_temperature) * 
+                         (df_new$h_distance_kernel) *
+                                (df_new$h_date_kernel) * 
                                 (df_new$h_time_kernel*df_new$air_temperature),0)
 
 df_new$additive_den <- ifelse(df_new$posterior_flag == "retain", df_new$total_additive_dist, 0)
@@ -116,8 +116,8 @@ result <- rbind(temp,result)
 
 result <- as.data.frame(result) 
 result <- merge(x =result, y = time_seq, by.x = "i", by.y = "time_index", all.x = TRUE)
-result$additive_temp <- as.numeric(result$additive_temp)
-result$mult_temp <- as.numeric(result$mult_temp)
+result$additive_temp <- as.numeric(as.character(result$additive_temp))
+result$mult_temp <- as.numeric(as.character(result$mult_temp))
 
 p1 <- ggplot(data=result, aes(x=new_date_time)) + 
   geom_point(aes(y = additive_temp)) +

@@ -20,9 +20,10 @@ options("jtools-digits" = 2, scipen = 999)
 rm(list=ls())
 set.seed(1234567890)
 library(geosphere)
-library(readr)
-stations <- read_csv("stations.csv")
-temps <- read_csv("temps50k.csv")
+library(ggplot2)
+
+stations <- read.csv("stations.csv")
+temps <- read.csv("temps50k.csv")
 st <- merge(stations,temps,by="station_number")
 
 
@@ -94,8 +95,8 @@ data$summation_numerator <- (data$kernal_distance * data$air_temperature) +
 data$summation_denominator <- data$kernal_distance + data$kernal_date + data$kernal_time
 
 # Kernal multiplication
-data$multiplication_numerator <- (data$kernal_distance * data$air_temperature) *
-  (data$kernal_date * data$air_temperature) *
+data$multiplication_numerator <- (data$kernal_distance) *
+  (data$kernal_date) *
   (data$kernal_time * data$air_temperature)
 
 data$multiplication_denominator <- (data$kernal_distance * data$kernal_date * data$kernal_time)
@@ -116,12 +117,12 @@ temp_sum <- as.character(temp_sum)
 temp_mult <- as.character(temp_mult)
 
 outcome <- as.data.frame(cbind(temp_sum, temp_mult))
-outcome$temp_sum <- as.numeric(outcome$temp_sum)
-outcome$temp_mult <- as.numeric(outcome$temp_mult)
-outcome$count <- c(1:13)
+outcome$temp_sum <- as.numeric(as.character(outcome$temp_sum))
+outcome$temp_mult <- as.numeric(as.character(outcome$temp_mult))
+outcome$count <- times$times
 
 # Plot outcomes, using ggplot2 package
-library(ggplot2)
+
 
 plot <- ggplot(data = outcome, aes(x = count, y = temp_sum, color = "temp_sum", group = 1)) +
   geom_point() + geom_line()
@@ -147,7 +148,7 @@ Date: 4 days
 
 Time: 2 hours
 
-When checking the weather forecasts on 17-12-2018 at 20:00 on Google, the same temperature is reported for Linköping as it is for Stockholm. The distance between these two cities is 200 kilometers. Most likely temperatures will change a lot more severly if one travels a certain distance in a straight line from south to north than from west to east. To compensate for this, a distance measure of 100 kilometers is chosen, this seems reasonable, but a measure like this is always arbitrary. 
+When checking the weather forecasts on 17-12-2018 at 20:00 on Google, the same temperature is reported for Linkoping as it is for Stockholm. The distance between these two cities is 200 kilometers. Most likely temperatures will change a lot more severly if one travels a certain distance in a straight line from south to north than from west to east. To compensate for this, a distance measure of 100 kilometers is chosen, this seems reasonable, but a measure like this is always arbitrary. 
 
 A kernel distance of 4 days seems large, however weights decrease as distance in dates increases.
 
@@ -159,14 +160,16 @@ The predicted temperatures for the summation model seem to follow a reasonable p
 
 Results for both models differ, simply because of how the predictions are calculated. When one adds the kernel calculations with each other, this is a completely different thing then when multiplying them with each other. Many weights are small numbers, and if one multiplies these numbers with each other, very quickly, very small numbers arise. Which result in different predictions than when summing.
 
-```{r}
+### large extreme values
+```{r, warning=FALSE}
 myfunction(st = st,latitude = 58.4274, longitude = 14.826, h_distance = 300000, h_date = 300, h_time = 300)
 ```
 
-```{r}
+### small extreme values
+```{r, warning=FALSE}
 myfunction(st = st,latitude = 58.4274, longitude = 14.826, h_distance = 10, h_date = 0.1, h_time = 0.1)
 ```
-When one takes very high values for the function parameters, both temperatues for summation and multiplication linearly increase over time and reach their peak in the evening. When one takes very small values for parameters the model with kernel multiplications reaches very low values. This is easy to explain as when multiplying very small numbers with each other the outcome, thus predicted temperatues, will be very small.
+When the widths are extremely large the values are saturated and there is no variations while when the values are really small the prediction by multiplicative effectively yields 0 while summation kernel predicted highly varying curve.
 
 # Assignment 2 - Support Vector Machines
 
