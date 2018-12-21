@@ -171,14 +171,15 @@ For the width of time, considering the shorter winter days I do expect 3 hour of
 
 ```{r}
 rm(list=ls())
-set.seed(1234567890)
+set.seed(12345)
 
 data(spam)
 
+n = dim(spam)[1]
 ## create test and training set
-index <- sample(1:dim(spam)[1])
-spamtrain <- spam[index[1:floor(dim(spam)[1]/2)], ]
-spamtest <- spam[index[((ceiling(dim(spam)[1]/2)) + 1):dim(spam)[1]], ]
+id = sample(1:n, floor(n*0.7))
+spamtrain = spam[id,]
+spamtest = spam[-id,]
 
 
 ## train a support vector machine

@@ -251,8 +251,14 @@ pamr.plotcen(model, mydata, threshold = 1.3)
 ### important features
 ```{r}
 ## List the significant genes
-NROW(important_gen)
-knitr::kable(colnames(data[,head(important_gen$id,10)]), 
+temp <- colnames(data) %>% as.data.frame()
+colnames(temp) <- "col_name"
+temp$index <- row.names(temp)
+
+df <- merge(x = important_gen, y = temp, by.x = "id", by.y = "index", all.x = TRUE)
+df <- df[order(df[,3], decreasing = TRUE ),]
+
+knitr::kable(head(df[,4],10), 
              caption = "Important feaures selected by Nearest Shrunken Centroids ")
 
 ```
@@ -270,7 +276,7 @@ Analysis:
 
 From the plot of thershold vs. misclassification error we can see that for the thershold value of 1.3, the class error is lowest.
 
-231 features were selected by this model as the most important features. The top ten features of the model are given by the table above. Only few features make sense considering the dataset is of the year 2011, thus words like call for 2012 should be for the conference calls of 2012. Same is the case with the words like X10th, also refers to Xth conference, however rest of the features make little sense.
+231 features were selected by this model as the most important features. The top ten features of the model are given by the table above, from this table we can see that the features selected are logical in nature, example "conference", "papers" etc.
 
 The test error is just 10% (accuracy is 90%) and the ability of our model to classify non-conference is 100%, while its ability to classifiy conference mail is 80%, the accuracy along with low number of samples hints that our model may very well be overfitted.
 
@@ -310,8 +316,7 @@ final_result <- cbind(result_scc$overall[[1]]*100,
                       result_elastic_net$overall[[1]]*100, 
                       result_svm$overall[[1]] *100) %>% as.data.frame()
 
-features_count <- cbind(NROW(important_gen), NROW(elastic_variable), 
-                        length(svm_fit@coef[[1]]))
+features_count <- cbind(NROW(important_gen), NROW(elastic_variable), NCOL(data))
 
 final_result <- rbind(final_result, features_count)
 
@@ -326,39 +331,38 @@ knitr::kable(final_result, caption = "Comparsion of Models on Test dataset")
 
 Analysis: 
 
-33 variables were selected by the elastic net model as the features for classifying the mails as conference, while the svm model selects 43 features to classify the mails.
+33 variables were selected by the elastic net model as the features for classifying the mails as conference, while the svm model selects 4703 features to classify the mails.
 
 From the model comparsion we see that overall choosing SVM gives us the best accuracy, while Nearest Centroid Model and Elastic Net model both have the same accuracy, however this is not a strong point given the low number of samples. From the coefficents of the elastic net we can see that the features choosen from the elastic net are far more reasonable than the once choosen by Nearest Centroid model, thus Elastic Net features selection is superior to Nearest Centroid model in quality and quantity too.
 
-We also know for a fact the SVM has regularization built into we see that SVM has the benefits of the elastic net too(partial).Thus my choice is the SVM Model which has the least features and highest accuracy.
+For SVM even though the model has good accuracy the sheer number of features used makes choosing this hard, although it should be noted that choosing SVM works very well when we are dealing with a sparse dataset.
 
 
 ##3. Implement Benjamini-Hochberg method for the original data, and use t.test() for computing p-values. Which features correspond to the rejected hypotheses? Interpret the result.
-
 ```{r}
-p_value <- c()
-for (i in 1:4702){
-  x <- data[,i]
-  res <- t.test(x ~ Conference, data = data, alternative = "two.sided")
-  p <- res$p.value
-  p_value[i] <- p 
+
+y <- as.factor(data[,4703])
+x <- as.matrix(data[,-4703])
+p_values <- data.frame(feature = '',P_value = 0,stringsAsFactors = FALSE)
+for(i in 1:ncol(x)){
+res = t.test(x[,i]~y, data = data,
+alternative="two.sided"
+,conf.level = 0.95)
+p_values[i,] <- c(colnames(x)[i],res$p.value)
 }
-p_value <- as.data.frame(p_value)
-p_value$reject_flag <- as.factor(ifelse(p_value$p_value <0.05, "Retain", "Drop"))
-p_value$column_index <- row.names(p_value)
-
-keep <- ifelse(p_value$reject_flag == "Retain", as.numeric(p_value$column_index), NA)
-keep <- na.omit(keep)
-keep <- colnames(data[,keep])
-keep
+p_values$P_value <- as.numeric(p_values$P_value)
+p <- p.adjust(p_values$P_value, method = 'BH')
+length(p[which(p > 0.05)])
+out <- p_values[which(p <= 0.05),]
+out <- out[order(out$P_value),]
+rownames(out) <- NULL
+out
 ```
-
 
 Analysis:
 
-From the above table we can see that 281 features had significant p-values (more than 0.05), some of the features do make sense to in their ability to distinguish mails pertaining to conferences, such as 'committee', 'conference', 'international', 'keynote', 'manuscripts' etc. 
-
-Thus we see that even a simple and time tested techniques like t test can be used to get a sense of the important features for model building. Although this method does help us its still selects far too many features than the other methods that we have seen and implemented uptill now.
+Based on Benjamini-Hochberg method, 4663 features do not affect the response and just using 39 remaining
+variables in modeling is reasonable.
 
 # Appendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}

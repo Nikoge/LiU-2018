@@ -170,69 +170,53 @@ For the width of time, considering the shorter winter days I do expect 3 hour of
 
 In this assignment, a Support Vector Machine (SVM), a supervised learning model, will be used to classify spam dataset that is included within the *kernlab*-package which will be used for this assignment.
 
-In the first step, the package will be loaded, attached and the *spam*-data frame will be read.
-```{r, echo=TRUE, eval=TRUE, message=FALSE}
-# loading/attaching kernlab library
-library(kernlab)
-# importing data
-data(spam)
-# printing nrow & ncol
-dim(spam)
-```
-
-The *spam* data consists of 4601 observations emails described by in total 58 features. The *type*-feature classifies the mails as either *spam* or *nonspam*.
-
-The model selection will be based on the *holdout method* which uses training data to fit the model and test data to evaluate it. To make sure that enough observations are integrated within both data sets, a relation of 70:30 will be chosen.
-```{r, echo=TRUE, eval=TRUE, message=FALSE}
-# dividing data into train and test set
-n = dim(spam)[1]
+```{r}
+rm(list=ls())
 set.seed(12345)
+
+data(spam)
+
+n = dim(spam)[1]
+## create test and training set
 id = sample(1:n, floor(n*0.7))
-train = spam[id,]
-test = spam[-id,]
+spamtrain = spam[id,]
+spamtest = spam[-id,]
+
+## train a support vector machine
+model_0.05 <- ksvm(type~., data=spamtrain,
+               kernel="rbfdot",
+               kpar=list(sigma=0.05),
+               C=0.5)
+
+model_1.0 <- ksvm(type~.,data=spamtrain,
+               kernel="rbfdot",
+               kpar=list(sigma=0.05),
+               C=1.0)
+
+model_5.0 <- ksvm(type~.,data=spamtrain,
+               kernel="rbfdot",
+               kpar=list(sigma=0.05),
+               C=5.0)
+
+# confusion table
+conf_model_0.05 <- table(spamtest[,58], predict(model_0.05,spamtest[,-58]))
+names(dimnames(conf_model_0.05)) <- c("Actual Test", "Predicted Test")
+caret::confusionMatrix(conf_model_0.05)
+
+conf_model_1.0 <- table(spamtest[,58], predict(model_1.0,spamtest[,-58]))
+names(dimnames(conf_model_1.0)) <- c("Actual Test", "Predicted Test")
+caret::confusionMatrix(conf_model_1.0)
+
+conf_model_0.05 <- table(spamtest[,58], predict(model_5.0,spamtest[,-58]))
+names(dimnames(conf_model_0.05)) <- c("Actual Test", "Predicted Test")
+caret::confusionMatrix(conf_model_0.05)
+
 ```
+Analysis:
 
-Using the training data and the *radial basis function (RBF) kernel* with a width of 0.05, three different SVM-models with a different *C*-parameter (0.5, 1 and 5) will be fitted. Within every iteration, the test misclassification error respectively will be calculated. If it will be identified as the lowest error, the model will be saved as *bestModel*.  
-```{r, echo=TRUE, eval=TRUE, message=FALSE}
-# setting up minimum misclassification rate to 1 for following loop
-minMisclassificationRate = 1
-# fitting svm-models for different parameter C
-for (C in c(0.5, 1, 5)) {
-  svmModel = ksvm(type ~ ., 
-                  data = spam, 
-                  kernel = "rbfdot",
-                  kpar = list(sigma = 0.05),
-                  C = C)
-  classification = predict(svmModel , test[, -which(colnames(train) == "type")])
-  misclassificationRate = mean(test$type != classification)
-  print(paste0("Test misclassification error for C = ", C, ": ", round(misclassificationRate, 3)))
-  print(table(y = test$type, yFit = predict(svmModel, test[, -which(colnames(test) == "type")])),
-        caption = paste0("Confusion matrix for C = ", C, ": "))
-  if (misclassificationRate < minMisclassificationRate) {
-    minMisclassificationRate = misclassificationRate
-    bestModel = svmModel
-  }
-}
-```
+From the summary of the three models build we can see that the accuracy of models are 90.83%, 91.61%, 91.70% respectively. Accuracy is only half the story, as a good spam detection should never classify a good mail has 'spam', which is something that model1 is doing. However in model 1 also has the least accuracy however its marginally bad. Given a choice i would select model1 has the best model despite the lower accuracy.
 
-Based on the *holdout method*, the model with the lowest test error (third model where *C = 5*) will be identified as the most optimal classifier.
-In the following, it is summarised:
-```{r, echo=TRUE, eval=TRUE, message=FALSE}
-# returning parameter C and erros of best model
-knitr::kable(
-  x = as.data.frame(
-    cbind(C = bestModel@param,
-          trainError = round(bestModel@error, 3),
-          testError = round(minMisclassificationRate, 3))),
-  caption = "Summary of best identified svm model",
-  row.names = FALSE)
-```
-
-Comparing the train and test error, it can be clearly seen that both values are very similar which indicates that neither too much overfitting nor underfitting seem to occur. 
-
-But accuracy is only half the story: Referring also to the confusion matrices, it confirms that model three correctly identifies most of the nonspam mail compared to the others. Thereby, if the aim is to minimize the likelihood of missing out important mails, then model 3 still is the best choice. 
-
-*C* is the cost parameter which penalizes large residuals. So a larger cost will result in a more flexible model with fewer misclassifications. In effect the cost parameter allows you to adjust the bias/variance trade-off. The greater the cost parameter, the more variance in the model and the less bias.The greater the cost, the fewer misclassifications are allowed. Note that here we penalize the residuals resulting in higher variance and lower bias.
+Purpose of the 'C' parameter:- C is the cost parameter which penalizes large residuals. So a larger cost will result in a more flexible model with fewer misclassifications. In effect the cost parameter allows you to adjust the bias/variance trade-off. The greater the cost parameter, the more variance in the model and the less bias.The greater the cost, the fewer misclassifications are allowed. Note that here we penalize the residuals resulting in higher variance and lower bias.
 
 # Appendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
