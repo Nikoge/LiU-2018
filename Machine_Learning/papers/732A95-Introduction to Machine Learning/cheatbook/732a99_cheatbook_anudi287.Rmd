@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # Simple Tasks
 
 ## library and other
-```{r}
+```{r, message=FALSE}
 
 library(ggplot2) # plots
 library(tree) # decision tree
@@ -27,6 +27,8 @@ library(dplyr) # pipelining
 library(glmnet) # lasso and ridge
 library(mgcv) # spline
 library(kernlab) # SVM
+library(mboost) # ensemble ADA boost
+library(randomForest) # randomforest
 
 # colours (colour blind friendly)
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", 
@@ -70,13 +72,33 @@ id3=setdiff(id1,id2)
 test=data[id3,] 
 ```
 
+### Cross-Validation custom
+```{r}
+#Randomly shuffle the data
+data <- data[sample(nrow(data)),]
+
+#Create N equally size folds
+folds <- cut(seq(1,nrow(data)), breaks=10,labels=FALSE)
+
+#Perform N fold cross validation
+for(i in 1:10){
+    #Segement your data by fold using the which() function 
+    testIndexes <- which(folds==i, arr.ind = TRUE)
+    testData <- data[testIndexes,]
+    trainData <- data[-testIndexes,]
+    #Use the test and train data partitions however you desire, run model code here
+}
+
+
+```
+
 
 # Regression
 ## Logistic Regression along with confusion matrix
 
-```{r}
+```{r, warning=FALSE}
 best_model <- glm(formula = Spam ~., family = binomial, data = train)
-summary(best_model)
+#summary(best_model)
 
 train$prediction_prob <- predict(best_model, newdata = train, type = "response")
 train$prediction_class_50 <- ifelse(train$prediction_prob > 0.50, 1, 0)
@@ -170,7 +192,8 @@ plot(lasso_fit, xvar = "lambda", label = TRUE,
 lambda_lasso <- 10^seq(10, -2, length = 100)
 lambda_lasso[101] <- 0
 lasso_cv <- cv.glmnet(x,y, alpha=1, lambda = lambda_lasso, type.measure="mse")
-coef(lasso_cv, lambda = lasso_cv$lambda.min)
+
+#coef(lasso_cv, lambda = lasso_cv$lambda.min)
 
 lasso_cv$lambda.min
   
@@ -218,8 +241,8 @@ plot(tree_deviance)
 text(tree_deviance)
 
 ```
-## Classification using rpart
 
+## Classification using rpart
 ```{r}
 library(rpart.plot)
 library(rpart)
@@ -243,12 +266,9 @@ best_tree <- prune.tree(tree_deviance, best = 2)
 plot(best_tree, main="Pruned Tree for the given dataset")
 text(best_tree)
 
-
-
 ggplot(df_result, aes(x = size, y = dev)) + geom_point() + geom_line() + ggtitle("Plot of deviance vs. size")
 
 ```
-
 
 ## prune the tree using error
 ```{r}
@@ -289,22 +309,97 @@ plot(gam_model)
 ```{r}
 
 data(spam)
+spam$type <- as.factor(spam$type)
 
 ## create test and training set
-index <- sample(1:dim(spam)[1])
-spamtrain <- spam[index[1:floor(dim(spam)[1]/2)], ]
-spamtest <- spam[index[((ceiling(dim(spam)[1]/2)) + 1):dim(spam)[1]], ]
+n=nrow(spam)
+id=sample(1:n, floor(n*0.8))
+spamtrain=spam[id,]
+spamtest=spam[-id,]
 
-spamtrain$type <- as.factor(spamtrain$type)
 
 model_0.05 <- kernlab::ksvm(type~., data=spamtrain, kernel="rbfdot", kpar=list(sigma=0.05), C=0.5)
-model_0.05
+#model_0.05
 
 conf_model_0.05 <- table(spamtrain[,58], predict(model_0.05, spamtrain[,-58]))
 names(dimnames(conf_model_0.05)) <- c("Actual Test", "P2redicted Test")
 caret::confusionMatrix(conf_model_0.05)
 ```
 
+## ADA boost or ensemble for classification
+```{r}
+data(spam)
+## create test and training set
+n=nrow(spam)
+id=sample(1:n, floor(n*0.8))
+spamtrain=spam[id,]
+spamtest=spam[-id,]
+
+ada_model <- mboost::blackboost(type~., data = spamtrain, family = AdaExp(), 
+                                control=boost_control(mstop=15))
+test_ada_model_predict <- predict(ada_model, newdata = spamtest, type = c("class"))
+```
+
+## Random Forest for classification
+```{r}
+forest_model <- randomForest(type~., data = spamtrain, ntree = 15)
+test_forest_model_predict <- predict(forest_model, newdata = spamtest, type = c("class"))
+```
+
+## Comparing ADA boost and Randomforest
+```{r, warning=FALSE}
+# using warnings = FALSE
+
+final_result <- NULL
+
+for(i in seq(from = 10, to = 100, by = 10)){
+ada_model <- mboost::blackboost(type~.,
+data = spamtrain,
+family = AdaExp(),
+control=boost_control(mstop=i))
+
+forest_model <- randomForest(type~., data = spamtrain, ntree = i)
+
+prediction_function <- function(model, data){
+predicted <- predict(model, newdata = data, type = c("class"))
+predict_correct <- ifelse(data$type == predicted, 1, 0)
+score <- sum(predict_correct)/NROW(data)
+return(score)
+}
+
+train_ada_model_predict <- predict(ada_model, newdata = spamtrain, type = c("class"))
+test_ada_model_predict <- predict(ada_model, newdata = spamtest, type = c("class"))
+train_forest_model_predict <- predict(forest_model, newdata = spamtrain, type = c("class"))
+test_forest_model_predict <- predict(forest_model, newdata = spamtest, type = c("class"))
+
+test_predict_correct <- ifelse(spamtest$type == test_forest_model_predict, 1, 0)
+train_predict_correct <- ifelse(spamtest$type == train_forest_model_predict, 1, 0)
+
+train_ada_score <- prediction_function(ada_model, spamtrain)
+test_ada_score <- prediction_function(ada_model, spamtest)
+train_forest_score <- prediction_function(forest_model, spamtrain)
+test_forest_score <- prediction_function(forest_model, spamtest)
+
+iteration_result <- data.frame(number_of_trees = i,
+accuracy = c(train_ada_score,
+test_ada_score,
+train_forest_score,
+test_forest_score),
+type = c("train", "test", "train", "test"),
+model = c("ADA", "ADA", "Forest", "Forest"))
+final_result <- rbind(iteration_result, final_result)
+}
+
+final_result$error_rate_percentage <- 100*(1 - final_result$accuracy)
+
+ggplot(data = final_result, aes(x = number_of_trees,
+y = error_rate_percentage,
+group = type, color = type)) +
+geom_point() +
+geom_line() +
+ggtitle("Error Rate vs. increase in trees") + 
+facet_grid(rows = vars(model))
 
 
+```
 

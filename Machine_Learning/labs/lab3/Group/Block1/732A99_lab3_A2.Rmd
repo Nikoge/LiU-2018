@@ -176,45 +176,67 @@ set.seed(12345)
 
 data(spam)
 
-n = dim(spam)[1]
-## create test and training set
-id = sample(1:n, floor(n*0.7))
-spamtrain = spam[id,]
-spamtest = spam[-id,]
+# separate data to training, validation, and test - 40/30/30
+n <- NROW(spam)
+set.seed(12345)
+id <- sample(1:n, floor(n*0.4))
+train <- spam[id,]
+id1 <- setdiff(1:n, id)
+id2 <- sample(id1, floor(n*0.3))
+valid <- spam[id2,]
+id3 <- setdiff(id1,id2)
+test <- spam[id3,]
+
 
 ## train a support vector machine
-model_0.05 <- ksvm(type~., data=spamtrain,
+model_0.05 <- ksvm(type~., data=train,
                kernel="rbfdot",
                kpar=list(sigma=0.05),
                C=0.5)
 
-model_1.0 <- ksvm(type~.,data=spamtrain,
+model_1.0 <- ksvm(type~.,data=train,
                kernel="rbfdot",
                kpar=list(sigma=0.05),
                C=1.0)
 
-model_5.0 <- ksvm(type~.,data=spamtrain,
+model_5.0 <- ksvm(type~.,data=train,
                kernel="rbfdot",
                kpar=list(sigma=0.05),
                C=5.0)
 
 # confusion table
-conf_model_0.05 <- table(spamtest[,58], predict(model_0.05,spamtest[,-58]))
+conf_model_0.05 <- table(test[,58], predict(model_0.05,test[,-58]))
 names(dimnames(conf_model_0.05)) <- c("Actual Test", "Predicted Test")
 caret::confusionMatrix(conf_model_0.05)
 
-conf_model_1.0 <- table(spamtest[,58], predict(model_1.0,spamtest[,-58]))
+conf_model_1.0 <- table(test[,58], predict(model_1.0,test[,-58]))
 names(dimnames(conf_model_1.0)) <- c("Actual Test", "Predicted Test")
 caret::confusionMatrix(conf_model_1.0)
 
-conf_model_0.05 <- table(spamtest[,58], predict(model_5.0,spamtest[,-58]))
+conf_model_0.05 <- table(test[,58], predict(model_5.0,test[,-58]))
 names(dimnames(conf_model_0.05)) <- c("Actual Test", "Predicted Test")
 caret::confusionMatrix(conf_model_0.05)
+
+# choosing the first model C=0.05, now trainning the model on the full dataset to get generalised error
+train_test <- rbind(train,test)
+
+final_svm_model <- ksvm(type~., data=train_test,
+               kernel="rbfdot",
+               kpar=list(sigma=0.05),
+               C=0.5)
+
+final_model_0.05 <- table(valid[,58], predict(final_svm_model, valid[,-58]))
+names(dimnames(final_model_0.05)) <- c("Actual Validatation", "Predicted Validatation")
+caret::confusionMatrix(final_model_0.05)
 
 ```
 Analysis:
 
-From the summary of the three models build we can see that the accuracy of models are 90.83%, 91.61%, 91.70% respectively. Accuracy is only half the story, as a good spam detection should never classify a good mail has 'spam', which is something that model1 is doing. However in model 1 also has the least accuracy however its marginally bad. Given a choice i would select model1 has the best model despite the lower accuracy.
+From the summary of the three models build we can see that the accuracy of models are 90.51%, 91.89%, 92.03% (for C=0.05, 1 and 5 respectively). Accuracy is only half the story, as a good spam detection should never classify a good mail has 'spam' (university acceptance has the same words as a spam mail eg: 'congratulations', 'opportunity', 'pleased', 'deadline/hurry' ), which is something that model1 is doing, however our model 1 also has the least accuracy.
+
+Additionally 'spamers' are 'evolutionary' by nature, the subject and style of their mails keep changing (nigerian prince providing you money, bitcoins from Elon Musk), thus our model should never be overtrained or I daresay it should be a bit more on the underpredicted side. Thus from the above two reasons I would select model1 which has the highest ability of identifying non-spam mails and is off by only ~1% in terms of accuracy compared to our best model.
+
+Best on our selection the generalized model error for our chosen model is 8.77% (accuracy 91.23%) and its ability to correctly identify nonspam mail is 96.09%.
 
 Purpose of the 'C' parameter:- C is the cost parameter which penalizes large residuals. So a larger cost will result in a more flexible model with fewer misclassifications. In effect the cost parameter allows you to adjust the bias/variance trade-off. The greater the cost parameter, the more variance in the model and the less bias.The greater the cost, the fewer misclassifications are allowed. Note that here we penalize the residuals resulting in higher variance and lower bias.
 
