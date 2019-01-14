@@ -1,0 +1,465 @@
+---
+title: "732A99 chetabook"
+author: "Anubhav Dikshit(anudi287)"
+date: "13 January 2019"
+output: 
+    pdf_document:
+      toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 2016
+
+## Assignment1
+
+### 1. Divide the dataset into training and test sets (80/20), use seed 12345. Fit a decision tree with default settings to the training data and plot the resulting tree. Finally, remove the second observation from the training data, fit the tree model again and plot the tree. Compare the trees and comment why the tree structure changed so much although only one observation is deleted.
+
+```{r}
+
+library(tree)
+
+set.seed(12345)
+
+data <- read.csv("crx.csv", header = TRUE)
+data$Class <- as.factor(data$Class)
+
+# 50-50 split
+n=nrow(data)
+id=sample(1:n, floor(n*0.8))
+train=data[id,]
+test=data[-id,]
+
+decision_tree <- tree(data = train, formula = Class~.)
+train_new <- train[-2,]
+decision_tree_new <- tree(data = train_new, formula = Class~., method = "class")
+
+plot(decision_tree, main= "Original decision tree")
+text(decision_tree)
+plot(decision_tree_new, main= "Modified decision tree")
+text(decision_tree_new)
+```
+
+### 2.Prune the tree fitted to the training data by using the cross-validation. Provide a cross-validation plot and comment how many leaves the optimal tree should have. Which variables were selected by the tree?
+```{r}
+library(ggplot2)
+
+set.seed(12345)
+
+cv_tree <- cv.tree(decision_tree, FUN = prune.tree, K = 10)
+df_result <- as.data.frame(cbind(size = cv_tree$size, dev = cv_tree$dev))
+ggplot(df_result, aes(x = size, y = dev)) + geom_point() + geom_line()
+
+# puring the tree for leaf size of 3
+best_tree <- prune.tree(decision_tree, best = 2)
+plot(best_tree, main="Pruned Tree for the given dataset")
+text(best_tree)
+```
+
+### 3.Fit a GAM model with features A3 and A9, comment on the choice of family parameter. Why is it pointless to include a spline component of A9? Provide an equation of the fitted model. Comment which components are significant. Plot the spline component of A3 and interpret the plot.
+
+```{r}
+set.seed(12345)
+library(mgcv)
+
+gam_model <- mgcv::gam(data=train, formula = Class~s(A3)+A9, family=binomial)
+summary(gam_model)
+plot(gam_model)
+
+```
+
+### 4.Use the following error function to compute the test error for the GAM and tree models: E = sum((Ylogp) + (1-Y)log(1-p)) where Y and p refer to Y=1. Which model is the best according to this criterion? Why is this criterion sometimes more reasonable to use than the misclassification rate?
+
+```{r}
+predicted_test <- predict.gam(gam_model, newdata = test, type="response")
+predicted_test <- as.data.frame(predicted_test)
+predicted_test$actual_value <- as.numeric(as.character(test$Class))
+predicted_test$predicted_class <- ifelse(predicted_test$predicted_test >0.5, 1, 0)
+
+
+predicted_test$error <- (predicted_test$predicted_class * log(predicted_test$predicted_test)) + ((1-predicted_test$predicted_class)*log(1-predicted_test$predicted_test))
+
+sum(predicted_test$error)
+
+```
+
+## Assignment 2
+
+### 1.Interpret the plot resulting from the code below.
+```{r}
+library(mboost)
+bf <- read.csv2("bodyfatregression.csv")
+set.seed(1234567890)
+m <- blackboost(Bodyfat_percent~Waist_cm+Weight_kg, data=bf)
+mstop(m)
+cvf <- cv(model.weights(m), type="kfold")
+cvm <- cvrisk(m, folds=cvf, grid=1:100)
+plot(cvm)
+mstop(cvm)
+
+```
+
+### In the following steps, you are asked to use the R package kernlab to learn a SVM for classifying the spam dataset that is included with the package. For the C parameter, consider values 1 and 5. Consider the radial basis function kernel (also known as Gaussian) and the linear kernel. For the former, consider a width of 0.01 and 0.05. This implies that you have to select among six models.
+```{r}
+library(kernlab)
+
+data(spam)
+
+## create test and training set
+index <- sample(1:dim(spam)[1])
+spamtrain <- spam[index[1:floor(dim(spam)[1]/2)], ]
+spamtest <- spam[index[((ceiling(dim(spam)[1]/2)) + 1):dim(spam)[1]], ]
+
+spamtrain$type <- as.factor(spamtrain$type)
+
+model_1 <- kernlab::ksvm(type~., data=spamtrain, kernel="rbfdot", kpar=list(sigma=0.01), C=1)
+model_2 <- kernlab::ksvm(type~., data=spamtrain, kernel="rbfdot", kpar=list(sigma=0.05), C=1)
+model_3 <- kernlab::ksvm(type~., data=spamtrain, kernel="rbfdot", kpar=list(sigma=0.01), C=5)
+model_4 <- kernlab::ksvm(type~., data=spamtrain, kernel="rbfdot", kpar=list(sigma=0.05), C=5)
+
+model_5 <- kernlab::ksvm(type~., data=spamtrain, kernel="vanilladot", C=1)
+model_6 <- kernlab::ksvm(type~., data=spamtrain, kernel="vanilladot", C=5)
+
+
+
+
+
+missclass=function(X,X1){
+n=length(X)
+return(1-sum(diag(table(X,X1)))/n)
+}
+
+
+conf_model_1 <- table(spamtest[,58], predict(model_1, spamtest[,-58]))
+names(dimnames(conf_model_1)) <- c("Actual Test", "Predicted Test")
+caret::confusionMatrix(conf_model_1)
+# 0.93
+
+conf_model_2 <- table(spamtest[,58], predict(model_2, spamtest[,-58]))
+names(dimnames(conf_model_2)) <- c("Actual Test", "Predicted Test")
+caret::confusionMatrix(conf_model_2)
+# 0.916087
+
+conf_model_3 <- table(spamtest[,58], predict(model_3, spamtest[,-58]))
+names(dimnames(conf_model_3)) <- c("Actual Test", "Predicted Test")
+caret::confusionMatrix(conf_model_3)
+# 0.9286957
+
+conf_model_4 <- table(spamtest[,58], predict(model_4, spamtest[,-58]))
+names(dimnames(conf_model_4)) <- c("Actual Test", "Predicted Test")
+caret::confusionMatrix(conf_model_4)
+# 0.9169565
+
+conf_model_5 <- table(spamtest[,58], predict(model_5, spamtest[,-58]))
+names(dimnames(conf_model_5)) <- c("Actual Test", "Predicted Test")
+caret::confusionMatrix(conf_model_5)
+# 0.9282609
+
+conf_model_6 <- table(spamtest[,58], predict(model_6, spamtest[,-58]))
+names(dimnames(conf_model_6)) <- c("Actual Test", "Predicted Test")
+caret::confusionMatrix(conf_model_6)
+# 0.93
+
+```
+
+### 2. Use nested cross-validation to estimate the error of the model selection task described above. Use two folds for inner and outer cross-validation. Note that you only have to implement the outer cross-validation: The inner cross-validation can be performed by using the argument cross=2 when calling the function ksvm.
+
+```{r}
+
+model_1 <- kernlab::ksvm(type~., data=spamtrain, kernel="rbfdot", kpar=list(sigma=0.01), C=1, cross = 2)
+
+
+```
+
+# 2018-01-11
+
+### 1. Perform principal component analysis using the numeric variables in the training data except of "utime" variable. Do this analysis with and without scaling of the features. How many components are necessary to explain more than 95% variation of the data in both cases? Explain why so few components are needed when scaling is not done.
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+data <- read.csv("video.csv", header = TRUE)
+# 50-50 split
+n=nrow(data)
+set.seed(12345)
+id=sample(1:n, floor(n*0.5))
+train=data[id,]
+test=data[-id,]
+
+pca_data <- select(train, c(duration, width, height, bitrate, framerate, i, p, b, frames, i_size, p_size, size, o_bitrate, o_framerate, o_width, o_height, umem))
+
+pca_unscaled <- prcomp(pca_data, scale = FALSE)
+pca_scaled <- prcomp(pca_data, scale = TRUE)
+
+eigenvalues = pca_unscaled$sdev^2
+# plotting proportion of variation for principal components
+plotData = as.data.frame(cbind(pc = 1:3, variationProportion = eigenvalues[1:3]/sum(eigenvalues), cummulative = cumsum(eigenvalues[1:3]/sum(eigenvalues))))
+
+ggplot(data = plotData) +
+geom_col(aes(x = pc, y = variationProportion), width = 0.3, fill = "grey70") +
+geom_line(data = plotData,
+aes(x = pc, y = cummulative)) +
+geom_text(aes(x = pc, y = cummulative, label = round(cummulative, 3)), size = 4,
+position = "identity", vjust = 1.5) +
+theme_bw() +
+ggtitle("Proportion of variation for principal components")
+
+
+eigenvalues = pca_scaled$sdev^2
+# plotting proportion of variation for principal components
+plotData = as.data.frame(cbind(pc = 1:10, variationProportion = eigenvalues[1:3]/sum(eigenvalues), cummulative = cumsum(eigenvalues[1:10]/sum(eigenvalues))))
+
+ggplot(data = plotData) +
+geom_col(aes(x = pc, y = variationProportion), width = 0.3, fill = "grey70") +
+geom_line(data = plotData,
+aes(x = pc, y = cummulative)) +
+geom_text(aes(x = pc, y = cummulative, label = round(cummulative, 3)), size = 4,
+position = "identity", vjust = 1.5) +
+theme_bw() +
+ggtitle("Proportion of variation for principal components")
+
+```
+
+### 2. Use only first 100 rows from the entire data and all numeric variables and create interaction variables up to the third order with the following code: Use the obtained matrix to perform a Nearest Shrunken Centroid (NSC) analysis in which "codec" is target and all other interaction variables are features. Obtain the cross-validation plot and interpret it in terms of bias-variance tradeoff. How does model complexity change when the threshold delta increases?
+
+```{r}
+
+library(pamr) 
+
+numeric_data <- select(train, c(duration, width, height, bitrate, framerate, i, p, b, frames, i_size, p_size, size, o_bitrate, o_framerate, o_width, o_height, umem, utime)) %>% head(100)
+
+new_data=t(apply(as.matrix(numeric_data), 1, combn, 3, prod))
+
+new_data = scale(new_data)
+rownames(new_data) = 1:nrow(new_data)
+x = t(new_data)
+y = train$codec
+
+mydata = list(x=x,y=as.factor(y),geneid=as.character(1:nrow(x)), genenames=rownames(x))
+model=pamr.train(mydata,threshold=seq(0, 4, 0.1))
+model
+```
+
+
+### 3. Use the cross-validated NSC model to extract the threshold giving the optimal value of the log-likelihood (log-likelihood values are also available in the cross-validated model). Why is the multinomial log-likelihood applied for this model?
+
+```{r}
+cvmodel=pamr.cv(model, mydata)
+
+```
+
+# plot
+```{r, fig.height=9}
+pamr.plotcv(cvmodel)
+
+
+cvmodel$threshold[which.max(cvmodel$loglik)]
+
+important_gen <- as.data.frame(pamr.listgenes(model, mydata, threshold = 1.5))
+```
+
+### 4. Use original data to create variable "class" that shows "mpeg" if variable "codec" is equal to "mpeg4", and "other" for all other values of "codec". Create a plot of "duration" versus "frames" where cases are colored by "class". Do you think that the classes are easily separable by a linear decision boundary?
+
+```{r}
+
+train$class <- ifelse(train$codec == "mpeg4", "mpeg", "other")
+
+ggplot(data=train, aes(x = duration, y = frames, color = class)) + geom_point()
+```
+
+### 5. Fit a Linear Discriminant Analysis model with "class" as target and "frames" and "duration" as features to the entire dataset (scale features first). Produce the plot showing the classified data and report the training error. Explain why LDA was unable to achieve perfect (or nearly perfect) classification in this case.
+
+```{r}
+model <- MASS::lda(as.factor(class) ~ frames+duration, data = train)
+model
+plot(model)
+
+predictions <- model %>% predict(train)
+lda.data <- cbind(train, predictions$class)
+
+ggplot(lda.data, aes(x = frames, y = duration)) + geom_point(aes(color = class))
+ggplot(lda.data, aes(x = frames, y = duration)) + geom_point(aes(color = predictions$class))
+
+
+```
+
+
+### 6. Fit a decision tree model with "class" as target and "frames" and "duration" as features to the entire dataset, choose an appropriate tree size by cross-validation. Report the training error. How many leaves are there in the final tree? Explain why such a complicated tree is needed to describe such a simple decision boundary.
+
+```{r}
+
+library(tree)
+train_trimmed <- train[,c("class", "frames", "duration")]
+train_trimmed$class <- as.factor(train_trimmed$class)
+tree_deviance <- tree::tree(class~frames+duration, data=train_trimmed)
+
+set.seed(12345)
+cv_tree <- cv.tree(tree_deviance, FUN = prune.tree, K = 10)
+df_result <- as.data.frame(cbind(size = cv_tree$size, dev = cv_tree$dev))
+
+# puring the tree for leaf size of 3
+best_tree <- prune.tree(tree_deviance, best = 10)
+plot(best_tree, main="Pruned Tree for the given dataset")
+text(best_tree)
+
+```
+
+
+# Part-B
+
+###2. Train NN
+
+```{r}
+
+library(neuralnet)
+
+#Generating data
+set.seed(1234567890)
+Var = runif(50, 0, 10)
+trva = data.frame(Var, Sin = sin(Var))
+# Training and validation split
+tr = trva[1:25, ] # Training
+va = trva[26:50, ] # Validation
+nn_val_res_df = data.frame()
+nn_val_res_df2 = data.frame()
+# Random initialization of the weights in the interval [-1, 1]
+w_init = runif(31, -1, 1)
+
+
+for(i in 1:10) {
+print(paste("Running NN: ", i))
+set.seed(1234567890)
+# Training neural network
+nn = neuralnet(Sin ~ Var, data = tr, hidden = 10,
+startweights = w_init, threshold = i / 1000)
+# Predicting values for train and validation
+va_res = neuralnet::compute(nn, va$Var)$net.result
+tr_res = neuralnet::compute(nn, tr$Var)$net.result
+# Computing train and validation MSE
+tr_mse = mean((tr_res - tr$Sin)^2)
+va_mse = mean((va_res - va$Sin)^2)
+# Storing data in data frame
+nn_val_res_df = rbind(nn_val_res_df,
+data.frame(thres_num = i, thres_val = i / 1000,
+val_mse = va_mse, trn_mse = tr_mse))
+}
+
+#best was  0.004
+
+
+
+for(i in 1:10) {
+print(paste("Running NN: ", i))
+set.seed(1234567890)
+# Training neural network
+nn = neuralnet(Sin ~ Var, data = tr, hidden = c(2,3),
+startweights = w_init, threshold = i / 1000)
+# Predicting values for train and validation
+va_res = neuralnet::compute(nn, va$Var)$net.result
+tr_res = neuralnet::compute(nn, tr$Var)$net.result
+# Computing train and validation MSE
+tr_mse = mean((tr_res - tr$Sin)^2)
+va_mse = mean((va_res - va$Sin)^2)
+# Storing data in data frame
+nn_val_res_df2 = rbind(nn_val_res_df2,
+data.frame(thres_num = i, thres_val = i / 1000,
+val_mse = va_mse, trn_mse = tr_mse))
+}
+# best was 0.001
+
+
+# Best threshold = 0.001
+opt_nn = neuralnet(Sin ~ Var, data = tr, hidden = 10, startweights = w_init, threshold = 0.004)
+opt_nn2 = neuralnet(Sin ~ Var, data = tr, hidden = c(2,3), startweights = w_init, threshold = 0.001)
+
+tr_res = neuralnet::compute(opt_nn, tr$Var)$net.result
+# Computing train and validation MSE
+tr_mse = mean((tr_res - tr$Sin)^2)
+
+plot(opt_nn2)
+
+```
+
+# 2018-04-06
+
+### 1. Perform a series of LASSO regressions by using training data and computing the misclassification errors for the validation data for various values of the penalty factor lambda =0,0.1,.,0.9,1 . Produce a plot showing the dependence of the training and test errors on the penalty parameter and choose the optimal value of the penalty parameter. Comment how the training error behaves when lambda increases and why it happens in this way. Which features are selected by the optimal LASSO model? Finally, compute the test error, compare it with the training and validation errors and make appropriate conclusions.
+
+```{r}
+
+library(glmnet)
+
+rm(list=ls())
+
+n=NROW(iris)
+set.seed(12345)
+id=sample(1:n, floor(n*1/3))
+train=iris[id,]
+id1=setdiff(1:n, id)
+set.seed(12345)
+id2=sample(id1, floor(n*1/3))
+valid=iris[id2,]
+id3=setdiff(id1,id2)
+test=iris[id3,]
+
+lambda_lasso <- seq(from = 0, to = 1, by=0.1)
+
+x = train %>% select(-c(Species)) %>%  as.matrix()
+y = train %>% select(Species) %>%  as.matrix()
+
+x_valid = valid %>% select(-c(Species)) %>%  as.matrix()
+y_valid = valid %>% select(Species) %>%  as.matrix()
+
+
+x_test = test %>% select(-c(Species)) %>%  as.matrix()
+y_test = test %>% select(Species) %>%  as.matrix()
+
+lasso_cv <- cv.glmnet(x, y, alpha=1, lambda = lambda_lasso, family = "multinomial", type.measure="class")
+
+# trainning error is least for lambda = 0
+
+result_lasso <- NULL
+for(i in 1:length(lambda_lasso)){
+temp <- lasso_cv$cvm[i] %>% as.matrix()
+temp <- cbind(CVM_error = temp, lambda = lasso_cv$lambda[i])
+result_lasso <- rbind(temp, result_lasso)
+}
+
+predicted <- predict(lasso_cv, newx = x_valid, type=c("class"), s =(lambda_lasso))
+new_predicted <- cbind(predicted, y_valid) %>% as.data.frame()
+colnames(new_predicted) <- c(lambda_lasso, "y_valid")
+
+out <- NULL
+for(i in 0:10){
+error <- ifelse(new_predicted[,i] == as.character(new_predicted$y_valid), 1, 0)
+temp <- cbind(i, NROW(new_predicted) - sum(error))
+out <- rbind(out, temp)
+}
+
+test_predicted <- predict(lasso_cv, newx = x_test, type=c("class"), s =(lambda_lasso))
+test_new_predicted <- cbind(test_predicted, y_test) %>% as.data.frame()
+colnames(test_new_predicted) <- c(lambda_lasso, "y_test")
+
+out_test <- NULL
+for(i in 0:10){
+error <- ifelse(test_new_predicted[,i] == as.character(test_new_predicted$y_test), 1, 0)
+temp <- cbind(i, NROW(test_new_predicted) - sum(error))
+out_test <- rbind(out_test, temp)
+}
+
+```
+
+
+### 2. Fit a Naïve Bayes classification to the combined training and validation data and estimate the prediction error for the test data. Report the confusion matrix for the training data, training and test errors. Present also a scatterplot showing Sepal Length versus Sepal Width in which the observations are colored by the value of Species. Does Naïve Bayes assumption seem to be fulfilled according to this plot?
+
+```{r}
+
+```
+
+
+
+
+
+

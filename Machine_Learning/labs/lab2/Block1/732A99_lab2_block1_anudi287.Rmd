@@ -200,7 +200,7 @@ tree_list <- NULL
 naive_list <- NULL
 final <- NULL
 for(threshold in seq(from = 0.05, to = 0.95, by = 0.05)){
-  probability_data_combined$predicted_class <- ifelse(probability_data_combined$prob_good > threshold, "good", "bad")
+ probability_data_combined$predicted_class <- ifelse(probability_data_combined$prob_good > threshold, "good", "bad")
   
   df2 <- probability_data_combined[,c("model", "actual_test_class", "predicted_class")]
   df2$threshold <- threshold
