@@ -1,0 +1,97 @@
+---
+title: "Equal Opportunities in Higher Education for Students With Disabilities in India"
+author: "Jasleen Kaur Mann"
+date: "9/16/2018"
+output:
+  pdf_document: default
+bibliography: ref.bib
+abstract: Providing equal opportunities in the education system does not only constitute non-discriminatory behavior but also providing the infrastructure to enable the growth and development of every student who desires to attain education. The topic of having equality of opportunities is a very relevant one in all sectors and is also rightly being discussed worldwide in every field. But it is even more important in the field of education as that forms the foundation of future growth of an individual in terms of personal development, employment, wealth and health. Providing equal opportunities refers to providing the same platform to all irrespective of religion, race, gender, disability or caste. In this paper, I focus on inclusivity of people with disabilities in higher education systems in India. This paper makes an attempt at understanding the challenges faced by these students and policies implemented by India to empower them. This paper does that by referring to research papers, news articles and information available on UNESCO and United Nations websites. In the end I have concluded with my thoughts on areas of improvement and initiatives taken by Sweden which India can learn from. 
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Introduction
+
+According to an article on UNESCO's website, 1/7 of world's population is estimated to be living with a disability. [@unescoefa] Hence it is important to make the education systems inclusive to ensure the social and academic success of such a substantial part of the world population. Inclusive education systems will also lead to more diverse, democratic and innovative learning environments and will have a positive effect on future generations of the world.
+
+Article 26 of Universal Declaration of Human Rights, adopted in 1948 states: 'Everyone has the right to education' and referring to 'A guide for ensuring inclusion and equity in education' released by UNESCO for Education 2030 agenda[@unescoguide]:
+
+\setlength{\leftskip}{1cm}
+\setlength{\rightskip}{1cm}
+
+*The central message is simple: every learner matters and matters equally.*
+
+***Inclusion** is a process that helps overcome barriers limiting the presence, participation and achievement of learners.*
+
+***Equity** is about ensuring that there is a concern with fairness, such that the education of all learners is seen as having equal importance.* 
+
+
+\setlength{\leftskip}{0pt}
+\setlength{\rightskip}{0pt}
+
+
+Referring to some sections of United Nations Article 24 on education from Convention on the Rights of Persons with Disabilities [@unitednations], State parties are responsible for ensuring inclusive education at all the levels which will enable complete development of human potential and lifelong learning leading to a sense of dignity and self-worth. Ensuring the development of their personality, talents and creativity, as well as their mental and physical abilities, to their fullest potential will also result in strengthening of respect for human rights, fundamental freedoms and human diversity. State parties are responsible for realizing these human rights of persons with disabilities in education and ensuring that they are not excluded from the general education system on the basis of disability. To enable this State Parties should take the required measures to build the support system and required infrastructures like employing expert and qualified staff in the field, having means for required examination formats and required training, creating awareness and providing financial support and appropriate accommodation.
+
+
+
+## Policies in India and their Impact and Implementation
+India has many Acts in place which are part of the constitution and are legally binding to ensure equal opportunities in higher education for people with disability. After signing the United Nations Convention on the Rights of Persons with Disabilities(UNCRPD) in 2007 India updated it's Persons with Disabilities Act, 1995 (PWD Act, 1995) to make it complaint with UNCRPD and passed Rights of Persons with Disabilities Act, 2016 on 28 December 2016 [@singhkishore2014]. Learning disabilities have now been included in the act along with other neurological disorders which were not included earlier. There is also 3% reservation in government job sector and educational institutes for persons with disabilities.[@jameelss2011] But actual implementation and results of these policies and privileges are far from satisfactory. A recent (2017) news article in one of India's reputed news agency published a report by National Center for Promotion of Employment for Disabled People (NCPEDP) conducted at the topmost Colleges and Universities which was very alarming. Some of the findings of report are [@timesofindia2017]:
+
+1. Only 0.48% of seats are filled by students with disabilities against the minimum 3% reserved for them i.e. 16% of the minimum quota.
+2. Out of these only, 28% are women.
+3. Out of 3.33 Lakh students studying at these 32 institutions, only 1614 are disabled students.
+
+Keeping in mind that in India 50% of people with disabilities are under 25 years of age these findings are highly disappointing. These shocking results prove that a lot needs to be done in this field. After this study came out, he the Hon'ble Supreme Court of India said on 15 December 2017[@hindustantimes]:
+*People with disability have a right to get higher education and not making adequate provisions to facilitate their proper education would amount to “discrimination”. And asked higher education and other such institutions, which were receiving aid from the government, to comply with the provisions of the Rights of Persons with Disabilities Act, 2016.* 
+
+Going through the Report Prepared by UNESCO MGIEP to Support the Ministry of Human Resource Development’s Formulation of the National Education Policy in India [@unesco2016]throws some light on the challenges faced by the students with disabilities in higher education. This Report is based on the study of 6017 Indian nationals aged between 17 to 29 from 5 regions of India. Summarising the findings here:
+
+1. Students felt lack of effort on the part of professors and administrators when it came to implementing the policies dictated by law. In some cases, they were not aware of the policies in place as well rules related to examination processes, accomodation and other facilities.
+2. Students themselves were not completely informed about their own priveledges and rights. They also did not know how to ask for them. They were not aware of the existing government and non-profit agencies which could help them in getting the required facilities.
+3. Many students had to leave their homes and move to the cities where facilities for them were better. And this meant moving away from their existing support system and also meant more expenses.
+4. Many students had to compromise on the choice of the institute and the field of study as the environment in public universities is more supportive towards disabilities than the private ones but they might not have the courses which the students want to pursue. Also, the cost of study and funding opportunities are better in public universities.
+5. Students suggested that better digitization of educational materials can result in better accessibility of resources for them.
+6. Students also highlighted the lack of support staff at universities like writers, counsellors and disability cells.
+7. The study also highlighted upon the positive and encouraging impact of inclusion in education and that was that 39.1% replied that there has been a positive impact on their own attitude towards disability.  
+
+This clearly shows that students with disabilities are facing lot of challenges and are not getting enough opportunities to follow their dreams and realize their own full potential. This also reflects that supporting infrastructure is not in place to enable their growth in our society.
+
+
+## Conclusion
+It is important to build an inclusive environment in all sectors but more so in education to ensure an improved learning for all which will enable the future generations of the world to be more aware, sensitive towards others, learn from the diversity, are innovative and creative and hence can build a more inclusive and peaceful world.
+
+I think some of the things that India should improve in this direction are:
+
+1) **Improve the inclusivity in primary education.** India should ensure free primary education catering to the requirements of disabled students by employing teachers who are trained to help the students with their special requirements. It is required to make sure the rules and regulations are followed by both public and private institutes. Since primary education forms the base for higher education, it is extremely important to make sure that this basic education is accessible to all.
+
+2) **Improve awareness among students, professors and administrator** on the needs of students with disabilities and their rights and existing rules. This will improve their attitude towards the students and will help in creating an encouraging atmosphere for them.
+
+3) **Create special departments in Universities and Colleges.** All the institutes providing higher education should have help department/cells to cater to the requirements and needs of the students with disabilities where they can get help and raise their grievances.  
+
+4) **Better infrastructure for accessibility.** India should work on more inclusive public facilities like transportation and ramps and elevators to ensure that the educational institutes are more accessible. Should also work on increasing awareness among other citizens.
+
+5) **Should work on improving the facilities at higher education institutes in rural regions.** The facilities in the institutes in rural India are poor in comparison to cities because of which students either have to give up on their dreams of pursuing higher education or have to move to the cities. Moving to cities is more expensive and often means less availability of help as they have to have to stay away from their families. Improvement in this area will ensure more students are able to access their right to education.
+
+6) **Availability of Financial support in higher education.** More funds should be available to enable that the students with disabilities get the support of resources which can enable them to pursue a better learning.
+
+7) **Better use of technology.** India should use the advancement in technology to facilitate improved accessibility of study material and format of examinations for students with the disability. Digitizing books, articles and journals and providing it online will make the study material more accessible. Even the examinations can be improved by using technology.
+
+9) **Department/Committees to ensure the standards.** There should be committees responsible for ensuring that guidelines are being followed by the education institutes. This will ensure that no lapse occurs on the part of the institute and no student has to suffer because of that.
+
+
+### What India can learn from Sweden
+
+1. Sweden has more concise and clear material available online on the rights of people with disability in regard to higher education. This is something which can go a long way in making the students aware of their own rights and facilities available to them. This is something which India can also implement.
+
+2. All higher education institutes in Sweden clearly provide information on the facilities they provide for students with the disability. This is helpful in choosing the university and is a good step which India should make sure to implement.
+
+3. Sweden has a more inclusive infrastructure related to transportation and accessibility. All the public transportation and university campuses are accessible to students with disabilities and this is something which is very much missing in India.
+
+4. Sweden has comparatively better wheelchair accessible accommodation and public facilities which is one of the encouraging factor people with disability to become independent and something which is a need of the hour in India.
+
+
+
+## References
+

@@ -1,0 +1,70 @@
+---
+title: "Plagiarism: A Mindset Problem"
+author: "Anubhav Dikshit, LiUID anudi287"
+output: pdf_document
+bibliography: bibliography.bib
+documentclass: "article"
+abstract: " Plagiarism is a complex problem faced by all academic institutes/universities. Despite the common problem, understanding the reasons for plagiarism differs from institute to institute. While some institutes attribute the problem to the quality of students, some to attribute it to the competitive environment and a majority attribute the cause as culture of the students. This paper is an effort to understand the extent to which academia attributes plagiarism to culture/upbringing of the students and suggests that plagiarism is not a cultural but a mindset problem."
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+biblio-style: apsr
+---
+```{r, message = FALSE, echo=FALSE}
+library(knitr)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+Robin William said, "I always thought the idea of education was to learn to think for yourself". In today's world, education is increasing and getting more competitive. Thus, it is turning more into getting an edge on others. When it comes to getting edge on a project/assignment, plagiarism seems to be the easy answer in all parts of the world [@amos2014ethics]. I think the issue of the plagiarism warrants everyone attention, for this could undo the academic achievements of humanity simply by eroding the trust in research and the very concept of education.
+
+There are many stereotypes when it comes to plagiarism. Some attribute the increase in plagiarism due to an influence of culture. There is also a notion that since western education promotes individual thinking, it will result in more original thought hence leading to less plagiarism cases compared to other education system (Indian, Chinese etc.). There is therefore, certainly a need to verify this claim using the literature of today.
+
+Some of the reasons that are suggested for plagiarism that have a cultural influence are: English being a second language for student increased the likelihood of plagiarism[@heckler2015role], the mindset of students [@koul2009influence], environmental factors, including the punishment for plagiarism[@mccabe2001cheating] etc.
+
+To gauge the various aspects of plagiarism, it is important to understand the reasons for plagiarism. What attributes of students make them more susceptible towards plagiarism and which are the conditions that act as a catalyst in this process? In pursuit of answering the above questions, one of the most preferred and easy tool employed is a survey. While some of the surveys were designed with specific ethnicity in mind[@jereb2018factors], others focused on investigating the reasons for plagiarism[@eret2010plagiarism]. Among the literature on plagiarism, two important and highly cited papers were selected for critical review. ***An empirical analysis of differences in plagiarism among world cultures***[@ison2018empirical] and ***The Role of Cultural Values in Plagiarism in Higher Education***[@heckler2015role]. 
+
+## Discussion
+
+In the paper ***The Role of Cultural Values in Plagiarism in Higher Education*** the authors wants to understand the student's mindset when it comes to plagiarism and the methodology used was to conduct a survey of 537 students (all belong to the same course Introduction to Sociology). The survey had about 45% take-rate. As an incentive to the students taking the survey, 1 extra credit was awarded to each of them. Although the survey sample was biased in terms of a single university and single course, the survey yielded some interesting results and unique.
+
+```{r, message = FALSE, echo=FALSE}
+
+df <- data.frame(Rationale = c("Faculty fault", "Time management", "Means to an end", "Internet is public", "Did not know", "Same idea", "Not whole paper", "Everyone does it", "Have not heard any"),
+                 "Percentage of response"  = c("43.7", "40.3", "34.9", "34.9", "29.0", "27.3", "9.7", "9.2", "7.1"))
+                 
+kable(df, caption = "Table showing the justification for plagiarism (Ison 2018)")
+```
+
+
+The result: Out of 240 students 100% of them had a good understanding of what constituent's plagiarism. This dispelled the myth that students are ignorant about plagiarism. Another interesting thing to note is that the desire to excel and time crunch ('Time management' and 'Means to end' in the survey) together is the number one reason provided for plagiarism (75% of total). Together this result points out that it is the environmental factor that influence of students when it comes to plagiarism.
+
+In the paper ***An empirical analysis of differences in plagiarism among world cultures*** the authors wants to understand the impact of culture when it comes to plagiarism and the methodology used was to conduct a survey of 266 students per group. The groups were formed by nationality of student - United States, Western Europe, US, Eastern Europe, Africa, China, India and Middle East. The authors gathered doctoral dissertations and master's theses (only English language) from the universities and analysed for plagiarism (content matching assessment) using a software. The output of this software is similarity index which is basically a measure of text overlap with other sources (internal database as well as online).
+
+
+Random samples were drawn from each group and these were tested to determine the overlap. The mean and the median of the similarity index was used to gauge the extent of plagiarism vs. nationality of students. The procedure had its drawbacks in terms of sourcing the candidates from only UK and US Institutes.
+
+```{r, message = FALSE, echo=FALSE}
+
+df2 <- data.frame(Group = c("Western Europe", "USA", "Eastern Europe/Russia", "Africa", "China", "Middle East", "India", "All groups"),
+                 Mean = c(20.6, 22.7, 23, 23.7, 25.9, 27.5, 32.5, 25.1),
+                 Median = c(14.5, 14.5, 15.5, 17.5, 25.5, 23.5, 26.5, 20),
+                 SD = c(16.3, 17.5, 18.3, 16.3, 10.9, 16.8, 18.1, 16.7),
+                 Variance = c(267.3, 307.8, 335.7, 265.4, 118.4, 281.4, 327.9, 279.2))
+                 
+kable(df2, caption = "Table showing the similarity index vs. groups (Heckler and Forde 2015)")
+```
+
+The result: The extend of plagiarism (mean score) by Chinese student vs. American students is not significantly different, dispelling the myth that American student are better in original thoughts. Furthermore, both mean and median of Indian student was higher, suggesting that plagiarism is significantly higher than the rest of the world (more than Africa). This also reinforces the findings from the previous paper of ignorance being a cause for plagiarism. 
+
+About India leading the cases in the survey, as an undergraduate student, we were encouraged to write papers. We were provided with sample journal paper and asked to do literature review, with only the number of papers published being the objective in mind. We were aware that we should avoid plagiarism, but this task lacked any feedback thus we just did an adequate job. It should also be pointed out that there is a lack of enforcing a content matching assessment software which leads to no detection/correction mechanism for students to practice paper writing[@singh2016preventing].
+
+## Conclusion
+
+We know that plagiarism is a complex problem, which by all literature suggests is also a growing problem. One of the things that we have established is the fact that culture is rarely the cause for plagiarism, as suggested by [@heckler2015role] factors like increased competition is a far bigger contributor. Another important reason for different kind of plagiarism (not citing the source) is the lack of practice by students[@adhikari2018beyond]. Personally, this is something that I completely agree with. Not being exposed to right tools and practice of reading and writing academic papers is the real reason for the increase in propensity towards plagiarism. 
+
+If every student is provided a sandbox environment to practice and learn the do's and don'ts of reading/writing scientific literature, then, it is my belief, that the rate of plagiarism will certainly drop. Having personal experience in academic and culture difference between the Western education and the Indian education system, I believe that one step in this direction of reducing plagiarism is taken in my university (Linköping University). Every student in my master's program is asked to write a non-technical paper on broad range of topics. The requirements are made simple and successful completion of this task provides students with 3 credits. Thus, students irrespective of their backgrounds learn the proper techniques of citing source, researching literature, presentation skills and all this leads to a sandbox environment where students can learn from their mistakes and they are ready for future academic journey.
+
+
+# References

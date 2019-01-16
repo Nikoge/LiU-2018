@@ -1,0 +1,377 @@
+---
+title: Avoiding Plagiarism in Higher Education
+subtitle: Students should study and practice plagiarism policies!
+author:
+  - name: Julius Kittler
+    email: julki092@student.liu.se
+    affiliation: Link&#246;ping University
+abstract: |
+  Plagiarism is an essential topic in academia and can affect peoples lives 
+  even beyond that. To be able to avoid committing plagiarism by accident, 
+  students need to be properly educated about the topic. This paper takes a 
+  qualitative approach to gain insights about which knowledge and skills 
+  students are lacking with respect to plagiarism. The findings from this case 
+  study may inspire future research about specific educational measures. 
+  
+bibliography: references.bib
+link-citations: true
+output: rticles::acm_article
+---
+
+# Introduction
+All university students face questions regarding plagiarism at some point. 
+As their degree and maybe even their future academic career depends on it, being 
+able to avoid plagiarism is essential for all students. However, plagiarism 
+still occurs - for different reasons. 
+
+This paper takes a look at two specific reasons, the lack of knowledge about 
+plagiarism and the ability to follow the plagiarism policies in practice. 
+Particularly, a case study in form of a survey with master's students from 
+different academic and cultural backgrounds was conducted. The participants were 
+asked about their confidence to avoid plagiarism in their master's thesis and 
+were asked to pose any questions that they had regarding plagiarism. 
+
+The goal of this survey was to get an overview of the knowledge and skills
+regarding plagiarism that students need. Due to the nature of the sample
+however, the results are not representative. Hence, this paper can be 
+considered a case study rather than an empiric study.
+
+# Theoretical Overview
+*What is the definition of plagiarism?* There are various definitions of 
+plagiarism. Many universities inform their students about plagiarism online, 
+using definitions that highlight different aspects of plagiarism. What all 
+definitions have in common is that they contain the main issue of using another 
+author's work without making clear that it is from this author.
+
+The Oxford University defines plagiarism as follows:
+
+>"Plagiarism is presenting someone else’s work or ideas as your own, with or
+>without their consent, by incorporating it into your work without full
+>acknowledgement. All published and unpublished material, whether in manuscript, 
+>printed or electronic form, is covered under this definition. Plagiarism may be 
+>intentional or reckless, or unintentional." 
+[@oxford2018]
+
+The Linköping University, educating its students about plagiarism online as 
+well, defines it as follows:
+
+>"To plagiarize means using somebody else's work and presenting it as your own 
+>without referring to the source. It may be a text, idea, theory, image, chart, 
+>figure, music, computer program or a product. Even reformulation, paraphrasing, 
+>text to your own words, without referencing the source is plagiarism.
+>Plagiarism may also violate Copyright laws."
+[@liu2018]
+
+*How common is plagiarism among students?* Ercegovac et al. argue 
+in their review about academic dishonesty that plagiarism is a common issue, 
+especially copying information from the web [@ercegovac2004]. For instance, the 
+review refers to a study by Braumoeller et al. who conducted a study with 
+political science students. This study found that one out of eight papers 
+written by the students was problematic due to plagiarism [@braumoeller2001]. 
+
+*Which forms of plagiarism exist?* Braumoeller et al. differentiate between 
+casual plagiarism and blatant plagiarism, saying that the majority of plagiarism 
+cases detected in the students' papers is casual plagiarism. 
+The authors define a case of casual plagiarism as a paper that a) has a 
+text passage that is very similar to the source material, b) has a reference 
+to the author of the source material somewhere in the paper but c) not in a way 
+that makes clear that the text passage is originally from this author. 
+In contrast to that, they define a case of blatant plagiarism as a paper that 
+a) contains at least one text passage that is an exact copy from the source 
+material but b) does not make clear where this text passage is from.
+
+*Why do students plagiarise?* Comas-Forgas et al. argue that some main 
+reasons for plagiarism among students are related to the students themselves 
+such as bad time management and difficulties with the course work, and to the 
+availability of information online for potential copying [@comas-forgas2010]. 
+Dor&oacute; asked students what they think are the reasons of other students to 
+conduct plagiarism [@doro2014]. The main reasons mentioned by the students were 
+the intention to save time but also the "lack of information on plagiarism and 
+lack of citing and paraphrasing skills" [@doro2014] which is referred to as 
+unintentional plagiarism. 
+
+*What is lacking: theory or practice?* According to Ercegovac et al. 
+"[it] is simply not enough to define plagiarism, distribute neatly prepared 
+citation templates for different formats, and say that plagiarism is wrong, 
+punishable, easily detectable" [@ercegovac2004]. Dor&oacute; points out that 
+especially students who conduct unintentional plagiarism do so not because of a 
+lack of knowledge but rather because of lack of practice [@doro2014]. Of course, 
+theory and practice are not standalone concepts as practice does not make sense 
+without theory. However, previous research mentioned above indicates that it is 
+especially practice that seems to be lacking.
+
+*Which difficulties do students have with following plagiarism policies?*
+A case study with international students in Sweden highlights that 
+"international [master's] students still need basic education on how to cite and 
+reference properly in order to avoid plagiarism. They especially need more 
+opportunities to practice paraphrasing" [@gunnarsson2014]. Other research even 
+implies that, reversely, practicing paraphrasing also helps students to get a 
+better understanding of plagiarism than just plain memorization [@barry2006]. 
+
+*How can institutions educate and support students?* Several studies have shown 
+that a university course, in which plagiarism is a core theme, can improve 
+students' understanding of plagiarism and their ability to avoid it 
+[@gunnarsson2014; @barry2006; @estow2011]. E.g. Estow et al. found in a study 
+with students in the USA that "giving students hands-on experience and repeated 
+exposure to the topic of plagiarism improves their ability to identify faulty 
+paraphrasing, enhances their own paraphrasing" [@estow2011]. It may even be a 
+good approach to give grades for the course [@barry2006].
+
+# Methodology
+The case study was conducted with first semester students (n = 19), all from the 
+same statistics master's program in Sweden. The majority of the students 
+were international students from East and South Asia, the Middle East, Africa, 
+Europe and South America. There were eleven students with an engineering 
+background and eight students with a statistics or mathematics background. The 
+participants were asked the following three questions:  
+
+1. How confident are you that you are able to avoid any plagiarism in your 
+master's thesis? \
+2. Which questions [min. 1 question] need to be answered to make you feel more 
+confident about avoiding plagiarism in your master’s thesis? \
+3. Which activities [min. 3 activities] would help you feel more confident about 
+avoiding plagiarism in your master’s thesis?\
+
+Answers to all questions were required to complete the survey but in the 
+text-based questions (question 2 and 3), the participants were able to write 
+"NA" or "None". 
+
+The survey results were analyzed mostly qualitatively (except the results for 
+the first question). The data was not analyzed by region and academic background
+to ensure anonymity. Furthermore, no statistical tests were conducted because of 
+the small sample size. 
+
+The answers for the second and third question were processed as follows: 
+1) Missing answers and answers that did not relate to the question were removed. 
+2) Grammar and spelling were corrected to improve readability.
+3) Answers that contained semantically independent pieces of information were 
+split up (e.g. into two answers). 
+4) The resulting answers were grouped by topic.
+
+# Results
+
+The results for the first question "How confident are you that you are able to 
+avoid any plagiarism in your master's thesis?" are displayed visually below. 
+After coding the answers numerically (from "very confident" = 6 to "not at all 
+confident" = 1), the median level of confidence was "confident" (5) and the mean 
+was "rather confident" (4.37).
+
+
+```{r echo = FALSE, warning = FALSE}
+
+# Import data from data directory
+dir = paste(getwd(), "/data/surveydata.csv", sep = "")
+data = read.csv(dir)
+
+# Create a factor for the first survey question
+confidence_raw = data[, 2]
+confidence = factor(x = confidence_raw, levels = c(6:1), 
+                    labels = c("very confident", "confident", 
+                               "rather confident", "rather not confident", 
+                               "not confident", "not at all confident"))
+
+# Visualize the first survey question 
+par(mar = (c(5, 10, 5, 5)))
+barplot(rev(table(confidence)), 
+        main = "Figure 1: Confidence about Avoiding Plagiarism in Thesis", 
+        ylab = "", xlab = "Number of Responses (n = 19)", axes = TRUE, 
+        cex.axis = 0.8, cex.lab = 1, space = 1, col="grey80", horiz=TRUE, 
+        las = 1)
+
+```
+
+The results for the second and third survey question can be found in detail in 
+the appendix. There are two missing answers for each of the two questions as
+the students had written "NA" or "None".
+
+Overall, the participants' questions regarding plagiarism (second survey 
+question) were related to the following three topics (numbers in parentheses 
+indicate the number of occurences): the definition of plagiarism (3), the 
+automatic checks that universities do to identify plagiarism (4), and
+the correct way of citing and referencing a source (5). Furthermore, 
+four questions regarding special cases (e.g. referencing references and 
+referencing theorems and axioms) were asked.
+
+Activities that the participants considered helpful to become more 
+confident about their abilities to avoid plagiarism were related to the 
+following six topics: seeing examples of plagiarism (6), having a 
+mentor e.g. a supervisor or an experienced peer (9), getting 
+feedback from others (5), using and understanding the automatic 
+checking system (7), independent studying of plagiarism (9)
+and seminars (3).
+
+# Conclusions
+*1. Most students feel confident about their ability to avoid plagiarism but 
+they still need some more knowledge and/or practice regarding plagiarism.*
+
+First of all, one can conclude that most students who participated in the (not
+representative) survey felt confident about their abilites to avoid plagiarism
+in their master's thesis. However, 21 percent of the participants felt rather
+not confident, not confident or not at all confident. This seems to be a 
+considerable amount when keeping in mind that none of the students should 
+commit plagiarism in their master's thesis. 
+
+Noticeably, even though the majority of the students felt confident regarding
+plagiarism, all students (except two who did not answer the survey questsions) 
+still asked reasonable questions regarding plagiarism (question 2) or named 
+activities that would help them become even more confident (question 3). 
+This may imply that the students who do feel confident about their ability 
+to avoid plagiarism in their thesis might also need some more knowledge and/or 
+practice regarding plagiarism before they actually start writing their thesis.
+
+*2. The students have questions regarding various aspects of plagiarism. Most of 
+the questions relate to citing/referencing, automatic checking systems, and 
+plagiarism in general.*
+
+The variety of the students' questions is rather broad as some questions 
+relate to the basic concept of plagiarim whereas others cover advanced topics 
+like referencing a paper that has been referenced by a source that the student 
+wants to use in his or her thesis. Specifically, the participants would like to 
+get more information regarding citations and a better understanding of how the 
+automatic checks conducted by universities work.
+
+*3. The students would like to fill their knowledge and skill gaps with help of
+examples, mentors, feedback, independent studying and seminars.*
+
+Apparently, for some students, plagiarism is still a little abstract as 
+they are asking for concrete examples. Furthermore, the fact that nine students 
+asked for some kind of mentorship might indicate that these students anticipate 
+that more questions will occur when they actually work on their thesis and need
+to avoid plagiarism "in practice". Getting feedback from other people as well as 
+from plagiarism checking systems seems to be important for many participants. 
+Interestingly, nine students mentioned activities that can be done 
+independently. This could indicate confidence about their ability to fill 
+knowledge gaps themselves. However, three students also asked for a seminar or 
+lectures.
+
+*Overall, the participants' answers illustrate that the students indeed need 
+more knowledge and practical skills. Better education about plagiarism in 
+general, automatic plagiarism checks, referencing and citing would help them 
+feel more confident not to accidentally commit plagiarism. The students would 
+like to acquire this knowledge and these skills with help of mentors, feedback, 
+concrete examples, independent studying and seminars.*
+
+\newpage
+
+# Appendix
+
+**Which questions [min. 1 question] need to be answered to make you feel more 
+confident about avoiding plagiarism in your master’s thesis?**
+
+*Plagiarism Definition* \  
+
+1. "What's plagiarism?" \
+2. "Can we use someone's ideas in our own way?" \
+3. "At which level is paraphrasing tolerated?"
+
+*Automatic Checks* \  
+
+1. "How to self-check our content for plagiarism? What kind of tools are 
+available?" \
+2. "What is the thereshold for terming a sentence to be plagiarized ([e.g.] 60%)?" \
+3. "[What] is the minimum percentage in order to be accused [of] plagiarism?" \
+4. "Have I added [all] the necessary quotes? Has the school system given me a 
+green in the pre-rest before the final submission?"
+
+*References/Citations* \  
+
+1. "In which form should be cited?" \
+2. "How best to cite someone's work" \
+3. "How can I make sure this is [a] reference, not plagiarism?"\
+4. "How exactly we can use a paper to write our paper. [...] And what [...]
+details should we add if we are taking a sentance from [a] reference [paper]." \
+5. "How do I avoid plagiarism when copying and changing (at the same time) a 
+part of some [original] work."
+
+*Special Cases* \  
+
+1. "If I want to use of some [theorems], axioms [etc.], should I mention [...] 
+any refrences?" \
+2. "If I use [...] a sentence which has been refered to another paper, 
+should I refer to [...] both [papers] or [is] the main reference [...] enough?" \
+3. "What happens when you develop an idea that other people had before but you 
+couldn't (for any reason) see?" \
+4. "What if I (unintentionally) cite something from a language [I] don't 
+[understand], what happens then? Is that plagiarism?"
+
+\newpage
+
+**Which activities [min. 3 activities] would help you feel more confident about 
+avoiding plagiarism in your master’s thesis?**
+
+*Examples* \  
+
+1. "See citation examples" \
+2. "See examples of plagiarism" \
+3. "See some examples" \
+4. "Looking through some hard to spot examples" \
+5. "To have and use a condensated cheat sheet about the most common and not so 
+common mistakes with graphs and examples." \
+6. "Talking to someone who conducted plagiarism before" \
+
+*Montorship* \ 
+
+1. "Asking someone who knows what [plagiarism] is" \
+2. "Talking to someone who [has] already [written] a master's thesis [successfully]" \
+3. "Regularly meeting and talking with the instructor about the paper progress" \
+4. "Double check with supervisor if something is unclear" \
+5. "Periodic meetings with the advisor" \
+6. "Talking to my teacher" \
+7. "Talking to someone" \
+8. "Grouping students with experience in writing thesis with those who have no 
+experience at all" \
+9. "Closed group interaction between professor and student so that students are 
+not scared of professors" \
+
+*Feedback* \  
+
+1. "Getting masters thesis reviewed by [peers]" \
+2. "Periodic revisions of the thesis" \
+3. "Having someone who’s familiar with the sources read it through" \
+4. "Having more than two total checks before the final submission" \
+5. "Formative Feedback based on [summative] assessment" \
+
+*Automatic Checks* \ 
+
+1. "Using plagiarism check." \
+2. "Guidance in order to avoid [evaluation system warnings]" \
+3. "Discovering how the anti-plagiatism softwares work" \
+4. "Using of tools that can find plagiarism" \
+5. "Being given the opportunity to access the schools plagiarism system to 
+better improve my thesis" \
+6. "If there was a proxy urkund to run with" \
+7. "Double check [URKUND's] rules" \
+
+*Independent* \ 
+
+1. "Reading a paper and summarizing/paraphrasing on my own, [learning] best 
+practices regarding citations and references" \
+2. "Check again and again [and] read more papers" \
+3. "Reading rules and regulations associated to plagiarism" \
+4. "Double check that sources are cited properly" \
+5. "Reading about plagiarism" \
+6. "Refering to the refrences as far as I can. Try not to copy the sentences." \
+7. "Adding more graphics / charts to convey the message instead of text" \
+8. "[...] I need to learn the concept with [its] details so [that] I won’t 
+accidentally be a part of that." \
+9. [improving] technical writing skills \
+
+*Seminars* \  
+
+1. "More [...] seminars or practical [sessions] to be familiar with how to write 
+a thesis" \
+2. "Seminars on to what extent is considered plagiarism" \
+3. "Have a lecture with an expert of the field. Go deep into the difference 
+between paraphrasing and plagiarism" \
+
+\newpage
+
+# References
+
+---
+references:
+...
+
+
+
+

@@ -1,0 +1,89 @@
+---
+title: "Gap between higher education and workplace"
+author: "Maquieira Mariani"
+date: "19/09/2018"
+bibliography: ref.bib
+output: pdf_document
+---
+
+#Introduction
+
+
+For most high-skilled jobs, higher education is usually the responsible in converting a high school graduate into a full-time employee; however, some differences might be found in the process. This paper explores the gap between what university teaches and what most employers require; it also focus on the importance of teamwork both for academia and the workplace. Past literature is analyzed as well as a few interviews I conducted to graduates from Argentina. Finally, there is my own personal view on this matter.
+
+
+
+
+
+#Previous research
+
+
+There are no clearly defined roles and responsibilities in how to cover the preparation of an individual from high-school to a high-skilled job. Some might say that providing what industry asks for is the university entirely responsibility; but some others might agree with Edsger W. Dijkstra; he said “it is not the task of the University to offer what society asks for, but to give what society needs”, the problem arises when what society “asks for” does not match what it “needs”. Anyway, we agree on the ultimate goal being to produce graduates with ability to think, learn and adapt[@dunne2000bridging]. Most of us also would concur in assigning the role of transitioning from education to work to university and not to the employer.
+
+
+Setting aside the discussion if it “should provide what is needed or what it is asked”: teamwork, collaboration and cooperation; are skills that are becoming more important each day, as we live in an increasing connected and globalized world. Furthermore, as the number of students grows; that may not mean a growth of academics, hence teamwork could release some responsibility and tasks off professors: for example, having just one assignment per group (and not one per individual); also, many doubts could be evacuated among the students themselves without consuming the professor’s limited time. Moreover, the clinical phycology sector advocates groups and teams, as it can provide a favorable context for learning, as opposed to individual learning [@dunne2000bridging]. 
+
+
+
+In the past, learning meant only “knowledge”. In the 21st century this, changed:  learning is both knowledge and social skills; and there is a strong reason behind all this. Teamwork and social skills in general, are advocated by many sectors: at a first glance it looks beneficial… But what are the proven benefits?
+
+It would be impossible to list all the benefits in the entire history; since we are all social creatures and undoubtedly it had helped us to progress through the centuries, but recent research agrees on the next points:
+
+
+-	Group outcomes are often better than individual outcomes (“two brains are better than one”).
+-	Top students are likely to show and explain their skills and strategies to other students. (“what done through cooperation today, will tomorrow be done unaided”).
+-	Competition between groups boosts the cooperation between the members of a given group.
+-	Results that came using prior group support may also be of higher quality. (“snowball effect”).
+-	Confidence of individuals is boosted by groups and leads to higher levels of active participation.
+-	It is vital in terms of making more efficient use of staff time; it may also enable the saving of resources and equipment.
+-	Promotes individual transferable skills like time management, written communication and negotiation. [@dunne2000bridging]
+
+
+It is satisfying to know this has been proven, but from my already short experience with Sweden’s education system, I can sense some of its advantages: all the above is true and can be seen here in Linköping. Both social and transferable skills play a key role; we agree that Einstein could have done a brilliant job on his own but that is the exception, not the rule. Social skills like: being able to speak clearly, thinking before speaking and conveying a clear message, having good manners, body language, being able to put oneself in the situation of the other person, etc. are extremely important skills for most jobs; as well as, transferable skills like proper writing skills, time management, being able to motivate oneself and others, teamwork, research skills, etc.
+
+Many companies focus on the interview, and they insist on the importance of the “good attitude” that a candidate must have; on the other hand, negligent and passive attitudes have been seen in interviews way too often.[@abdullah2013bridging] 
+
+The above skills have been missing in several cases: let’s consider the English language itself; Sweden ranks second in the  “EF English Proficiency Index” (this index ranks countries by the average level of English language skills amongst those adults who took the test), but in many countries like Argentina the language is not perfectly spoken and this can lead to two cases: one case is the person hired, not being able to perform at his/her best due to the language barrier, or in a worse case miscommunication leading to errors. The other case is a candidate directly being rejected due to poor English level. I myself, have seen many cases of outstanding graduates not being able to secure a job position due to their English level. [@abdullah2013bridging] English is the global language and vital for international communication. 
+
+Other aspects to be considered are skills that might be taught at university but there are some cases where that is not enough: for example, someone being timid, or cultural differences... Let’s say the above can be “taught”, but a shy person will undoubtedly struggle more due to his shyness. Also “cross cultural” aspects can be taught, but entirely all differences between all cultures cannot be explained. On a personal note I can say that Swedish and Argentine cultures are very similar, one would assume a Swedish businessperson attending meetings in Buenos Aires should succeed, but, wait… In Buenos Aires the common greeting is a kiss, so, he or she would have to kiss every man and woman he meets, he or she must also get customary to the fact that for starting a conversation it is common to grab the other’s person shoulder; lunch should not be eaten before 2pm, and dinner should not be before 9pm, otherwise it would be considered discourteous and/or eccentric. The point here is to highlight the importance of soft skills, the person must be a genius at his or her task, but cultural differences or shyness can undermine it all.
+
+
+
+#Interviews
+
+
+In order to explore other’s views, I conducted seven interviews to university graduates, all of them completed their education in Argentina with no experience abroad and they are now full-time employed by a private company or in the public sector.
+The interview aimed to explore the next points considering higher education:
+A)	Topics studied at university that are essential for their daily job tasks.
+B)	Topics studied at university that are “useless” for their daily job tasks.
+C)	Topics not studied at university that are essential for their daily job tasks.
+D)	Topics that they would have added to their university career plan/curriculum.
+
+
+In most cases there is consensus on the answers; I see this due to the fact that education in Argentina is quite rigid and even though the interviewees have followed different careers and sectors, higher education in Argentina has the same issues across all departments. 
+
+A) Majority of responses agree on the “ability to solve known issues” and in another scenario “ability to investigate and examine unknown topics”; these could be related to “think and adapt”[@dunne2000bridging]. On the “computer science” side it was also prized the study of an “agnostic” approach as opposed to a specific technology (agnostic refers to hardware and/or software that works with various systems without requiring any special adaptations; anything that is designed to be compatible across most common systems). On other sectors learning law and theoretical aspects was crucial. 
+
+B) Most answers denoted discrepancies: for some, everything was useful; for others the 1st and 2nd year “plagued” with courses that were not specific to their careers resulted useless, and obviously there were some career/sector specific answers. Nevertheless, there was some unanimity on the “computer science” sector: courses that only taught a specific software/technology resulted in being considered of not much use (a bias might exit). If we take an extreme example, let’s say a graduate in computer science from 1970: most specific technologies he or she used are not likely to be used nowadays, nonetheless I would not consider it “useless”. Most graduates interviewed graduated before 2009, hence, they might see what they learnt back then as “old” or “useless”.
+
+C) There was consensus: answers pointed to (ironically) specific software/technology, that in most cases was self-taught, or learnt in a training provided by the company they worked. Surprisingly, social skills were not mentioned as “needed”, this is due to the culture, that can be summarized in: “this needs to be done for yesterday”, hence, there is no time for “social skills”. Personally, I believe this is due to never experiencing first-hand the benefits of having and applying good social and transferable skills.
+
+D) Perhaps this was the most interesting question: what would they add?; remarkably there was not much enthusiasm in the answers, I think there could be a bias here, and could be related to the fact that most students work full time as they study, so who would add anything? Nevertheless, the main idea that emerged was the possibility to choose courses and create a more personalized curriculum. Unfortunately, most curriculums are fixed and one cannot decide which courses to take.
+
+On a finale note, five out of the seven interviewed where from a computer science background: as this sector changes faster than others, I guess it’s complex to judge higher education back in time. Just to put a simple example, one course might focus more on a technology/topic that in a twenty years’ time might be of little us, whereas another course might seem unimportant at the moment and it results in a technology that spikes in popularity and usage in a few years. For “computer science” it appears that if the technology taught at the moment was not successful in the continuous years, looks as “useless”, but on the other hand if a technology/software was not taught at the university and then it became popular and ended up being used at their current jobs they would have added it. I guess it is difficult to predict how much we will use in the future, the things that we learn now; that is why most courses focus on concepts, which are time-less as opposed to a specific software.
+
+
+
+
+
+#Personal view and conclusion.
+
+
+Overall, the above analysis highlights the importance of soft skills and the continuous fight for “closing” the gap. 
+To stablish my own opinion on this matter I first need to stress that an “interview for a job position” should not be confused with long term success in a job. During interviews there are cases were people just do not prepare for it, and interviewers somehow assume it is the university’s entire fault or at least partially: let’s get this right, it is the candidate’s responsibility to investigate about the company/organization he or she is applying for. Classes on how to prepare for an interview are available extensively, but that is another discussion; what needs to be agreed is that the candidate needs at least some sort of preparation for the interview. Regarding “long term success”, as explored, soft skills are key. In my own personal experience, I have seen “the gap” in a few opportunities. At university all the content was in Spanish, and while working one’s brain must be “switched” to English, since most work documentation is in that language, and meetings with people abroad shall be in that language as well (at university nobody really explains how to “switch” your brain to another language). Another experience was related to “time management”, I used to complete assignments/study at night or during the weekend; there is a time restriction at most jobs and stuff needs to be done before 5pm in most cases; that took me some time to adapt (assignments that must be submitted before 5pm could be a solution?). I also had to learn the hard way that kissing is not the common salute in the entire world!
+
+My most recent experience of this gap was working with people from other sectors: one gets so used to using more “technological” terms like “performant”, “box”, “kill the process”, “kill the box” or “data set” whereas people from other sectors might not be familiar with them. Likewise, I had to adapt to certain “marketing”, or “accountancy” terms that I was unfamiliar with. I believe we get so used to working with people only from our sector/division that when we need to meet with non-technical people it is as if we spoke two different languages; I guess assignments with people from more humanistic careers could be introduced, in order to explain our technical words in simpler or more understandable terms.
+Personally, I believe this gap is much smaller in Sweden as opposed to my home town (Buenos Aires) and in the end it is a never-ending process, constant adjustments will have to be done as society progresses, we, as students have a key role in this, for example here in Sweden having ourselves the possibility to do an evolution after each course, and  specially, for it to be heard and be anonymous is of great help. As a final note, on our first class in Sweden a job description was opened and thoroughly reviewed, it is clear from the beginning that Linköping University wants this gap to be as small as possible.
+
+
+#References

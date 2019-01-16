@@ -460,6 +460,196 @@ out_test <- rbind(out_test, temp)
 
 
 
+# 2017-04-18
 
+### 1.Plot the dependence of CW versus BD where the points are colored by Species. Are CW and BD good predictors of the Species?
+
+```{r}
+
+library(dplyr)
+library(ggplot2)
+
+crab_data <- read.csv("australian-crabs.csv")
+
+ggplot(data=crab_data, aes(x = BD, y = CW, colour=species)) + 
+  geom_point() + 
+  ggtitle("Plot of Carapace Width vs. Body depth")
+
+```
+
+### 2. Create a Naïve Bayes classifier model with Species as target and CW and BD as predictors. Present the confusion matrix and comment on the quality of the classification. Based on the assumptions of the Naïve Bayes, explain why this model is not appropriate for these data
+
+```{r}
+library(e1071)
+
+options(scipen = 999)
+
+naive_model <- naiveBayes(species ~CW+BD, data=crab_data)
+predicted_class <- predict(naive_model, newdata=crab_data, type = "class")
+
+conf_naive_train <- table(crab_data$species, predicted_class)
+names(dimnames(conf_naive_train)) <- c("Actual Train", "Predicted Train")
+caret::confusionMatrix(conf_naive_train)
+
+```
+
+### 3. Fit the logistic regression now with Species as target and CW and BD as predictors and present the equation of the decision boundary. Plot the classified data and the decision boundary and comment on the quality of the classification
+
+```{r}
+
+log_model <- glm(species ~ CW+BD, data=crab_data, family = binomial)
+
+prediction_prob <- predict(log_model, newdata = crab_data, type = "response")
+prediction_class_50 <- ifelse(prediction_prob > 0.50, "Orange", "Blue")
+
+conf_log_train <- table(crab_data$species, prediction_class_50)
+names(dimnames(conf_log_train)) <- c("Actual Train", "Predicted Train")
+caret::confusionMatrix(conf_log_train)
+
+summary(log_model)
+```
+
+### 4. Scale variables CW and BD and perform principal component analysis with these two variables. Present the proportion of variation explained by PC1 and PC2 and based on results from step 1 explain why the first principal component contains so much variation.
+
+```{r}
+
+new_crab_data <- crab_data %>% select (CW, BD) %>% scale()
+
+pca_result = prcomp(new_crab_data)
+
+contribution <- summary(pca_result)$importance
+knitr::kable(contribution[,1:2],
+caption = "Contribution of PCA axis towards varience explaination")
+
+
+eigenvalues = pca_result$sdev^2
+# plotting proportion of variation for principal components
+plotData = as.data.frame(cbind(pc = 1:2,
+variationProportion = eigenvalues[1:2]/sum(eigenvalues),
+cummulative = cumsum(eigenvalues[1:2]/sum(eigenvalues))))
+ggplot(data = plotData) +
+geom_col(aes(x = pc, y = variationProportion), width = 0.3, fill = "grey70") +
+geom_line(data = plotData,
+aes(x = pc, y = cummulative)) +
+geom_text(aes(x = pc, y = cummulative, label = round(cummulative, 3)), size = 4,
+position = "identity", vjust = 1.5) +
+theme_bw() +
+ggtitle("Proportion of variation for principal components")
+
+
+factoextra::fviz_pca_var(pca_result,
+col.var = "contrib", # Color by contributions to the PC
+gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+repel = TRUE # Avoid text overlapping
+)
+
+```
+
+
+## Assignment 2
+
+### 1. Fit a generalized linear model in which response is Poisson distributed, and the canonical link (log) is used for regression. Report the probabilistic expression for the fitted model (how the target is distributed based on the feature)
+
+```{r}
+
+library(mgcv)
+
+bank_data <- read.csv2("bank.csv")
+
+gam_model <- glm(data=bank_data, formula = Time ~ Visitors, family=poisson(link = "log"))
+plot(gam_model)
+
+```
+
+### 2. Compute a prediction band for the values of Time=12,12.05,12.1,.,13.0 by using the model from step 1 and the parametric bootstrap with B=1000. Plot the original data values and the prediction band into one figure and comment whether the band seems to give a correct forecasting. How many customers (report a range) should the bank expect at 13.00?
+
+```{r}
+
+gam_model <- glm(data=bank_data, formula = Time ~ Visitors, family=poisson(link = "log"))
+
+new_seq <- seq(from=12, to=13, by = 0.05)
+temp <- as.data.frame(cbind(new_seq, new_seq))
+colnames(temp) <- c("Time", "Visitors")
+
+rng=function(data, mle) {
+data1=temp
+n=nrow(data1)
+pred <- predict(gam_model, newdata = data1)
+residual <- data1$EX - pred
+#generate new Price
+data1$EX=rnorm(n, pred, sd(residual))
+return(data1)
+}
+
+
+
+
+```
+
+
+## Assignment 3
+
+```{r}
+library(kernlab)
+
+# width is the sigma here. kernel rbfdot is gaussian. vanilladot is linear
+data(spam)
+spam$type <- as.factor(spam$type)
+## create test and training set
+n=nrow(spam)
+id=sample(1:n, floor(n*0.8))
+spamtrain=spam[id,]
+spamtest=spam[-id,]
+
+model_1 <- kernlab::ksvm(type~., data=spam, kernel="rbfdot", kpar=list(sigma=0.05), C=1, cross = 2)
+model_10 <- kernlab::ksvm(type~., data=spam, kernel="rbfdot", kpar=list(sigma=0.05), C=10, cross = 2)
+model_100 <- kernlab::ksvm(type~., data=spam, kernel="rbfdot", kpar=list(sigma=0.05), C=100, cross = 2)
+
+cross(model_1)
+cross(model_10)
+cross(model_100)
+
+```
+
+
+##NN
+
+```{r}
+
+library(neuralnet)
+
+#Generating data
+set.seed(1234567890)
+Var = runif(50, 0, 10)
+trva = data.frame(Var, Sin = sin(Var))
+tr1 <- tr[1:25,] # Fold 1
+tr2 <- tr[26:50,] # Fold 2
+
+# Random initialization of the weights in the interval [-1, 1]
+w_init = runif(31, -1, 1)
+
+# Training neural network
+nn = neuralnet(Sin ~ Var, data = tr, hidden = 10, startweights = w_init, threshold = 0.001)
+
+va_res = neuralnet::compute(nn, va$Var)$net.result
+va_mse = mean((va_res - va$Sin)^2)
+va_mse
+
+```
+
+### Ensemble
+
+```{r}
+library(mboost)
+bf <- read.csv2("bodyfatregression.csv")
+set.seed(1234567890)
+m <- blackboost(Bodyfat_percent~Waist_cm+Weight_kg, data=bf) 
+mstop(m)
+cvf <- cv(model.weights(m),type="kfold") 
+cvm <- cvrisk(m, folds=cvf, grid=1:100) 
+plot(cvm)
+mstop(cvm)
+
+```
 
 

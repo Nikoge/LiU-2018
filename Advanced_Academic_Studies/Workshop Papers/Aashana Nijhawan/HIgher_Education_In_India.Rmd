@@ -1,0 +1,88 @@
+---
+title: "Higher Education In India"
+author: "Aashana Nijhawan"
+date: "9/15/2018"
+output: pdf_document
+bibliography: bibliography.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Abstract 
+Education is represented as a country’s strength. India has been performing fairly well since the last two decades in the field of higher education. India is one of the biggest players of the higher education system. Be it medical or technology, Indian education system has gown. India is known to have educated, knowledgeable, and highly skilled people. The private universities have expanded rapidly. But the quality and base requirements needed for a university to be called close to ideal are only managed well by very few institutions. This paper is more condensed way to look what issues and facets are there in the Indian education system in various aspects, how students feel about it, and how the system can improve.
+
+
+## Introduction
+
+Education makes the foundation of each individual. One’s education defines a person’s personality and dignity. A country’s economic growth is a result of the education of its citizens. Education is a right for every human and it is independent of gender, caste, religion, and such biases. Yet, not everyone receives its access. With the increase in the population of India, the number of students opting for higher education is also increasing. The possibility of having access to quality, equality, and equity in the education system, at the same time, managing a yearly increase in the proportion of students does not seem achievable in the near future. The number of students in India is gargantuan sized that its education system stands third in the world at this point, after the United States of America and China @shaguri2013higher. The private sector universities have a huge role to play in promoting access and providing admission seats for higher studies, along with the government/state universities and colleges. India has been focusing on research, science, and technology since a few decades now. Many universities offer these courses that are very advanced and beneficial. India has 23 IITs (Indian Institute of Technology), 31 NITs (National Institute of Technology), 10 BITs (Birla Institute of Technology), 20 IIMs (Indian Institute of Management) are known for their exceptional faculty, research, infrastructure and producing the most successful employees and CEOs who are presently running companies like Google and Microsoft. The flagship educational establishment Indian Institute of Science (IISc) in Bangalore stands 91-100 banding in the World Reputation Rankings of 2018 and 170 in QS World University Rankings 2019 [Times higher education]. It is a feeling of prestige to study in these institutes. Every year about 11-12 lakh students register for engineering exams to get through IIT where the total number of seats are only 8000. These kinds of universities are very less in number to accommodate all. Thus, not every student in India gets an opportunity to attend an exemplary college in order to build their career and gain knowledge. 
+
+There are about 903 universities in India at present in 2017-2018 which is a 24.9% growth from 2013-2014 when it was 723 universities. Amongst these the highest number of universities are State Private and State Public Universities. The number of students enrolled in 2017-2018 is 3,66,42,378 which is a commendable rise @AIHES2017. In fact, both public and private universities are trying to incorporate several programmes together to provide better access to courses. But all these colleges apart from the tier1 and tier2 colleges lack in various factors. The studies are all theory and book based where practical knowledge is not being taught. The syllables are ages old and revised after very long intervals and the new update is still obsolete in terms of the real-world application. There is hardly funding available for students, especially for those who fall in the general category. @sheikh2017higher correctly states that the society is getting concerned about the quality of programmes, international rankings of higher education establishments, teaching methods and techniques, and research. And with the growth and diversification of the Indian higher education system these apprehensions will increase even more. 
+
+
+
+## Challenges and Issues faced for Higher Education in India 
+
+In India all the universities are governed and managed by The University Grant Commission (UGC). UGC enforces its standards is the main governing body at the tertiary level and advises the government, coordinating between the centre and the state. Accreditation for higher learning is monitored by twelve autonomous bodies established by the UGC @shaguri2013higher. The UCG has been working on to improve the Indian higher education system to improve. Yet, there are problems that exists.
+
+__Financial Aspect__: The institutions, apart from the government/central and state universities, that is private and deemed universities are not affordable by many students. The tuition fees per semester by IIT is now Rs.1,17,500 which is partly managed by government and partly by students. The average tuition fees of a private institute for engineering very easily touches Rs.14 Lakhs. And even if a student loan is taken the rate of interest by banks on loan is nearly 12% on which the interest starts right with the commencement of the course. According to the survey taken by Indians students 31.6% strongly agree that financially the studies are expensive in India. In contrast, the same survey was taken by European students who 28.6% strongly disagree and 42.9% disagree to higher education being expensive.
+
+
+
+``` {r echo = FALSE , out.width = "50%"}
+library(knitr)
+myimages<-list.files("/Users/aashana/Documents/Adv_Academic_Studies/Paper/images/", pattern = ".png", full.names = TRUE)
+knitr::include_graphics(myimages)
+```
+<!-- ![Survey results by Indian Students](/Users/aashana/Documents/Adv_Academic_Studies/Paper/images/graph1.png)![Survey results by European students](/Users/aashana/Documents/Adv_Academic_Studies/Paper/images/graph2.png) -->
+
+
+
+__Equity__: There are seat reservations on caste, tribe, religion, gender, and various minorities. This leaves less seats for general category of students. The prestige institute IIT have 49.5% of the total 8000 seats reserved for different categories. The Scheduled Cast/Scheduled Tribe receive nearly 50% relaxation in marks for getting admission. The deserving students with merits end up in a university below their merits or at times wait another year to apply. Female literacy rate is lesser than male literacy rate. In a lot of cases, especially medical sciences and engineering, people bribe and give donations in order to get a seat, because of many reasons like the student not having good merits, less number of seats, and high competition. The failure of not getting an admission has often resulted in thousands of suicides each year. According to the survey 73.7% Indian students think reservation of seats should not be there. And 89.5% Indian students think that Indian higher education system is not equal to all. Which is in disparity if compared to the EU students as 57.1% think that their higher education system is in fact equal.
+
+
+ __Quality__: The quality of material being taught is all theory based. Usually the content is not taught according to the current or real-world scenarios, it is from old text-books with less practical information. They lack in industry based link and not synced from the industry. Although, a lot of institutes are trying to work towards especially this aspect which gives a positive hope. As of now the career support is far behind. One of the participant from the survey states that Indian higher education system follows traditional methods of bookish learning and do not encourage or promote independent thinking. This results into not having a creative thinking and less innovative research. The quality of professors is not up to the mark states another. Good professors might not always want to teach in an institute which is in the village or at outskirts, or not at a place which pays less, in turn it is the students who suffer in gaining correct skills and knowledge. Many times it is the seniors in the universities that have been appointed for all labs and lectures which creates dependence on them for all kind of issues. There are approximately 1.5million engineers that graduate every year in India but 80% of them are not skilled enough to get hired. Large number of colleges and universities in India are unable to meet the minimum requirements laid down by the UGC and our universities are not in a position to mark its place among the top universities of the world @sheikh2017higher. A survey participant thinks that new age programs are very niche and often can be handled only by good institutes, thus depriving the program of wider range of student population. Overall research opportunities are sad in the country because of the stipend amounts attached to these positions. Hence, people prefer working over taking a research position. It also means that if you are financially constrained, one thinks twice about studying further. According to the survey the bachelor’s study rated by Indian students go as low as 2 and as high as 8 on a scale of 1 to 10. Whereas the bachelor’s study rated by European students range from 5 to 9 on a scale of 1-10 (1 being the lowest and 10 being the highest). 
+
+``` {r echo = FALSE , out.width = "50%"}
+library(knitr)
+myimages<-list.files("/Users/aashana/Documents/Adv_Academic_Studies/Paper/images1/", pattern = ".png", full.names = TRUE)
+knitr::include_graphics(myimages)
+``` 
+
+__Infrastructure__: Infrastructure of new and urban establishments have been worked very well upon and is seem to be growing. But in the rural areas the infrastructure is of low-standard. Students who study botany, life sciences, computer science, chemistry in these areas have not worked in a lab as they do not exist for them. A biochemistry student from a rural area would never have held a pipette in his/her hand or worked on a computer and this is a reality. They are taught just by books and do not have any practical access provided. This pulls the rural community far behind. This highlights the differences that creates division amongst urban and rural students’ skills and overall effects the Indian education system.
+
+__Lack in Research and Innovation__: There is no shortage of funding for the top Indian Institutions such as IITs, IIMs and other institutes of national importance. There is funding by the government as well but the money is not managed efficiently. However, budget for the Research is not under spent due to the insufficient good quality research work. Due to the limited focus on Research and Internationalization, very few Indian higher educational institutes are globally recognized.Number of Research papers published in India has increased continuously for the past few decades but reflected in low citation impact if compared with other countries like Germany, United States, France and China @sharma2015indian
+
+
+## Opportunities and Benefits of Studying in India
+
+India’s higher education system has been showing a tremendous growth with the increase in the universities and the number of institutions. As mentioned in the [Introduction] the rise in number of universities has reached to 903 universities in 2017-18 from 723 universities in 2013-14 and about 39050 Colleges and 10011 Stand Alone Institutions (AISHE 2017-18). With the help of private institutions, the access to higher education has been made more accessible. Private universities account to approximately 60% of the total universities in India. Use of modern-day technologies have been brought into use for daily teachings. In the age of the digital world there are thousands of courses available online for self-study which has flipped the game completely to positive side. These MOOCs (Massive Open Online Courses) are not only available by universities in abroad but also by Indian Institutes that help in learning relevant content accordingly. There are several startups that provide such courses online with minimal costs. This gives the students to have the liberty to study anything they want at their own pace with no pressure. The internet education has taken over widely. 
+
+Nearly 33,000 institutions function as Government and Private Degree Colleges which also include 1800 exclusive women's colleges. Indira Gandhi National Open University run by the Indian government is attributed to be the largest university in the world by number of students with over 3.5 million students from across the globe shaguri. This open university helps people of all age to become students and gain new skills with a degree at any point of their lives unlike other universities in India which have age limits. Annamalai University is one more great institute which provides distance education learning which helps take higher education in correspondence. Universities are reaching towards all possible borders. Government has proposed to provide direct admission to PhD options to students studying in IITs in order to reverse brain drain. Increasing access to the conferences that places in India is widely on rise which is beneficial for students to present their research work easily.
+
+In India there is a wide availability of coaching and tuitions available for all courses which is good because students who cannot keep up with the pace, or need extra help. This kind of coaching also exists for preparation of getting admission into higher education exams for bachelor’s and master’s. University professors in India do have a great quality in terms of providing time to the student. No matter how many times the student needs help, how silly the doubt is or even if they need to repeat the whole topics again they do that. They are always available.  After higher education there is a good chance of getting to work in the hub of major company places like Bangalore, New Delhi, Mumbai and Hyderabad which have big companies like Google, Microsoft, Adobe, PWC, etc.
+Students studying science and technology, would have more chance for research funding, plus there are many institutes who want to have programs in these fields. Some programs are tough to get through like medicine, CA, etc but they have good future. India has very good curriculums, study content, and internships in the field of both medicine and accountancy. These fields do require a lot of hard work and dedication but quality of education in these fields is good in India. 
+
+
+## Suggestions
+
+* Need to bring better research courses and having courses in more relevant and current fields. Funding for research. Allow more research or application oriented studies at higher level. That is more focus on learning via practical research, live project than theoretical/ class room learning. Bring in a practical, application based curriculum.
+* Overall implement to make higher education more relevant and research oriented.
+* Introduce incentives for students to engage in more research.
+* Improve quality of education holistically. 
+* Good Infrastructure for rural institutes and better facilities for disabled people.
+* Promote interdisciplinary research and courses in order to gain more knowledge apart from their own fields.
+* Collaboration with International universities for better content, courses and for improving university ranking on international level.
+* Cover up the shortage of faculty.
+* UGC to make stringent rules and regulations for universities so that a standard is maintained.
+* A more equal system for seat reservations so that deserving students do not get left behind.
+
+
+## Summary 
+
+This paper has been written to highlight the challenges and opportunities of taking higher education in India. With the help of two surveys, one taken by Indian students and the other by European students, to analyze and understand where India lags behind in relative terms and overall. Further boiled down by making recommendations of the Indian education system. Although, the population is huge, the challenges in improving the quality of education is not easy there seems to be hope as India has rose in various fields education and is becoming with every step.
+
+
+## References 
+

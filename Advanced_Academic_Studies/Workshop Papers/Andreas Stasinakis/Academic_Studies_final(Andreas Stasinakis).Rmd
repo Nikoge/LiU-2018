@@ -1,0 +1,96 @@
+---
+title: "Equal Opportunities in the Context of Higher Education"
+author: "Andreas Stasinakis"
+date: "September 8, 2018"
+output:
+  pdf_document:
+     toc: true
+     toc_depth: 4
+     number_sections: true
+  html_document:
+    theme: united
+    df_print: paged
+    toc: true
+  word_document: default
+bibliography: references.bib
+---
+#Abstract
+
+
+**Nowadays we live in a society, where discrimination is gradually becoming an issue of a distant past. It is true that after many efforts, discrimination because of social backround,  sex or disabilities is illegal. Day after day more and more people from all around the globe are being given equal opportunities in all aspects of life such as work, education and human rights. But were these measures enough or do we continue living in an unequal world?  Despite the importance of the issue above, only the field of equal opportunities in higher education in Sweden and Greece will be examined. More specifically, the situation in the two countries is  presented thoroughly and there is also a comparison between their educational systems and the procedures students have to deal with in order to gain access to a university. This  paper also raises  the  question about equality in swedish educational system for foreigners and finally the author composes his personal statment on this issue. Although swedish gonvernment took some controversial desicions in the last decade, they made a huge effort to provide equal opportunities in the context of higher education for everyone. **
+
+
+#Introduction
+
+
+To begin with, do we really understand the meaning of equality? Equality means that every special privilege should be eradicated so that everyone has the same rights regardless of their nationality,  their color or social status. Whereupon there is no point talking about equal opportunities while an important percentage of global population lives below the relative poverty line. Unfortunately this is a topic which is not possible to be discussed in only one scientific paper. 
+
+For this reason this paper will only refer to equal opportunities in the field of higher education, especially in Sweden. This topic is of major importance  since there are many  students who are interested in studying in Sweden  and some of them have to pay tuition fees in contrast to   the advertisement of equality in Swedish universities for everyone. Therefore  this paper  will investigate whether the statement above is true or not and in which extend.
+
+In the first chapter ["Equal Opportunities for native Students"](#Native) , the main differences between Sweden and Greece in order for someone to become a bachelor student will be discussed using information from 3 different scientific papers [@Allodi2007, @Tsiplakides2018, @Prokou2013]
+. Moreover, in the second chapter ["Equal opportunities for Immigrants in the context of Higher Education "](#immigrants), a book from Karolina Lukaszczyk[@ukaszczyk2013a] is used in order to analyze the main problems which foreign students face in higher education. In the last chapter ["Conclusion"](#con),  a critical judgment is given,  in the main issue of this paper, which is the equality of Swedish higher education. 
+
+
+#Equal Opportunities for Native Students{#Native}
+   
+
+##Swedish Students: Become a Bachelor Student
+
+
+First of all, a huge difference between Sweden and Greece is how students gain access to universities. In Sweden students have actually two chances. Firstly, it is possible for them  to get accepted by their grades during the last year of secondary school. This is very important because with that way their future is not based only on final exams but on their general effort during the whole school period. Moreover if their grades are not adequate , they have a second chance. It is possible to improve their grades and of course their chances to be accepted in a university by having an extra high school exam, for which they have to pay a fee [@Allodi2007, pp. 135]. Of course they have to put a lot of effort if they want to fulfill their dream and despite the fact that it is a stressful and difficult procedure,  it helps them to grow up and adjust in the business environment. 
+
+Of course, there are some negative aspects in this procedure that should be pointed out. One of them is that if someone studies one type or major in high school that do not align with the major of the bachelor they want, they have to attend to extra courses in order to keep up with the level of their bachelor studies. For example, if a student studies to become an electrician in high school but then changes his mind and wants  to study  medicine,he  will be missing some courses [@Allodi2007, pp. 135].
+
+## Greek Students: Become a Bachelor Student
+  
+ 
+  On the other hand, Greek students have only one choice. If they want to be part of a university, they have to pass the final exams, called "panhellenic exams",  in the end of school period. This is a very difficult obstacle because of the limited places that every university provides and a situation which is at least unfair [@Tsiplakides2018, pp. 24-25] and it is so because the future of every student depends on an exam without second chances being given. It does not matter if the student is on the top of the class. So, if they have had a bad day in the exams they lose their chances to become bachelor students because of the tough competition and they have to rewrite the exams one year later losing precious time.
+  
+  Nevertheless, the biggest concern is something else. It is a habit which shows exactly the inequality in the educational system in Greece. Specifically,  these exams are so competitive that parents have to hire  teacher for private lessons in order for their children to have chances succeeding in the exams. Nowadays, private lessons are an everyday situation for students which most of the times begins from the lowest classes of high school. Therefore it is clear that if a family cannot afford hiring a private tutor , the chances of their child passing the exams are significantly reduced. Moreover a recent research [@Tsiplakides2018, pp. 26-30] showed that the Greek higher educational system is scaled by the social background. More specific students from the upper social classes are more likely to have better chances in higher education in contrast to students from the lowest social levels. [@Prokou2013]
+
+Finally, it could be said that maybe there is something positive in this procedure. During the last year of secondary school,students learn how to read and process huge mass of information in a very short time, just like they need to do in university. As a result,It is easier for them to adjust in their new life as bachelor students.
+
+  
+##A Crucial Information
+
+
+Closing this chapter it is of utmost importance to highlight that we need to address this issue with caution. There is no doubt that many things could  change in both educational systems in order for them to be improved. It is not insinuated that the Swedish higher educational system is perfect and gives equal opportunities to everyone but the goal of this chapter was to compare these two systems only by their structure. Therefore, one could argue that Swedish students who study and put a lot of effort in achieving their goals , have many chances to  live their dream and qualify in higher education. On the other side, Greek students have to confront an unusual and inefficient situation with many unfortunate aspects. 
+
+
+#Equal Opportunities for Immigrants in the Context of Higher Education {#immigrants}
+
+##Swedish-Greek Bachelor and Master Students
+
+
+If everything goes according to plan, after Swedish students get accepted to the university, they do not need to pay any fees either for a bachelor's or a master's degree. It is also possible to apply for a student loan, if the student cannot afford his living expenses [@Allodi2007, pp. 135]. In this case students do not lose their chance becoming  a part of a bachelor's or master's degree, but they need to have a satisfactory progress during their studies. One of the  negative aspects about students is that they have to buy their own books but with the technological evolution the majority of books can be found online. So if  students need a book, they only have to search online or in university's library. It is clear  that if Swedish citizens want to study in higher education , they can achieve it even if they do not belong in the top of the social status. 
+
+As far as Greek higher education is concerned, it can be observed that during the past four decades new places in the universities have been offered. Therefore people with lower social background have better chances to obtain higher education. Unfortunately, this expansion did not eliminate the gap between different social status [@Prokou2013, pp. 45-47]. Nowadays, studying as a bachelor student is free but the problem is that  the Greek government cannot help students with loans or scholarships for living expanses. As a result, many students, especially those who do not study in their home city,  are forced to drop out their studies because of the living costs. In the case of master, during the financial crisis, more and more master programs require fee payment from the students in order to be sustained. Therefore it seems that it is only a matter of time until every student has to pay at least a part of their tuition fees in every university, either bachelor or master. 
+
+##Studying in Sweden as Immigrant
+
+
+The next topic, is one of the most important and maybe the most advertised in Sweden. Is Sweden one of the best choices for students who want to study abroad? And if it is, does this country support the statement of equal opportunities in higher education or is this only a marketing trick to approach more students? This chapter will quote the main axis of studying in Sweden as a foreign student and the author will give his opinion about equal opportunities. 
+
+First of all, all Swedish higher education institutions are open to incoming foreign students. So it does not matter whether you are from Sweden or not, you have the right to apply for a bachelor's or a master's program [@ukaszczyk2013a, pp. 12-13]. 
+At this point the classes of foreign students should be separated. The ones coming for EU or Switzerland do not have to pay any tuition fees. So for them studying as bachelor's or master's students is free and they have the same rights as the Swedish people. For that reason in this paper that issue will  not be discussed in detail because European students are almost equal to Swedish students. Students who are not  citizens of a EU country are called "internationals". This difference should be highlighted because from 2011 on, international students have to pay tuition fees in order to  participate in a bachelor's or master's program in Sweden [@ukaszczyk2013a, pp. 14].  This decision was at the very least controversial and created so many questions regarding equality in higher education in this country. 
+
+##A Tough Decision
+
+
+According to the report of [@ukaszczyk2013a, pp. 14], this decision is described as a strategy from the Swedish government with deeper meaning. The first reason for this decision was that the Swedish government could not offer both free and high quality education to everyone. So they agreed on quality instead of free education for international students  [@ukaszczyk2013a, pp. 15].
+It is also true that in  Sweden international students are being  welcomed because it is believed that they can play a significant role to the exchange of new, different ideas and multicultural experiences. International students are not considered to be  immigrants but on the contrary they are being given the opportunity to become legal citizens of Sweden and later on to act like a part of the local society. For that reason, the Swedish government tried to ease the differences and equalize the university procedures as much as they possibly could. Therefore, new information platforms were introduced, they gave  them the right of online residence permit application reducing that way  the required amount of time radically. The most important decision though was the increase of scholarships for internationals. For example, in the first semester when international students had to pay tuition fees in 2011, 569 out of 1348 applicants had a scholarship [@ukaszczyk2013a, pp. 19]. 
+
+Another reason why Swedish government took this decision could be  a Swedish migration board's research in 2004 [@ukaszczyk2013a, pp. 36]. 
+The topic of the research was how many of the international students who got a resident permit after applying for higher education completed their studies. Moreover, the results showed that from 6061 applicants both in 2013 and 2014 only at around 27 percentage registered to a university and from them only the 60 percent could prove any studying result. Therefore the majority of the immigrants misused their resident permit and they may have taken that way the opportunity of other compatriots who wanted for real to study in Sweden. 
+
+#Conclusion - Results{#con}
+
+Moving in Sweden for studying, can be said that it is something challenging and fascinating in the same time. One could be  worried about what they will face, not only by the academic perspective but also by their adjustment as a citizen in another country. To my mind it is true that Swedish people believe that immigrants could be a part of Sweden's future by giving new ideas and extra knowledge. For that reason they do not isolate foreign people but they try to help them with their integration in Swedish culture. As far as higher education concerned, 
+ 
+ >Education should be *available* (compulsory and free), *accessible* (based on equality and non-discrimination) *acceptable* (both to parents and children) and *adaptable*. [@ukaszczyk2013a]
+ 
+ In my opinion,the Swedish government is trying hard to succeed in it and it seems that they put a lot of effort to evolve their education system and make it equal for everyone without any discrimination. Of course there are lot of things could be changed in order Sweden to have a totally equalized educational system (if this is possible) but the most important thing for me is that they give a chance to everyone and it is in our hand to take advantage of this and become a part of the Swedish future. 
+
+#References
+
+

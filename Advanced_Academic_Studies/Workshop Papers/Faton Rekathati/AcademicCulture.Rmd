@@ -1,0 +1,181 @@
+---
+title: 'Academic Culture: A Comparison of the Open Access and Subscription
+  Journal Models in Publishing'
+author: "Faton Rekathati"
+date: "19 september 2018"
+output:
+  pdf_document: default
+  citation_package: biblatex
+bibliography: refs.bib
+link-citations: yes
+---
+
+
+## Abstract
+
+Open access journals and subscription based journals represent two different 
+philosophies surrounding how academic research should be disseminated. In this paper
+an exposition of the two different models is given in the introduction. A review 
+of the literature examines the scientific impact of publishing in each journal
+type, with some surrounding discussion on advantages and disadvantages associated
+with each model.
+
+## Introduction
+
+The traditional path for researchers to disseminate research has historically been 
+through submitting articles to publishers of so called *subscription journals*. These
+journals are typically owned and run by publishers who take care of the costs of 
+publishing and printing, in addition to handling the logistics of finding peer
+reviewers. As a means to recover the associated costs of publishing, a subscription journal 
+charges its readers a subscription or licensing fee in exchange for access to the research 
+it publishes. A non-subscriber wishing to read a specific article in such a 
+journal may have to either purchase the entire published issue, pay a pay-per-view charge or 
+purchase the article online -- depending upon the particular publisher. An example 
+of a journal published under the subscription based model is *Nature*, published 
+by Springer Nature.
+
+In the 21st century the emergence of an alternative publishing model called 
+*open access publishing* has made inroads in the academic sphere. There is no
+single unified open access model, but rather a spectrum of different degrees of open access. 
+The general philosophy underlying the movement is that research should be made 
+freely available and openly accessible to readers. However, the details of how 
+the philosophy should be translated into practice differs.  
+
+With the advent of the internet academic publishing has largely shifted from 
+print to electronical formats. Anyone with access to the internet can, in theory,
+easily gain access to any piece of information. The view of the open access
+publishing movement, as a consequence, has been that all research ought to be made freely
+available and openly accessible online by the publisher. 
+
+The manner in which research is made freely available varies. In the field of
+mathematics and computer science it is common to "self-archive" papers. Authors 
+themselves upload preprints (yet to be published or peer reviewed articles) or finished 
+articles to popular repositories such as [arXiv](https://arxiv.org/). Another route
+is to publish through so called open access journals. The costs of publishing are
+then generally shifted onto the authors, which pay article processing fees to 
+reimburse the journal for some of the costs associated with editing, publishing 
+and peer review. It should however be noted that not all open access journals 
+charge fees, nor do all of them provide rigorous peer review.
+
+Whereas print paper journals need to apply length restrictions due to space considerations, 
+online journals can choose to be more flexible with article formats. Since many open 
+access journals publish solely online, there subsequently is no restriction to the 
+amount of articles they may publish. As a result publishing criteria for open access 
+online journals such as PLOS ONE may focus more on the analyses performed being of a 
+"a high technical standard" [@PLOS] over other inclusion criteria. In contrast,
+traditional subscription journals may, because of space considerations, require published 
+results to be novel, and for the research in question to provide a significant 
+contribution to the particular field.
+
+
+## Literature review
+
+A study from Björk and Solomon [-@Björk2012] reviewed the scientific impact of
+open access journals as compared to subscription journals. The study used the 
+metric "impact factor" to assess a journal's scientific impact. A journal's 
+impact factor is defined as the average number of citations of the articles it
+has published in the past two years. Björk and Solomon combined data collected from four different 
+academic databases to obtain information on the year and the country in which a 
+journal was founded, citation indices for its articles, along with other article 
+and journal metadata. 
+
+On the aggregate data set Björk and Solomon [-@Björk2012] found open access journal impact
+factors on average were lower: 76% and 67% compared to those of subscription journals 
+depending on whether the citation database used was Journal Citation Reports or Scopus. 
+However, when the authors analysed impact factor according to region and journal
+founding year, it was found younger open access journals (founded 2001-2012) perform
+roughly equal to subscription journals founded during the same time period. The 
+data set was then further divided into the disciplines Medicine and Health and compared
+to all other disciplines. The authors comment how differences in impact factor
+among Medicine and Health journals disappear for newly founded journals (2001-2012),
+which they deem to be of a higher quality and standard.
+
+Finally Björk and Solomon look at whether the impact factor of open access journals 
+which charge authors an article processing fee differ as compared to other open 
+access journals without fees, and as compared to subscription journals. Here 
+open access journals with article processing fees which were founded after 1996 perform 
+almost equally well as subscription journals. In contrast, open access publications 
+without authors' fees have only a third to a half of the impact factor of subscription 
+journals. 
+
+The authors, in my view, offer up a plausible explanation as to why 
+open access journals with article processing fees founded prior to 1996 have 
+such low impact factors. They expect these journals to be those which have
+converted from a subscription model to an open access one. It is in my opinion
+conceivable the journals changed business models because they did not have a sufficient
+subscriber base.
+
+In the analyses of results Björkman and Solomon were, in my view, highly thorough to 
+control for region, discipline, the journal launch year and article processing fees. 
+They may otherwise have had the results of their research called into question, 
+as impact factors may differ depending on discipline or journal type. 
+Impact factors have also been criticized as the majority of published research tend 
+to get few citations [@Callaway], meaning a distribution of citations is going 
+to be left skewed. Thus, a metric which is based off of the mean of such a distribution 
+may not be the most representative measure to act as a proxy for determining scientific impact. 
+One can therefore question whether the authors should perhaps have used a metric not
+based off of the mean. Although, in my view "impact factor" has become such an established 
+and well known term that its omission may have caused the contents and analyses 
+contained within the article to become less relatable for the intended audience
+(presumably academics).
+
+
+In 2013 an article with the title "Who is afraid of peer review?" [@Bohannon60] 
+caused a great commotion among the scientific community. The author sent out 
+304 versions of an article with claims that some randomly chosen 
+molecule (in a database of plausible molecules) from a randomly chosen algae 
+caused a lower incidence of cancer growth in some particular randomly chosen
+cancer cell. The articles were sent to 304 open access publishers, drawn from
+two different sources. The first one a supposedly complete directory of open 
+access journals: "Directory of Open Access Journals" (DOAJ). The second one an online
+list of "predatory" publishers. 
+
+From the 304 papers, only 255 received a response [@Bohannon60]. Out of the 
+submissions which received a response, 45% were accepted in the DOAJ sample while
+82% were accepted among the list of predatory publishers. Bohannon noted that
+the majority of publishers showed no sign of having reviewed the paper at all, 
+with only 36 of the peer reviews pointing out any scientific problems whatsoever.
+
+While Bohannon's article was thought provoking, it could in my opinion have 
+lent its author more credibility by also including subscription journals in 
+the sample. Especially in order to convince and appease the open access community
+that he harbors no biases in terms of focusing the study only on one publishing model. 
+An additional point of improvement may in my view have been to include more data
+on the type of journal, with some inspiration from Björk and Solomon's [-@Björk2012] 
+division into article fee and non article processing fee journals. Nonetheless,
+Bohannon did in my opinion manage to shine a light on the potential pitfalls of
+unregulated and unchecked open access publishing. There is an abundance of 
+publishers, and it may be difficult to distinguish the legitimate actors from
+predatory ones.
+
+## Discussion
+
+I think that both subscription based publishing and open access journals 
+do have a place in the future. A journal being open access does not necessarily
+mean nor imply it follows the online publishing model of accepting as many papers 
+as it can put through a scientifically sound peer review process. There exists
+a spectrum of open access journals, where some of them are print journals which
+also make available either the entirety or parts of their content for free online.
+The same applies to subscription journals, where certain journals allow authors to
+pay a fee to "open access" their articles online, despite the journal primarily
+being based on the print based subscription model. 
+
+In terms of the variety of content published in these journals, I think there is
+an argument to be made that the traditional print journals offer a service of
+curating content for its readers. No single human being can conceivably read 
+the combined scientific output in their respective disciplines. If some journals
+have very strict criteria for publication, such as demanding published results 
+have novel and significant contributions -- then they are in a sense providing 
+a service where they curate content so the reader does not have to. 
+
+However, one may object that in demanding significant contributions important 
+research such as replication studies and null findings do not get published. Well,
+I think this is where online open access publishers can come in and highlight 
+these sort of studies which are important and critical, but may not receive much 
+space in traditional print journals. It is important for scientific research that
+all findings be published, whether it be a siginificant result, a null finding 
+or a failed/succesful replication study, lest scientists repeat research
+others have already conducted but never published! One such initiative to highlight
+negative, null and inconclusive results was for example made by PLOS [@PLOS_C].
+
+## References
