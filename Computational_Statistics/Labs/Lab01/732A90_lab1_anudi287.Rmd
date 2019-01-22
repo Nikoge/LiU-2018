@@ -85,19 +85,35 @@ We should have gotten both values as 0, however for *x=1* the derivate showed as
 
 ```{r}
 
-myvar <- function(vector){
-  
-  vector <- c(1,2,3,4,5)
-  square_vector <- vector^2
-  n <- length(vector)
-  sum_square_term <- sum(square_vector)
-  square_sum_term <- (sum(vector))^2
-  
-  
+myvar <- function(myvector){
+  #vector <- c(1,2,3,4,5)
+  n <- length(myvector)
+  answer <- (1/(n-1))*(sum(myvector^2) - (1/n) * ((sum(myvector))^2))
+  return(answer)
 } 
 
 ```
 
+###2. Generate a vector x such that number of terms is 10000 random numbers with mean=10^8, and varience=1
+
+```{r}
+
+my_rand_num <- rnorm(n=10000, mean=10^8, sd=1)
+```
+
+###3. 3. For each subset x_i = (x1,x2,....xi), compute Y_i = myvar(X_i)-var(X_i), plot Y_i vs. i. Draw conclusions and plot.How well does your function work? Can you explain the behaviour?
+
+```{r}
+Y <- vector(mode = "logical", length = length(my_rand_num))
+my_mat <- NULL
+for(i in 1:length(my_rand_num)){
+  X_i = my_rand_num[1:i]
+  Y = myvar(X_i) - var(X_i)
+  my_mat <- cbind(i, Y)
+  return(my_mat)
+}
+
+```
 
  Appendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
