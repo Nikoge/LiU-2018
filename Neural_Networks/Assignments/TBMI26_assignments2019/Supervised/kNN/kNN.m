@@ -12,7 +12,26 @@ function [ labelsOut ] = kNN(X, k, Xt, Lt)
 labelsOut  = zeros(size(X,2),1);
 classes = unique(Lt);
 numClasses = length(classes);
+sizeDataTrain=size(Xt,1);
+sizeDataTest=size(X,1);
 
+for i=1:sizeDataTest
+
+    disp(i)
+	
+	% Difference of feature vector calculation
+    difference=zeros(1,sizeDataTrain);
+    for j=1:sizeDataTrain
+        difference(j)=sum((Xt(j,:)-X(i,:)).^2);
+    end
+	
+	%sort difference vector
+    [~,sortedIndex] = sort(difference,'ascend'); 
+     
+    for j=1:k
+        labels(j)=label_train(sortedIndex(j),1);
+    end
+    lbl=mode(single(labels));
 
 end
 

@@ -14,6 +14,8 @@ dataSetNr = 1; % Change this to load new data
 % You can plot and study dataset 1 to 3 by running:
 % plotCase(X,D)
 
+plotCase(X,D)
+
 %% Select a subset of the training features
 
 numBins = 2; % Number of Bins you want to devide your data into

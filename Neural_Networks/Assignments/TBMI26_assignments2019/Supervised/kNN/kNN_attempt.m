@@ -40,5 +40,5 @@ end
 
 %compute accuracy
 accuracy=correct/sizeDataTest;
-dlmwrite('myFile.txt', confusionMatrix);
+%dlmwrite('myFile.txt', confusionMatrix);
 end
