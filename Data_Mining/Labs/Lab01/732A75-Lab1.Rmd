@@ -1,0 +1,40 @@
+---
+title: "732A75 Data Mining Lab-1"
+author: "Anubhav Dikshit(anudi287) and Nahid Farazmand (nahfa911)"
+date: "25 January 2019"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#SimpleKmeans: 
+
+Apply "SimpleKMeans" to your data. In Weka euclidian distance is implemented in SimpleKmeans. You can set the number of clusters and seed of a random algorithm for generating initial cluster centers. Experiment with the algorithm as follows:
+
+##1. Choose a set of attributes for clustering and give a motivation. (Hint: always ignore attribute "name". Why does the name attribute need to be ignored?) 
+
+Typically in clustering operations we only use numeric attributes, any attributes of type category or having too many levels are excluded. The reasoning is due to the fact clustering tends to be based on some distance measurment, and distance of attributes such as name, rownumbers are meaningless and may only come in the way of optimal solution.
+
+##2. Experiment with at least two different numbers of clusters, e.g. 2 and 5, but with the same seed value 10.
+
+
+##3. Then try with a different seed value, i.e. different initial cluster centers. Compare the results with the previous results. Explain what the seed value controls.
+
+##4. Do you think the clusters are "good" clusters? (Are all of its members "similar" to each other? Are members from different clusters dissimilar?)
+
+##5. What does each cluster represent? Choose one of the results. Make up labels (words or phrases in English) which characterize each cluster.
+
+#MakeDensityBasedClusters: 
+
+Now with MakeDensityBasedClusters, SimpleKMeans is turned into a denstiy-based clusterer. You can set the minimum standard deviation for normal density calculation. Experiment with the algorithm as the follows:
+
+##1. Use the SimpleKMeans clusterer which gave the result you haven chosen in 5).
+
+##2. Experiment with at least two different standard deviations. Compare the results. (Hint: Increasing the standard deviation to higher values will make the differences in different runs more obvious and thus it will be easier to conclude what the parameter does) 
+
+
+

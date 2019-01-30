@@ -1,4 +1,6 @@
-function [ labelsOut ] = kNN(X, k, Xt, Lt)
+% function to perform KNN %
+
+function [labelsOut] = kNN(X, k, Xt, Lt)
 %KNN Your implementation of the kNN algorithm
 %   Inputs:
 %               X  - Features to be classified
@@ -34,4 +36,6 @@ for i=1:sizeDataTest
     lbl=mode(single(labels));
 
 end
+end
+
 
