@@ -9,11 +9,20 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+options(scipen=999)
+library(dplyr)
+library(ggplot2)
 ```
 
 \newpage
 
 # Question 1: Cluster sampling
+
+An opinion pool is assumed to be performed in several locations of Sweden by sending interviewers
+to this location. Of course, it is unreasonable from the financial point of view to visit
+each city. Instead, a decision was done to use random sampling without replacement with the
+probabilities proportional to the number of inhabitants of the city to select 20 cities. Explore
+the file population.xls. Note that names in bold are counties, not cities.
 
 ##1. Import necessary information to R.
 ```{r}
@@ -23,21 +32,29 @@ data <- read.csv2("population.csv", header = TRUE)
 ##2. Use a uniform random number generator to create a function that selects 1 city from the whole list by the probability scheme offered above (do not use standard sampling functions present in R).
 
 ```{r}
-fthreebits<-function(k,s,L,N){
-  
-    X0 <- 4*s+1;
-    a<-8*k+5;
-    m<-2^L;
-    X<-X0
-  temp <- NULL
-  
-    for (i in 1:N){
-	 X <- (a*X)%%m ##c=0
-	 temp <- rbind(X, temp)
-    }
-    return(temp)
-}
+get_city <- function(data){
 
+data$Municipality <- as.character(data$Municipality)
+data$prob <- data$Population/sum(data$Population)
+#sorting the dataset
+data <- data %>% arrange(prob)
+
+data$cum_prob <- cumsum(data$prob)
+data$lead_cum_prob <- lead(data$cum_prob, n=1)
+
+# filling NA
+data$lag_cum_prob[1] <- 0
+data$lead_cum_prob[NROW(data)] <- 1
+
+set.seed(1234567)
+num <- runif(1,0,1)
+
+X <- ifelse(((num >= data$cum_prob) & (num <=  data$lead_cum_prob)), row.names(data), NA)
+X <- na.omit(X)
+
+data_name <- data[row.names(data) %in% X,]
+return(data_name$Municipality)
+}
 
 ```
 
@@ -45,26 +62,26 @@ fthreebits<-function(k,s,L,N){
 
 ```{r}
 
-# applied and removed one city from the list
+data$Municipality <- as.character(data$Municipality)
+# Select one city
+get_city(data = data)
+
+# Remove one city
 df <- data
-df <- df[row.names(df) != fthreebits(k=3,s=5,L=8,N=10)[1:1],]
-df <- df[row.names(df) != fthreebits(k=3,s=5,L=8,N=10)[2:2],]
 
-final_city <- NULL
-final <- NULL
-i = 0
-temp <- unique(fthreebits(k=5,s=7,L=8,N=1000))
-while(NROW(final_city) < 20){
-  X <- temp[i:i]
-  final <- c(X, final)
-  final <- unique(final)
-  final_city <- df[rownames(df) %in% final,]
-    i = i+1
+
+df <- df[!df$Municipality %in% get_city(data=df),]
+
+# apply function again
+get_city(data = df)
+
+# rempve this city
+df <- df[!df$Municipality %in% get_city(data=df),]
+
+# do this till 20 cities left
+while(NROW(df) >20){
+  df <- df[!df$Municipality %in% get_city(data=df),]
 }
-
-
-
-  
 
 ```
 
@@ -72,13 +89,10 @@ while(NROW(final_city) < 20){
 
 ```{r}
 
-options(scipen=999)
+# final cities selected
+df$Municipality
 
-library(ggplot2)
-
-final_city$Municipality
-
-data$flag <- ifelse(data$Municipality %in% final_city$Municipality, "Selected", "Unselected")
+data$Flag <- ifelse(data$Municipality %in% df$Municipality, "Selected", "Unselected")
 
 
 ```
@@ -86,13 +100,13 @@ data$flag <- ifelse(data$Municipality %in% final_city$Municipality, "Selected", 
 ##5. Plot one histogram showing the size of all cities of the country. Plot another histogram showing the size of the 20 selected cities. Conclusions?
 
 ```{r}
-library(dplyr)
 
-data %>% filter(flag == "Selected") %>% ggplot(., aes(Population)) + geom_histogram(bins=30) + ggtitle("Histogram of Selected cities")
 
-data %>% filter(flag == "Unselected") %>%ggplot(., aes(Population)) + geom_histogram(bins=30) + ggtitle("Histogram of Unselected Citites")
+data %>% filter(Flag == "Selected") %>% ggplot(., aes(Population)) + geom_histogram(bins=30) + ggtitle("Histogram of Selected cities")
 
-ggplot(data, aes(Population, fill=flag, colour=flag)) + geom_histogram(bins=30) + ggtitle("Histogram of Unselected vs. Selected Citites")
+data %>% filter(Flag == "Unselected") %>% ggplot(., aes(Population)) + geom_histogram(bins=30) + ggtitle("Histogram of Unselected Citites")
+
+ggplot(data, aes(Population, fill=Flag, colour=Flag)) + geom_histogram(bins=30) + ggtitle("Histogram of Unselected vs. Selected Citites")
 
 ```
 
@@ -100,42 +114,88 @@ ggplot(data, aes(Population, fill=flag, colour=flag)) + geom_histogram(bins=30) 
 
 ###The double exponential (Laplace) distribution is given by formula:
 
-$$ DE(\mu, \alpha) = \frac{\alpha}{2} \exp{(-\alpha|x - \mu|)} $$
+$$ DE(\mu, \alpha) = \frac{\alpha}{2} e^{(-\alpha|x - \mu|)} $$
+The CDF is given by:
 
-The inverse function would be
+$$F(x)=\int_{-\infty}^{x} f(x) dx$$
 
-$$ X = \mu - b * sgn(U) \ln(1-2|U|) $$
+$$F(x)=\int_{-\infty}^{x} \frac{\alpha}{2}e^{-\alpha(x-\mu)} dx ,~~~~~(if~~x>\mu)$$
+$$=1-\int_{x}^{\infty} \frac{\alpha}{2}e^{-\alpha(x-\mu)} dx$$
+
+$$=1-\frac{1}{2}e^{-\alpha(x-\mu)}$$
+
+$$F(x)=\int_{-\infty}^{x} \frac{\alpha}{2}e^{\alpha(x-\mu)} dx ,~~~~~(if~~x\leq\mu)$$
+
+$$=\frac{1}{2}e^{\alpha(x-\mu)}$$
+Inverse of CDF
+
+$$For~~x>\mu,~we~got~F(x)=1-\frac{1}{2}e^{-\alpha(x-\mu)}$$
+$$y=1-\frac{1}{2}e^{-\alpha(x-\mu)}$$
+$$\frac{ln(2-2y)-\alpha\mu}{-\alpha}=x$$
+$$For~U\sim U(0,1),~~~~~\frac{ln(2-2U)-\alpha\mu}{-\alpha}=X$$
+$$For~~x\leq\mu,~we~got~F(x)=\frac{1}{2}e^{\alpha(x-\mu)}$$
+$$y=\frac{1}{2}e^{\alpha(x-\mu)}$$
+$$\frac{ln(2y)}{\alpha}+\mu=x$$
+$$For~U\sim U(0,1),~~~~~\frac{ln(2U)}{\alpha}+\mu=X$$
 
 ##1. Write a code generating double exponential distribution DE(0; 1) from Unif(0; 1) by using the inverse CDF method. Explain how you obtained that code step by step. Generate 10000 random numbers from this distribution, plot the histogram and comment whether the result looks reasonable.
 
 ```{r}
-#X = m - b * sign(U) * log(1-2*abs(U))
 
-myfunc = function(n,mu,alpha){
-  U = runif(n,0,1)
-  y = mu - alpha * sign(U) * log(1-2*abs(U))
-  return(y)
+inverse_x = function(n,mu,alpha){
+  U <- runif(n,0,1)
+  X <- ifelse(U >0.5, log(2-2*U)/(-alpha)+mu, log(2*U)/(alpha)+mu)
+  return(X)
 }
 
-
-double_exp = function(n,mu,alpha){
-    x = runif(n,0,1)
-    y = 0.5*alpha * exp(-alpha * abs(x-mu))
-    return(y)
-}
-
-
-plot(myfunc(n=10000,mu=0,alpha=1))
-plot(double_exp(n=10000,mu=0,alpha=1))
-
-# testing from external library
-plot(rmutil::dlaplace(y = runif(10000,0,1), m=0, s=1, log=FALSE))
+hist(inverse_x(n=10000,mu=0,alpha=1))
 
 ```
 
 ##2. Use the Acceptance/rejection method with DE(0; 1) as a majorizing density to generate N(0; 1) variables. Explain step by step how this was done. How did you choose constant c in this method? Generate 2000 random numbers N(0; 1) using your code and plot the histogram. Compute the average rejection rate R in the acceptance/rejection procedure. What is the expected rejection rate ER and how close is it to R? Generate 2000 numbers from N(0; 1) using standard rnorm() procedure, plot the histogram and compare the obtained two histograms.
 
+
+The  Rejection  Method:  When  we  use  the  Inverse  Transformation  Method,  we  need  a simple  form  of  the  cdf F(x) that  allows  direct  computation  of X= Inverse(F(U)). When F(x) doesn't have a simple form but the pdf f(x) is available, random variables with density f(x)can be generated by the rejection method. Suppose you have a method for generating a random variable having density function g(x). Now, assume you want to generate a random variable having density function f(x).  Let c be a constant such that
+
+$$ \frac{f(y)}{g(y)} \leq c $$
+
+Thus if we maximize the ratio f(y)/g(y) then that would be the value of c. This can be done by using parital derivate of the fraction.
+
+
+$$ Majorizing~density~F_{Y}(y)\sim DE(0,1)=\frac{1}{2}e^{-|x|} $$
+$$ Target~density~F_{X}(y)\sim N(0,1)=\frac{1}{\sqrt{2\pi}}e^{-\frac{x^2}{2}}$$
+$$ C \ge \frac{\sqrt{2}}{\sqrt{\pi}} e^{-\frac{x^2}{2} + |y|} $$
+
+Differenitating with respect to x we get that the expression is maximum at x=1, thus C is:
+
+$$ \sqrt{\frac{2}{\pi}}e^\frac{-1}{2}$$
+$$=\frac{\sqrt{2}}{C\sqrt{\pi}}\cdotp e^{-\frac{y^2}{2}+|y|}$$
+$$ = e^{-\frac{y^2}{2}+|y|+\frac{1}{2}} $$
 ```{r}
+
+gen_de <- function(n, mu,alpha){
+  U <- runif(n,0,1)
+  Y <- ifelse(U > 0.5, log(2-2*U)/(-alpha)+mu, log(2*U)/(alpha)+mu)
+  frac <- exp(-(Y^2*0.5) + abs(Y) + 0.5) 
+  frac_flag <- ifelse(frac>U, "Accept", "Reject")
+  result <- cbind(frac, frac_flag)
+  result <- as.data.frame(result)
+  colnames(result) <- c("value", "flag")
+  result$value <- as.numeric(as.character(result$value))
+  return(result)
+}
+
+result <- gen_de(2000,0,1)
+
+#histogram
+only_accepted <- result[result$flag == "Accept",]
+hist(only_accepted$value)
+hist(rnorm(n = 2000,mean = 0,sd = 1))
+
+# rejections
+sum(result$flag != "Accept")
+
+
 
 ```
 

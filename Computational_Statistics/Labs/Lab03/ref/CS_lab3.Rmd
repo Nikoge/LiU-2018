@@ -1,0 +1,225 @@
+---
+title: "Computational Statistics lab3"
+author: "Saewon Jun(saeju204)"
+output: pdf_document
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Question 1: Cluster sampling
+An opinion pool is assumned to be performed in several locations of Sweden by sending interviewers to this location. Of course, it is unreasonable from the financial point of view to visit each city. Instead, a decision was done to use **random sampling without replacement** with the **probabilities proportional to the number of inhabitants of the city** to select 20 cities. 
+  
+##1.1 Import necessary information to R.
+```{r}
+data <- read.csv2("population.csv", fileEncoding = "iso-8859-1")
+#data$Proportion <- data$Population/sum(data$Population)
+#data$Cumsum <- cumsum(data$Proportion)
+```
+  
+##1.2 Use a uniform random number generator to create a function that selects 1 city from the whole list by the probability scheme offered above. 
+```{r}
+set.seed(12345)
+
+my_select <- function(data){
+     
+        point <- runif(1,0,1)
+        data$Proportion <- data$Population/sum(data$Population)
+        data <- data[order(data$Proportion),]
+        data$Cumsum <- cumsum(data$Proportion)
+        
+        for (i in 1:length(data$Cumsum)-1){
+                #cumsum(i)<point<cumsum(i+1)
+                if(data$Cumsum[i]<point && point<=data$Cumsum[i+1]){
+                        municipality=data$Municipality[i+1]
+                        index=i+1
+                } else {
+                        next
+                }
+        }
+         return(list(municipality=municipality, index=index))
+}
+
+my_select(data)      
+```
+  
+##1.3 Use the function you have created in step 2 as follows :
+(a) Apply it to the list of all cities and select one city
+(b) Remove this city from the list
+(c) Apply this function again to the updated list of the cities
+(d) Remove this city from the list 
+(e) ... and so on until you get exactly 20 cities.
+```{r}
+#nrow(data)=290
+#Since we need to select 20 cities, we need to remove 270 cities
+#go thorugh loops for 270 times or loop the function until nrow(data)=20, then stop
+final <- data
+ 
+repeat{
+        if(nrow(final)==20){
+                break
+        }
+        
+        selected <- my_select(final)$index
+        final <- final[-selected,]
+}
+```
+##1.4 Run the program. Which cities were selected?
+```{r}
+final
+nrow(final)
+```
+##1.5 Plot histograms and make conclusion.
+- showing the size of all cities of the country
+```{r}
+hist(data$Population, freq=FALSE, breaks=50,
+     main="Size of all cities in Sweden")
+```
+  
+- showing the size of the 20 selected cities.
+```{r}
+hist(final$Population, freq=FALSE, breaks=50,
+     main="Size of 20 selected cities")
+```
+  You can see that the distribution of randomly selected 20 cities follows the distribution considered all possible cities. Of course you will get the more accurate data when you visit all the cities, but in financial point of view, it is impossible. However, from the result we get above, we can still expect the similar accuracy with only visiting 20 cities. 
+  
+#Question 2: Different distributions
+The double exponential(Laplace) distribution is given by formula:
+$$DE(\mu,\alpha)=\frac{\alpha}{2}exp(-\alpha|x-\mu|)$$
+##2.1 Write a code generating double exponential distribution DE(0,1) from Unif(0,1) by using the inverse CDF method. Explain how you obtained that code step by step. 
+####PDF 
+$$f(x) = \frac{\alpha}{2}e^{-\alpha(x-\mu)},~~~~~(if~~x>\mu)$$
+$$f(x) = \frac{\alpha}{2}e^{\alpha(x-\mu)},~~~~~(if~~x\leq\mu)$$
+
+####get CDF
+$$F(x)=\int_{-\infty}^{x} f(x) dx$$
+$$F(x)=\int_{-\infty}^{x} \frac{\alpha}{2}e^{-\alpha(x-\mu)} dx ,~~~~~(if~~x>\mu)$$
+$$=1-\int_{x}^{\infty} \frac{\alpha}{2}e^{-\alpha(x-\mu)} dx$$
+$$=1-\frac{1}{2}e^{-\alpha(x-\mu)}$$
+
+$$F(x)=\int_{-\infty}^{x} \frac{\alpha}{2}e^{\alpha(x-\mu)} dx ,~~~~~(if~~x\leq\mu)$$
+$$=\frac{1}{2}e^{\alpha(x-\mu)}$$
+
+####Find Inverse of CDF
+$$For~~x>\mu,~we~got~F(x)=1-\frac{1}{2}e^{-\alpha(x-\mu)}$$
+$$y=1-\frac{1}{2}e^{-\alpha(x-\mu)}$$
+$$\frac{ln(2-2y)-\alpha\mu}{-\alpha}=x$$
+$$For~U\sim U(0,1),~~~~~\frac{ln(2-2U)-\alpha\mu}{-\alpha}=X$$
+$$For~~x\leq\mu,~we~got~F(x)=\frac{1}{2}e^{\alpha(x-\mu)}$$
+$$y=\frac{1}{2}e^{\alpha(x-\mu)}$$
+$$\frac{ln(2y)}{\alpha}+\mu=x$$
+$$For~U\sim U(0,1),~~~~~\frac{ln(2U)}{\alpha}+\mu=X$$
+
+
+```{r}
+inverse <- function(U,mu,alpha){
+        X <- c()
+        
+        for(i in 1:length(U)){
+                if(U[i]>0.5){
+                        X[i] <- log(2-2*U[i])/(-alpha)+mu
+                }else{
+                        X[i] <- log(2*U[i])/(alpha)+mu
+                }
+        }
+        
+        return(X)
+}
+```
+  
+##Generate the 10000 random numbers from this distribution, plot the histogram and comment whether the result looks reasonable.
+```{r}
+set.seed(12345)
+
+U <- runif(10000,0,1)
+mu <- 0
+alpha <- 1
+
+value <- inverse(U,mu,alpha)
+
+hist(value, breaks=2000, main="distribution of DE(0,1)")
+
+```
+  
+##2.2 Use the Acceptence/rejection method with DE(0,1) as a majorizing density to generate N(0,1) varaibles. 
+Explain step by step how this was done, and how did you choose constant c in this method? 
+$$Majorizing~density~F_{Y}(y)\sim DE(0,1)=\frac{1}{2}e^{-|x|}$$
+$$Target~density~F_{X}(y)\sim N(0,1)=\frac{1}{\sqrt{2\pi}}e^{-\frac{x^2}{2}}$$
+$$C:majorizing~constant$$
+$$Then~for~U\sim Unif(0,1),~if~the~following~condition~meets$$
+$$U\leq f_X(Y)/(C\cdotp f_Y(Y))$$
+$$we~set~X\leftarrow Y$$
+$$For~y>0,~~~~U\leq \frac{1}{\sqrt{2\pi}}e^{-\frac{y^2}{2}}/(C\cdotp\frac{e^{-y}}{2})$$
+
+$$=\frac{\sqrt{2}}{C\sqrt{\pi}}\cdotp e^{-\frac{y^2}{2}+y}$$
+$$For~y\leq0,~~~~U\leq \frac{1}{\sqrt{2\pi}}e^{-\frac{y^2}{2}}/(C\cdotp\frac{e^{y}}{2})$$
+$$=\frac{\sqrt{2}}{C\sqrt{\pi}}\cdotp e^{-\frac{y^2}{2}-y}$$
+$$if~the~condition~doesn't~meet,~then~it~is~rejected$$
+
+```{r}
+set.seed(12345)
+Ac_Re <- function(c){
+        
+        X <- NA
+        num.reject<-0
+        
+        while (is.na(X)){
+                 u <- runif(1,0,1)
+                 Y <- inverse(u,0,1) ##Fy(x) ~ DE(0,1)
+                 U <- runif(1,0,1)
+                 if(Y>0 & U<=sqrt(2/pi)/c*exp(-(Y^2)/2)+Y){
+                        X <- Y
+                        }else if(Y<0 & U<=sqrt(2/pi)/c*exp(-Y^2)/2-Y){
+                                X <- Y
+                                }else{
+                                        num.reject<-num.reject+1
+                                        }
+                 
+                }
+         c(X,num.reject)
+         }
+```
+
+##Get the C value
+$$C\geq \frac{f_X(Y)}{f_Y(Y)} =h(y)$$
+$$To~get~the~maximum~value,\frac{\partial h(y)}{\partial y}:=0$$
+```{r}
+
+```
+ 
+  
+##Generate 2000 random numbers N(0,1) using your code and plot the histogram. Compute the average rejection rate R in the acceptance/rejection procedure. What is the expected rejection ER and how close is it to R?
+```{r}
+set.seed(12345)
+
+Y <- dnorm(2000,0,1)
+c <- max(Y)
+        
+YY <-sapply(rep(c,2000),Ac_Re)
+
+hist(YY[1,], col="gray", breaks=100, freq=FALSE,
+     xlim=c(-5,5), main="With Accept/Reject method")
+lines(density(YY[1,]), col="red")
+
+```
+
+###Average rejection rate
+```{r}
+
+```
+  
+###expected rejection rate
+```{r}
+```
+  
+##Generate 2000 numbers from N(0,1) using standard rnorm() procedure, plot the histogram and compare the obtained two histograms
+```{r}
+set.seed(12345)
+XX <- rnorm(2000,0,1)
+
+hist(XX, col="gray", breaks=50, freq=FALSE, main="With standard rnorm procedure")
+lines(density(XX),col="red")
+```
+
