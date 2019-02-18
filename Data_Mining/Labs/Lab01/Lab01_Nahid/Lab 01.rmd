@@ -1,0 +1,164 @@
+---
+title: "Data Mining Lab 01"
+author: "Anubhav Dikshit (anudi287) and Nahid Farazmand (nahfa911)"
+date: "February 7, 2019"
+output: pdf_document
+---
+# Algorithm 1: Simple K-means
+Apply "SimpleKMeans" to your data. In Weka euclidean distance is implemented in SimpleKmeans. You can set the number of clusters and seed of a random algorithm for generating initial cluster centers. Experiment with the algorithm as follows:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(foreign)
+library(readr)
+```
+
+### 1. Choose a set of attributes for clustering and give a motivation. (Hint: always ignore attribute "name". Why does the name attribute need to be ignored?) 
+
+K-means algorithm cannot handle categorical data (attributes) so we have to ignore all categorical attributes when we want to use this algorithm for clustering.
+
+### 2. Experiment with at least two different numbers of clusters, e.g. 2 and 5, but with the same seed value 10.
+
+#### Number of clusters = 2 and seed = 10
+
+##### a. Buffer results
+
+\includegraphics[]{C02Seed10-01.PNG}
+
+We can see that sum of squared error within the clusters is around 5.07 and the division rate in clusters are 67% and 33% in cluster 1and 0, respectively. 
+
+##### b. Clusters
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+data <- read.arff('C02Seed10_Clusters.arff')
+data[order(data$Cluster),-2]
+```
+
+By choosing Cluster = 2 and seed = 10, the initial points are observations number 1 and 7.
+
+##### c. Visualization
+In this step we can check the relation between different attributes and the effectiveness of different attributes on finding clusters. The most observations of this step were as bellow: 
+
+\includegraphics[]{C02Seed10-Linear relation energy and fat.PNG}
+
+It can be clearly seen that there is a strong correlation between energy and fat attributes. So we can choose just one of this attributes and this can help us to reduce the space dimension.
+
+
+\includegraphics[]{C02Seed10-Calciumdoesntaffect.PNG}
+
+We can see that Calcium attribute does not play and effective role in clustering and all observations except 2 observations belong to 1 cluster!
+
+##### Number of clusters = 5 and seed = 10
+Now we will try another number of clusters but without changing the seed. The result will be as follow:
+
+##### a. Buffer results
+
+\includegraphics[]{C05Seed10-01.PNG}
+
+Here by increasing the number of clusters, the rate of sum of squared error decreased to about half of that of the previous choice.
+
+##### b. Clusters
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+data <- read.arff('C05Seed10_Clusters.arff')
+data[order(data$Cluster),-2]
+```
+
+Here we can see that the observation 1, 7, 10, 19 and 25 have been chosen as the initial centers for clusters. It should be noticed that two point are the same as points which were the initial points for k = 2. Another result that should be considered is that point number 25 has been defined as an outlier. However, this observation has been introduced as an cluster, because k-mean algorithm is as partitioning method and in these methods all points should belong to an cluster. 
+
+##### c. Visualization
+As we said before, energy and fat are correlated. Besides, calcium and Iron also are not as effective as energy and protein, so here we have chosen energy and protein to show the clusters:
+
+\includegraphics[]{C05Seed10-EnergyProtein.PNG}
+
+We can see that the shape of clusters are convex and the border between clusters are obvious, however some points are far from the centroids but still have been assigned to the clusters because as we said before, all points should belong to a cluster.
+
+
+### 3. Then try with a different seed value, i.e. different initial cluster centers. Compare the results with the previous results. Explain what the seed value controls.
+
+In this step we chose k = 5 and run the clustering algorithm for different seeds.
+
+##### a. seed = 1000
+
+##### Buffer results
+
+\includegraphics[]{C05Seed1000-01.PNG}
+
+##### clusters
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+data <- read.arff('C05Seed1000_Clusters.arff')
+data[order(data$Cluster),-2]
+```
+
+
+
+##### b. seed = 10000
+
+##### Buffer results
+
+\includegraphics[]{C05Seed10000-01.PNG}
+
+##### clusters
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+data <- read.arff('C05Seed10000_Clusters.arff')
+data[order(data$Cluster),-2]
+```
+
+Seed parameter controls the initial selected centroids so we can see that when we change seed, the initial selected points will change. Here we considered 2  different choices: 
+
+1. K = 5 and seed = 1000
+
+2. k = 5 and seed = 10000
+
+By choosing these amounts we can see that compared to the previous step with k = 5 and seed = 10, clusters are different. However, if we compare the results of these two cases we can see that most of the clusters are similar (similar clusters for 2 different seeds):
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+dframe <- data.frame(seed_1000 = c(2,0,1,3,4)
+                     ,seed_10000 = c(1,2,'3 plus observation 22',4
+                                     ,'0 without observation 22'))
+dframe
+```
+
+Comparing sum of squared error rates, seed = 10000 has the least amount of error.
+
+So the initial centroids can result in different clusters and if we want to do the analysis, we should try different seeds to be able to get the result which is the  nearest to the optimum.
+
+### 4. Do you think the clusters are "good" clusters? (Are all of its members "similar" to each other? Are members from different clusters dissimilar?)
+
+We would say that considering energy, fat and protein, clusters are good. We can differentiate clusters based on these attributes and we can say that based on selected attributes, observations within the clusters are similar. 
+
+### 5. What does each cluster represent? Choose one of the results. Make up labels (words or phrases in English) which characterize each cluster.
+
+Considering the sum of squared error rates and similarity of observations within the clusters, we will choose the model with k = 5 and seed = 10000. By choosing this model we can label clusters as bellow:
+
+\includegraphics[]{energy.PNG}
+
+\includegraphics[]{protoin.PNG}
+
+Cluster 0: Outlines
+
+Cluster 1: High Energy - Moderate Protein
+
+Cluster 2: Outlines
+
+Cluster 3: Low Energy - Moderate Protein
+
+Cluster 4: Low Energy - High Protein
+
+# Algorithm 2: Density-Based Cluster
+Now with MakeDensityBasedClusters, SimpleKMeans is turned into a density-based clustered. You can set the minimum standard deviation for normal density calculation. Experiment with the algorithm as the follows:
+
+### 1. Use the Simple K-Means clusterer which gave the result you haven chosen in 5.
+
+The parameters of K-means algorithm: k = 5 and seed = 10000
+
+### 2. Experiment with at least two different standard deviations. Compare the results. (Hint: Increasing the standard deviation to higher values will make the differences in different runs more obvious and thus it will be easier to conclude what the parameter does).
+
+In this algorithm, in the first step, clusters will be formed by using k-means algorithm with defined parameters. Then each cluster will be adjusted based on the Gaussian distribution. Here we have chosen different standard deviation for the algorithm and the results have been as bellow:
+
+\includegraphics[]{Density_SDs.png}
+
+Based on the results we can see that if we increase the standard deviation it may decrease the number of clusters. And we can see that log-likelihood also decreases along with standard deviation growth. So we should choose standard deviation as small as we can to be able to get the best result.
+
+
+
+
+
+
+

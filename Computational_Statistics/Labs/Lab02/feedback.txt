@@ -1,0 +1,9 @@
+    Q1.5: If your optimal lambda from 1.4 was 11.7, it doesn't seem you found it here.
+
+    Q1.6: If you compare with previous answers, are you sure this method is the best? Compare with the minimum lambda found before. Give a more clear answer.
+
+    Q2.2: In this task, you were to write the log likelihood, not the minus one. Also, you were to derive sigma, not sigma^2.
+
+
+
+Fix 1.6. Otherwise, good job!

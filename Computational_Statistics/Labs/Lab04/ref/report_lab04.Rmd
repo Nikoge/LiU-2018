@@ -1,0 +1,151 @@
+---
+title: "Report_lab04"
+author: "Thijs Quast"
+date: "7-2-2019"
+output: pdf_document
+---
+
+# Question 1 - Computations with Metropolis–Hastings
+
+## 1
+The CDF is provided:
+```{r}
+f_x <- function(x){
+  result <-(x^5)*(exp(-x))
+  return(result)
+}
+```
+We can omit the constant here because this will cancel out later on in the Metropolis-Hastings algorithm.
+
+```{r}
+f.MCMC.MH<-function(nstep,X0,props){
+    vN<-1:nstep
+    vX<-rep(X0,nstep);
+    for (i in 2:nstep){
+	X<-vX[i-1]
+	Y<-rlnorm(1, log(X), sdlog = props)
+	u<-runif(1)
+	a<-min(c(1,(f_x(Y)*dlnorm(X,meanlog=log(Y),sdlog=props))/(f_x(X)*dlnorm(Y,meanlog=log(X),sdlog=props))))
+	if (u <=a){
+	  vX[i]<-Y 
+	}else{
+	    vX[i]<-X
+	    }    
+    }
+    plot(vN,vX,pch=19,cex=0.3,col="black",xlab="t",ylab="X(t)",main="",
+         ylim=c(min(X0-0.5,-5),max(5,X0+0.5)))
+}
+```
+
+```{r}
+f.MCMC.MH(10000, 100, 1)
+```
+
+```{r}
+f.MCMC.MH2<-function(nstep,X0,props){
+    vN<-1:nstep
+    vX<-rep(X0,nstep);
+    for (i in 2:nstep){
+	X<-vX[i-1]
+	Y<-rlnorm(1, log(X), sdlog = props)
+	u<-runif(1)
+	a<-min(c(1,(f_x(Y)*dlnorm(X,meanlog=log(Y),sdlog=props))/(f_x(X)*dlnorm(Y,meanlog=log(X),sdlog=props))))
+	if (u <=a){
+	  vX[i]<-Y 
+	}else{
+	    vX[i]<-X
+	    }    
+    }
+    return(vX)
+}
+```
+
+
+## 2
+```{r}
+f.MCMC.chi<-function(nstep,X0,props){
+    vN<-1:nstep
+    vX<-rep(X0,nstep);
+    for (i in 2:nstep){
+	X<-vX[i-1]
+	Y<-rchisq(1, floor(abs(X)))
+	u<-runif(1)
+	a<-min(c(1,(f_x(Y)*dchisq(X,floor(abs(Y)))) / (f_x(X)*dchisq(Y, floor(abs(X))))))
+	if (u <=a){
+	  vX[i]<-Y 
+	}else{
+	    vX[i]<-X
+	    }    
+    }
+    plot(vN,vX,pch=19,cex=0.3,col="black",xlab="t",ylab="X(t)",main="",
+         ylim=c(min(X0-0.5,-5),max(5,X0+0.5)))
+}
+```
+
+```{r}
+f.MCMC.chi(10000, 100, 1)
+```
+## 3
+
+## 4
+```{r}
+f.MCMC.chi2<-function(nstep,X0,props){
+    vN<-1:nstep
+    vX<-rep(X0,nstep);
+    for (i in 2:nstep){
+	X<-vX[i-1]
+	Y<-rchisq(1, floor(abs(X)))
+	u<-runif(1)
+	a<-min(c(1,(f_x(Y)*dchisq(X,floor(abs(Y)))) / (f_x(X)*dchisq(Y, floor(abs(X))))))
+	if (u <=a){
+	  vX[i]<-Y 
+	}else{
+	    vX[i]<-X
+	    }    
+    }
+    return(vX)
+}
+```
+
+
+```{r}
+f1 <- mcmc.list()
+library(coda)
+for (i in 1:10){
+  f1[[i]] <- as.mcmc(f.MCMC.chi2(10000, i, 1))
+}
+```
+
+```{r}
+print(gelman.diag(f1))
+```
+
+## 5
+```{r}
+logsample <- f.MCMC.MH2(1000, 10, 1)
+chismaple <- f.MCMC.chi2(1000, 10, 1)
+mean(logsample)
+mean(chismaple)
+```
+
+
+# Question 2 - Gibbs sampling
+## 1
+```{r}
+load("chemical.rData")
+df <- as.data.frame(cbind(X, Y))
+colnames(df) <- c("Day", "Concentration")
+```
+
+```{r}
+library(ggplot2)
+plot <- ggplot(df, aes(x = df$Day, y = df$Concentration)) + geom_point() +
+  xlab("Day") + ylab("Concentration") +
+  ggtitle("Concentration of chemicals per day")
+
+plot
+```
+
+Given the shape observations I would say a logarithmic model is most suitable here.
+
+## 2

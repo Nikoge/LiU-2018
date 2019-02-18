@@ -7,7 +7,7 @@
 % 3 = dot cloud 3
 % 4 = OCR data
 
-dataSetNr = 1; % Change this to load new data 
+dataSetNr = 3; % Change this to load new data 
 
 [X, D, L] = loadDataSet( dataSetNr );
 
@@ -35,7 +35,7 @@ Xtest = [ones(1, size(Xt{2}, 2)); Xt{2}];
 
 numHidden = 2; % Change this, Number of hidden neurons 
 numIterations = 5000; % Change this, Numner of iterations (Epochs)
-learningRate = 0.0001; % Change this, Your learningrate
+learningRate = 0.05; % Change this, Your learningrate
 W0 = randn(numHidden, size(Xtraining, 1))/1000; % Change this, Initiate your weight matrix W
 V0 = randn(size(Dt{1}, 1), numHidden + 1)/1000; % Change this, Initiate your weight matrix V
 

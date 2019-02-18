@@ -111,7 +111,7 @@ Robust, Clustering using Links. Works on categorical data.\\
 \item Label data in disk, add other data to cluster with most neighbours.
 \end{itemize}
 \marginpar{\emph{Lecture 4\\2016-02-02}}
-Expected number of cross-links between $C_i$ and $C_j$.	= Expected number of
+Expected number of cross-links between $C_i$ and $C_j$.	= Expected number of cross
 links in $C_i\cup C_j - $ Expected number of links in $C_i -$ Expected number of
 links in
 $C_j$.\\
@@ -136,7 +136,11 @@ points.
 	Expected number of links in $C_i = m_i^{1+2f(t)}$
 \end{definition}
 \begin{definition}
-	Expected number of links in $C_i\cup C_j = (m_i+m_j)^{1-2f(t)}$
+	Expected number of cross links in $C_i\cup C_j = (m_i+m_j)^{1+2f(t)}$
+\end{definition}
+
+\begin{definition}
+	Godess of fit $G = \frac{}{(m_i+m_j)^{1+2f(t)} - m_i^{1+2f(t)} - m_j^{1+2f(t)}}$
 \end{definition}
 \subsection{CHAMELEON: Hierarchical Clustering Using Dynamic Modeling}
 \begin{enumerate}

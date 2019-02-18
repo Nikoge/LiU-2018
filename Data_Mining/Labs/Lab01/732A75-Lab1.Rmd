@@ -3,8 +3,8 @@ title: "732A75 Data Mining Lab-1"
 author: "Anubhav Dikshit(anudi287) and Nahid Farazmand (nahfa911)"
 date: "25 January 2019"
 output:
-  word_document: default
   pdf_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -19,14 +19,45 @@ Apply "SimpleKMeans" to your data. In Weka euclidian distance is implemented in 
 
 Typically in clustering operations we only use numeric attributes, any attributes of type category or having too many levels are excluded. The reasoning is due to the fact clustering tends to be based on some distance measurment, and distance of attributes such as name, rownumbers are meaningless and may only come in the way of optimal solution.
 
-##2. Experiment with at least two different numbers of clusters, e.g. 2 and 5, but with the same seed value 10.
 
+\includegraphics[]{pic1.jpg}
+
+##2. Experiment with at least two different numbers of clusters, e.g. 2 and 5, but with the same seed value 10.
+\includegraphics[]{kmean_k_2.jpg}
+\includegraphics[]{kmean_k_5.jpg}
+
+\includegraphics[]{kmean_k_2_visualization.jpg}
+\includegraphics[]{kmean_k_5_visualization.jpg}
+
+The more clusters we have, the more subdivisions we get and due to the nature of k-means (parition based algorithm) a cluster will never be empty, there will be no overlap and finally all data points will be covered. This leads to the possibility that there are some clusters which have so little data points (k=5) that they are not meaningful. Thus care must be taken to ensure that we specify k carefully and visually inspect if they make sense.
 
 ##3. Then try with a different seed value, i.e. different initial cluster centers. Compare the results with the previous results. Explain what the seed value controls.
 
+\includegraphics[]{kmean_k_2_seed999.jpg}
+\includegraphics[]{kmean_k_5_seed999.jpg}
+\includegraphics[]{kmean_k_2_visualization_seed999.jpg}
+\includegraphics[]{kmean_k_5_visualization_seed999.jpg}
+
+
+The seed value controls the starting points of the cluster centroids. If we change the value of the seed, the algorithm seems much more unstable for larger values of $k$, producing quite different clusters, which is likely also due to the fact that we have such a small dataset. However, if $k$ is small, the clusters produced are quite similar for different seeds. With $k=2$ for instance, the results are quite similar, evaluating by the centroids of the clusters, however for $k=5$, much less so. 
+
+We chose these values in order to compare how meaningful the clusters when there are many vs when there are few. The number of data points in the clusters may vary too with the seed. This, along with the fact that the algorithms converges after many less iterations that the maximum we supply of 500, shows that k-means does not generate solutions corresponding to the global optimum, because otherwise starting by only changing the seed values would result in the same solutions. Instead, local optima are reached and then the algorithm stops. The choice of the seed values is somewhat arbitrary as they just influence a random starting point.
+
 ##4. Do you think the clusters are "good" clusters? (Are all of its members "similar" to each other? Are members from different clusters dissimilar?)
 
+We guage the goodness our clusters on what attributes we are looking at. Since there are many variables, it is hard to visualize them all at once, visualization of each variable against itself to see if similar elements get into similar clusters is a helpful way to examine different clusters. 
+
+\includegraphics[]{kmean_k_2_visualization_energy.jpg}
+\includegraphics[]{kmean_k_2_visualization_protein.jpg}
+\includegraphics[]{kmean_k_2_visualization_calcium.jpg}
+
+We see that clusters seperate some variables very well (Energy) but not so well on other variables(Calcium). In a very done clustering the elements in a cluster are closer to each other. When we view cluster vs. Energy we can see that elements are sort of tightly packed.
+
 ##5. What does each cluster represent? Choose one of the results. Make up labels (words or phrases in English) which characterize each cluster.
+
+\includegraphics[]{kmean_k_2_visualization_fat.jpg}
+
+We chose $k=2$ with seed 10. As can be seen in the plots above, the clearest separation is in terms of fat content. In particular, we can see that very fatty foods contain very little calcium. The blue cluster contains meats that are high in fat and contain very little calcium, while the red cluster contains meats that are low in fat.
 
 #MakeDensityBasedClusters: 
 
@@ -34,7 +65,15 @@ Now with MakeDensityBasedClusters, SimpleKMeans is turned into a denstiy-based c
 
 ##1. Use the SimpleKMeans clusterer which gave the result you haven chosen in 5).
 
+
+
 ##2. Experiment with at least two different standard deviations. Compare the results. (Hint: Increasing the standard deviation to higher values will make the differences in different runs more obvious and thus it will be easier to conclude what the parameter does) 
 
+\includegraphics[]{density_based_cluster_sigma_1.jpg}
+\includegraphics[]{density_based_cluster_sigma_2.jpg}
+\includegraphics[]{density_based_cluster_sigma_3.jpg}
 
+The standard deviation parameter influences the size of the final clusters. First, the algorithm produces clusters according to k-means, and then adjusts them with the minimum standard deviation. If we have a sufficiently small minimum standard deviation, we are guaranteed that we will have as many clusters as we originally asked for, in our case $k=2$. However, if the standard deviation is too large we will end up including points that are dissimilar among each other, or even reducing the number of clusters, as more and more points need to be included to satisfy the minimum standard deviation requirement. The larger the standard deviation of an attribute for a given cluster in relation to the other attributes, the less that attribute serves to characterize the cluster. Taking cluster-means into account we need to consider the inter-cluster distance between the means for a given attribute in relation to the standard deviation of said attribute in order to evaluate its significance in characterizing a cluster.
+
+With $k=2$ we first used the default minimum of $\sigma=1.0E-6$, and we ended up with two clusters with the same data distribution as with the \textit{k-means algorithm}. For clustering with $\sigma=10$ we, as with $\sigma=1.0E-6$ got two clusters, even if two data points shifted cluster assignment. With $\sigma=1000$ all elements end up being in one cluster as a result of no data points being outside this constraint on the minimum standard deviation.
 

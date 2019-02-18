@@ -100,7 +100,7 @@ optimize(interval = c(0.1, 40), myMSE, pars=pars, tol=0.01)
 cat("iternations: ", count)
 ```
 
-Answer: Yes the function managed to find the optimal MSE value which we can visually compare from step4. It took 18 evaluations.
+Answer: Yes the function managed to find the an approximate optimal MSE value which we can visually compare from step4. It took 18 evaluations, this is not the global minima but very close to one. From a practical point of view I would consider this point to be good enough.
 
 ##6. Use optim() function and BFGS method with starting point lambda = 35 to and the optimal value. How many myMSE() function evaluations were required (read ?optim)? Compare the results you obtained with the results from step 5 and make conclusions.
 
@@ -112,7 +112,10 @@ cat("iternations: ", count)
 ```
 Answer: The number of iterations of this optimization is 3. For some reason, R stores the number of iterations as an addition to the previously specified iterForMyMSE. Therefore the number of iterations can be found by 21 - 18 = 3.
 
-Since the number of iterations in question 1.6 is much lower, we would say this method is more efficiently in finding the optimum. Also because a starting value lambda = 35 is specified.
+Although the number of iterations is only 3, the lambda value returned is 35. from the graph of lambda vs. MSE we can see that indeed this is a inflection point, hence the number of iterations being less is purely due to starting point.
+
+Secondly the global minimum is around 11 while this method yields 35, thus I would prefer 10.5 over this, however choosing a optimal starting point may change the conclusions.
+
 
 # Question 2: Maximizing likelihood
 
@@ -125,13 +128,15 @@ load("data.RData")
 
 ##2. Write down the log-likelihood function for 100 observations and derive maximum likelihood estimators for Mean, Sigma analytically by setting partial derivatives to zero. Use the derived formulae to obtain parameter estimates for the loaded data.
 
-The expression for the minus log likehood would be:
+The expression for the log likehood would be:
 
-$$ L_{x} =  \frac{100}{2}  \ln(2\pi) + \frac{100}{2}\ln_(\sigma^2) + \frac{1}{2\sigma^2} \sum_{j=1}^{100} (x_{j} - \mu)^2 $$ 
+$$ L_{x} = - ( \frac{100}{2}  \ln(2\pi) + \frac{100}{2}\ln_(\sigma^2) + \frac{1}{2\sigma^2} \sum_{j=1}^{100} (x_{j} - \mu)^2) $$ 
 Paritally differenitating with $\mu$ we get
 
 $$ \mu = \frac{1}{n} \sum_{j=1}^n x_{j} $$
 $$ \sigma^2 = \frac{1}{n} \sum_{j=1}^n (x_{j}-\mu)^2 $$
+
+$$\sigma = \sqrt{\frac{1}{n} \sum_{j=1}^n (x_{j}-\mu)^2} $$
 
 
 

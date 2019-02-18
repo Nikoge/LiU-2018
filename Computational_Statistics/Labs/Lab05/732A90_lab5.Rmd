@@ -1,0 +1,131 @@
+---
+title: "Computational Statistics (732A90) Lab5"
+author: "Anubhav Dikshit(anudi287) and Thijs Quast(thiqu264)"
+date: "12 Feburary 2019"
+output: 
+    pdf_document:
+      toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen=999)
+library(dplyr)
+library(ggplot2)
+```
+
+\newpage
+
+# Question 1: Hypothesis testing
+
+##1. Make a scatterplot of Y(draft_no) versus X(day_of_year) and conclude whether the lottery looks random.
+```{r}
+lottery <- read.csv("lottery.csv", sep=";")
+
+ggplot(lottery, aes(x=Day_of_year, y = Draft_No)) + geom_point() + 
+  ggtitle("Plot of Draft Number vs. day of birth")
+```
+
+##2. Compute an estimate Y(hat) of the expected response as a function of X by using a loess smoother (use loess()), put the curve Y(hat) versus X in the previous graph and state again whether the lottery looks random.
+
+```{r}
+ggplot(lottery, aes(x=Day_of_year, y = Draft_No)) + 
+  geom_point() +
+  geom_smooth(method = loess) +
+  ggtitle("Plot of Draft Number vs. Day of birth")
+
+
+model <- loess(Draft_No ~ Day_of_year, lottery)
+lottery$Y_hat <- predict(model, lottery)
+
+ggplot(lottery, aes(x=Day_of_year, y = Draft_No)) + 
+  geom_point() +
+  geom_line(aes(y = Y_hat)) +
+  ggtitle("Plot of Draft Number vs. Day of birth without using ggplot loess")
+
+```
+
+##3. To check whether the lottery is random, it is reasonable to use test statistics 
+
+$$ T = \frac{\hat Y(X_{b}) - \hat Y(X_{a})}{X_{b}-X_{a}} $$
+Where $X_{b} = argmax_x Y(X)$ and $X_{a} = argmin_x Y(X)$.
+
+If this value is significantly greater than zero, then there should be a trend in the data and the lottery is not random. Estimate the distribution of T by using a non-parametric bootstrap with B = 2000 and comment whether the lottery is random or not. What is the p-value of the test?
+
+```{r}
+
+library("boot")
+
+stat1 <- function(data, index){
+    data <- data[index,]
+    model <- loess(Draft_No ~ Day_of_year, data)
+    res <- predict(model, data)
+    X_a <- data$Day_of_year[which.max(data$Draft_No)]
+    X_b <- data$Day_of_year[which.min(data$Draft_No)]
+    Y_a <- res[X_a] 
+    Y_b <-res[X_b]
+    answer <- ((Y_b - Y_a) / (X_b - X_a))
+    return(answer)
+}
+
+res <- boot(data=lottery, statistic = stat1, R=2000)
+print(boot.ci(res))
+plot(res)
+
+```
+
+##4.Implement a function depending on data and B that tests the hypothesis H0: Lottery is random versus H1: Lottery is non-random by using a permutation test with statistics T. The function is to return the p-value of this test. Test this function on our data with B = 2000.
+
+```{r}
+my_permu <- function(data, index){
+    data <- data[index,]
+    model <- loess(Draft_No ~., data)
+    res <- predict(model, data)
+    X_a <- data$Day_of_year[which.max(data$Draft_No)]
+    X_b <- data$Day_of_year[which.min(data$Draft_No)]
+    Y_a <- res[X_a] 
+    Y_b <-res[X_b]
+    answer <- ((Y_b - Y_a) / (X_b - X_a))
+  return(answer)
+}
+
+data <- lottery
+data$Month <- NULL
+res <- boot(data=lottery, statistic = stat1, R=2000)
+    
+    
+```
+
+#Question 2: Bootstrap, jackknife and confidence intervals
+
+##1. Plot the histogram of Price. Does it remind any conventional distribution? Compute the mean price.
+
+```{r}
+price_data <- read.csv("prices1.csv", sep=";")
+
+ggplot(data=price_data,aes(Price)) + 
+  geom_histogram(bins=20) + 
+  ggtitle("Histogram of Price")
+```
+
+##2. Estimate the distribution of the mean price of the house using bootstrap. Determine the bootstrap bias-correction and the variance of the mean price. Compute a 95% confidence interval for the mean price using bootstrap percentile, bootstrap BCa, and first-order normal approximation
+
+```{r}
+
+```
+
+##3. Estimate the variance of the mean price using the jackknife and compare it with the bootstrap estimate
+
+```{r}
+
+```
+
+##4. Compare the confidence intervals obtained with respect to their length and the location of the estimated mean in these intervals.
+
+```{r}
+
+```
+
+#Appendix
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+```
