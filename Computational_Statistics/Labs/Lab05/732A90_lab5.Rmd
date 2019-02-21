@@ -110,13 +110,72 @@ ggplot(data=price_data,aes(Price)) +
 
 ##2. Estimate the distribution of the mean price of the house using bootstrap. Determine the bootstrap bias-correction and the variance of the mean price. Compute a 95% confidence interval for the mean price using bootstrap percentile, bootstrap BCa, and first-order normal approximation
 
+Bias correction
+$$T1 = 2.T(D) - \frac{1}{D} \sum_{i=1}^B T^*_{i} $$
+
 ```{r}
+
+# Estimation of mean of Price
+stat_mean <- function(data, index){
+    data <- data[index,]
+    answer <- mean(data$Price)
+    return(answer)
+}
+
+res <- boot::boot(data=price_data, statistic = stat_mean, R=2000)
+res
+plot(res,index = 1)
+
+#95% CI for mean using percentile
+boot.ci(res, index=1, type=c('perc'))
+
+#95% CI for mean using bca
+boot.ci(res, index=1, type=c('bca'))
+
+#95% CI for mean using first order normal
+boot.ci(res, index=1, type=c('norm'))
+
+# Bias-correction and Varience of Price
+
+stat_bias_correction <- function(data, index){
+    t_d <- 2*mean(data$Price)
+    data2 <- data[index,]
+    answer <- t_d - mean(data2$Price)
+    return(answer)
+}
+
+res <- boot(data=price_data, statistic = stat_bias_correction, R=2000)
+res
+print(boot.ci(res))
+
+# Varience using bootstrap
+stat_varience <- function(data, index){
+    data2 <- data[index,]
+    n <- length(data2)
+    answer <- (1/(n-1)) * sum(data2$Price - mean(data2$Price))^2
+    return(answer)
+}
+
+res <- boot(data=price_data, statistic = stat_varience, R=2000)
+res
+
 
 ```
 
 ##3. Estimate the variance of the mean price using the jackknife and compare it with the bootstrap estimate
 
 ```{r}
+
+stat_jackknife_varience <- function(data, index){
+    data2 <- data[-index,]
+        n <- length(data2)
+    answer <- (1/(n-1)) * sum(data2$Price - mean(data2$Price))^2
+    return(answer)
+}
+
+res <- boot(data=price_data, statistic = stat_jackknife_varience, R=2000)
+res
+
 
 ```
 
