@@ -31,7 +31,7 @@ selectAtRandom = true; % true = select features at random, false = select the fi
 % Note: you have to modify the kNN() function yourselfs.
 
 % Set the number of neighbors
-k = 3;
+k = 4;
 
 LkNN = kNN(Xt{2}, k, Xt{1}, Lt{1});
 
@@ -39,7 +39,7 @@ LkNN = kNN(Xt{2}, k, Xt{1}, Lt{1});
 % Note: you have to modify the calcConfusionMatrix() function yourselfs.
 
 % The confucionMatrix
-cM = calcConfusionMatrix( LkNN, Lt{2})
+cM = calcConfusionMatrix( LkNN, Lt{1})
 
 % The accuracy
 acc = calcAccuracy(cM)

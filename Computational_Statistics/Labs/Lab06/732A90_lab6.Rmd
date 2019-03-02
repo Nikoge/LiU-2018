@@ -1,0 +1,153 @@
+---
+title: "Computational Statistics (732A90) Lab6"
+author: "Anubhav Dikshit(anudi287) and Thijs Quast(thiqu264)"
+date: "2 March 2019"
+output: 
+    pdf_document:
+      toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen=999)
+library(dplyr)
+library(ggplot2)
+library(knitr)
+set.seed(12345)
+```
+
+\newpage
+
+# Question 1: Genetic algorithm
+
+In this assignment, you will try to perform one-dimensional maximization with the help of a genetic algorithm.
+
+##1. Define the function
+
+$$f(x) := \frac{x^2}{e^x} - 2 e^-\frac{(9 sinx)}{(x^2 + x + 1)} $$
+```{r}
+
+function_f <- function(x){
+answer <- (x^2/exp(x)) - 2 * exp(-(9* sin(x))/(x^2 + x + 1))  
+return(answer)
+}
+
+function_f(x=1)
+```
+
+
+##2. Define the function crossover(): for two scalars x and y it returns their "kid" as $\frac{(x+y)}{2}$.
+```{r}
+crossover <- function(x,y){
+answer <- (x+y) * 0.5
+return(answer)
+}
+
+crossover(x=3,y=7)
+```
+
+
+##3. Define the function mutate() that for a scalar x returns the result of the integer division x2 mod 30. (Operation mod is denoted in R as %%).
+
+```{r}
+mutate <- function(x){
+answer <- x^2 %%30  
+return(answer)
+}
+
+mutate(x=30)
+```
+
+
+
+##4. Write a function that depends on the parameters maxiter and mutprob and:
+```{r}
+myfunction <- function(maxiter, mutprob){
+
+# part-b
+inital_population <- seq(from=0, to=30, by=5)
+
+# part-c
+Values <- vector("numeric", length = length(inital_population))
+for(i in 1:length(inital_population)){Values[i] <- function_f(x=i)}
+Values <- as.data.frame(Values)
+Values$inital_population <- inital_population
+
+while(i < maxiter){
+# part-d
+parents <- Values[Values$inital_population %in% sample(x = inital_population, size=2, replace=FALSE), ]
+parents <- parents %>% arrange(Values)
+victim <- which.min(Values$Values)
+parent_1 <- parents[1,1]
+parent_2 <-  parents[2,1]
+
+if(runif(n=1) > mutprob){
+kid <- crossover(x=parent_1, y=parent_2)
+kid <- mutate(x=kid)
+Values[[victim,1]] <- kid
+}else{
+  kid <- 0
+}
+max_value <- max(Values$Values)
+i <- i+1
+}
+  
+answer <- y <- Values$Values
+y <- as.data.frame(y)
+y$x <- seq(0,30,1)
+answer <- ggplot(y, aes(x=x, y=y, group=1)) + 
+  geom_point() + geom_line(linetype = "dashed") + 
+  ggtitle("Plot of the function") 
+return(answer)
+}
+
+# part-a 
+x <- seq(from=0,to=30,by=1)
+y <- vector("numeric", length = length(x))
+for(i in 1:length(x)){y[i] <- function_f(x=i)}
+y <- as.data.frame(y)
+y$x <- seq(0,30,1)
+ggplot(y, aes(x=x, y=y, group=1)) + 
+  geom_point() + geom_line(linetype = "dashed") + 
+  ggtitle("Plot of the function") 
+
+
+myfunction(maxiter=10, mutprob=0.5)
+
+```
+
+
+###(a) Plots function f in the range from 0 to 30. Do you see any maximum value?
+
+###(b) Defines an initial population for the genetic algorithm as X = (0,5,10,15.....30).
+
+###(c) Computes vector Values that contains the function values for each population point.
+
+###(d) Performs maxiter iterations where at each iteration
+
++ Two indexes are randomly sampled from the current population, they are further used as parents (use sample()).
+
++ One index with the smallest objective function is selected from the current population, the point is referred to as victim (use order()).
+
++ Parents are used to produce a new kid by crossover. Mutate this kid with probability mutprob (use crossover(), mutate()).
+
++ The victim is replaced by the kid in the population and the vector Values is updated.
+
++ The current maximal value of the objective function is saved.
+
+###(e) Add the final observations to the current plot in another colour.
+
+##5. Run your code with different combinations of maxiter= 10,100 and mutprob= 0.1, 0.5,0.9. Observe the initial population and final population. Conclusions?
+
+#2. EM algorithm
+
+The data file physical.csv describes a behavior of two related physical processes Y = Y (X) and Z = Z(X).
+
+###1. Make a time series plot describing dependence of Z and Y versus X. Does it seem that two processes are related to each other? What can you say about the variation of the response values with respect to X?
+
+
+
+
+#Appendix
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+```

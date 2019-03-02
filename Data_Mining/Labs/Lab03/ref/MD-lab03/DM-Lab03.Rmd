@@ -1,0 +1,53 @@
+---
+title: "Association Analysis (2) - the importance of the distance metric used within the clustering algorithm"
+author: "Nahid Farazmand (nahfa911) and Anubhav Dikshit (anudi287)"
+date: "March 1, 2019"
+output: pdf_document
+---
+## Dataset
+Monk dataset contains 124 instance and each instance has 6 attributes and belongs to one of 2 classes. Here you can see 10 first instances of the dataset.
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(foreign)
+monk <- read.arff('monk1.arff')
+colnames(monk) <- c('att1','att2','att3','att4','att5','att6','class')
+head(monk,10)
+```
+
+## Clustering
+Here we want to investigate whether or not the clustering algorithms can find the classes which has been identified before. For this purpose, we First, cluster the data with different algorithms and number of clusters by Use of the Clusters to class evaluation model to see whether the clustering algorithm is able to discover the class division existing in the data.
+
+Here, we used 4 different cases:
+
+    1. 2-Mean algorithm, seed = 10
+
+    2. 2-Mean algorithm, seed = 10
+
+    3. Density-Based Cluster with minStdDev = 1.0E-6 and 2-Mean
+
+    4. Density-Based Cluster with minStdDev = 1.0E-6 and 4-Mean
+    
+The confusion matrices for these cases can bee seen in the picture bellow:
+
+\includegraphics[]{CM-clustering.png}
+
+It can be clearly seen that the algorithms could not discover the class division existing in the data!
+
+Now we want to find out why the clustering algorithms were not successful, for this purpose we got help from Association analysis. By Use of association analysis we will try to find a set of rules that are able to accurately predict the class label from the rest of the attributes. Actually, we want to mine the classes to find out how we can decribe the classes by looking at the attributes then we can find out how was the performance of our clustering algorithms.
+
+## Association analysis
+For association analysis we used density-Based Cluster with minStdDev = 1.0E-6 and 2-Mean and we added the cluster attribute to the dataset.Then we implement the association analysis with minimum support of 0.05 and a maximum number of rules of 19 and Tried to find as few rules predicting class 1 as possible. The rules are as bellow:
+
+\includegraphics[]{rules.PNG}
+
+By looking at the rules we can obviousely see that all founded rules have minimum support (not more than that) this can be one of the reasons why the clustering algorithm could not find the classes. On the other hand, the more important problem is that the attributes are categorical (not numerical) and here the only way that we can estimate the proximity between instances were euclidean and Manhattan distances which can be used for numerical data. This is the most important reason why the clustering algorithm could not discover the class division existing in the data. We would say that with the euclidean and Manhattan formlas we cannot obviousely distinguish between these rules and other combination of attributes in different instances.
+
+
+
+
+
+
+
+
+
+
+

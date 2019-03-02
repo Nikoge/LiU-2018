@@ -1,0 +1,132 @@
+---
+title: "Computational Statistics Computer Lab 5"
+author: "Nahid Farazmand (nahfa911), Aashana Nijhawan (aasni448)"
+date: "February 19, 2019"
+output: pdf_document
+---
+## Question 1: Hypothesis testing
+### 1.1. Scatterplot of Draft Number versus Day Of Year
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#--- Question 1:
+#-- 1.1
+library(readxl)
+data <- read_excel('lottery.xls',sheet = 1)
+
+library(ggplot2)
+ggplot(data = data)+
+geom_point(mapping = aes(x = Day_of_year,y = Draft_No),color = 'dodgerblue3') + 
+ggtitle('Draft Number versus Day Of Year') +
+theme(plot.title = element_text(hjust = 0.5)) 
+```
+
+Based on this plot there is no relation between Draft number and Day of year and the lottery looks random.
+
+### 1.2. Curve of estimated Draft_No versus Day_Of_Year
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#-- 1.2
+set.seed(123456)
+model <- loess(formula = Draft_No~Day_of_year
+               , data = data)
+Y_hat <- predict(object = model, newdata = data)
+data2 <- data.frame(Y_hat = Y_hat, Day_of_year = data$Day_of_year)
+ggplot()+
+geom_point(data = data, mapping = aes(x = Day_of_year,y = Draft_No)
+           ,color = 'dodgerblue3') +
+geom_line(data = data2,mapping = aes(x = Day_of_year,y = Y_hat)
+          ,color = 'goldenrod1'
+          ,size = 1.5) + 
+ggtitle('Draft Number versus Day Of Year') +
+theme(plot.title = element_text(hjust = 0.5)) 
+
+```
+
+### 1.3. Estimating the distribution of T by using a non-parametric bootstrap with B = 2000
+$T = \frac{\hat{Y}(X_b)-\hat{Y}(X_a)}{X_b - X_a}$ Where $X_b = argmax_xY(X)$ and $X_a = argmin_xY(X)$
+
+NOTE: If this value is signifcantly greater than zero, then there should be a trend in the data and the lottery is not random.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#-- 1.3. 
+library(boot)
+stat1 <- function(data,vn){
+  data <- as.data.frame(data[vn,])
+  X_b <- data[which.max(data$Draft_No),]$Day_of_year
+  X_a <- data[which.min(data$Draft_No),]$Day_of_year
+  model <- loess(formula = Draft_No~Day_of_year
+               , data = data)
+  Y_hat <- predict(object = model, newdata = data)
+  Y_hat_a <- Y_hat[X_a]
+  Y_hat_b <- Y_hat[X_b]
+  (Y_hat_b - Y_hat_a)/(X_b - X_a)
+}
+
+res <- boot(data = data, statistic = stat1
+                        # Ordinary nonparametric bootstrap (default)
+            , R = 2000, sim = "ordinary")
+
+
+plot(res)
+```
+
+#### P-Value:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# P-Value
+mean(abs(res$t0) < abs(res$t-mean(res$t)))
+```
+
+By looking at the histogram of T we can obviously see that most of the cases are around zero. Besides the pi-value >> 0.05 which means we cannot reject the null hypothesis; so based on our test the lottery is random.
+
+### 1.4. Permutation test with statistics T
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#-- 1.4. Permutation test
+P_per_test <- function(data,R){
+  res <- boot(data = data, statistic = stat1, R = R)
+  X_b <- data[which.max(data$Draft_No),]$Day_of_year
+  X_a <- data[which.min(data$Draft_No),]$Day_of_year
+  model <- loess(formula = Draft_No~Day_of_year
+               , data = data)
+  Y_hat <- predict(object = model, newdata = data)
+  Y_hat_a <- Y_hat[X_a]
+  Y_hat_b <- Y_hat[X_b]
+  T_x <- (Y_hat_b - Y_hat_a)/(X_b - X_a)
+               # two-sided test
+  length(which(abs(res$t) > abs(T_x)))/R
+}
+
+P_per_test(data,2000)
+
+```
+
+Based on the result of permutation test, again, we can say that the lottery is random.
+
+### 1.5. Crude estimation of power
+At first we Generate data samples that satisfy $H_1$ (obviously non-random datasets). And then we implement our test for all datasets. Then we calculate the proportion of cases that our test reject $H_0$ (Where p-value is less than 0.05).
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#-- 1.5. Estimate of the power
+library(matrixStats)
+X <- data$Day_of_year
+alph <- seq(0.1,10,0.1)
+output <- data.frame(alpha = 0,p_value = 0)
+
+for(i in 1:length(alph)){
+  Bet <- rnorm(n = length(X),mean = 183,sd = 10)
+  Y <- rowMaxs(cbind(matrix(rowMins(cbind(matrix(alph[i]*X+Bet,ncol = 1),366))
+                            ,ncol = 1),0))
+  data5 <- data.frame(Day_of_year = X, Draft_No = Y)
+  output[i,] <- c(alph[i],P_per_test(data5,200))
+}
+
+output
+```
+
+### Percent of correct rejections
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+power = length(which(output$p_value < 0.05))/length(alph)
+cat(paste0('power = ',power*100,'%'))
+```
+
+As we can see power is high so the quality of our test statistics is good.
+
+# Appendix
+```{r, ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+```
