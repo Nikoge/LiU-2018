@@ -10,6 +10,7 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 options(scipen=999)
+options(stringsAsFactors = FALSE)
 library(dplyr)
 library(ggplot2)
 library(knitr)
@@ -28,11 +29,10 @@ $$f(x) := \frac{x^2}{e^x} - 2 e^-\frac{(9 sinx)}{(x^2 + x + 1)} $$
 ```{r}
 
 function_f <- function(x){
-answer <- (x^2/exp(x)) - 2 * exp(-(9* sin(x))/(x^2 + x + 1))  
+answer <- x^2/exp(x) - 2*exp(-(9*sin(x))/(x^2+x+1))
 return(answer)
 }
 
-function_f(x=1)
 ```
 
 
@@ -43,7 +43,6 @@ answer <- (x+y) * 0.5
 return(answer)
 }
 
-crossover(x=3,y=7)
 ```
 
 
@@ -51,77 +50,55 @@ crossover(x=3,y=7)
 
 ```{r}
 mutate <- function(x){
-answer <- x^2 %%30  
+answer <- (x^2)%%30  
 return(answer)
 }
 
-mutate(x=30)
 ```
 
 
 
 ##4. Write a function that depends on the parameters maxiter and mutprob and:
+###(a) Plots function f in the range from 0 to 30. Do you see any maximum value?
 ```{r}
-myfunction <- function(maxiter, mutprob){
+y <- vector("double", length = 30)
+x <- seq(from=0,to=29,by=1)
+for(i in 0:29){y[i+1] <- function_f(x=i)}
 
-# part-b
-inital_population <- seq(from=0, to=30, by=5)
+data <- data.frame(cbind(x,y))
+data$flag <- "original_values"
+data$x <- as.numeric(as.character(data$x))
+data$y <- as.numeric(as.character(data$y))
 
-# part-c
-Values <- vector("numeric", length = length(inital_population))
-for(i in 1:length(inital_population)){Values[i] <- function_f(x=i)}
-Values <- as.data.frame(Values)
-Values$inital_population <- inital_population
+ggplot(data, aes(x=x, y=y, group=1)) + 
+geom_point() + 
+geom_line(linetype = "dashed") + 
+ggtitle("Plot of the function") 
 
-while(i < maxiter){
-# part-d
-parents <- Values[Values$inital_population %in% sample(x = inital_population, size=2, replace=FALSE), ]
-parents <- parents %>% arrange(Values)
-victim <- which.min(Values$Values)
-parent_1 <- parents[1,1]
-parent_2 <-  parents[2,1]
-
-if(runif(n=1) > mutprob){
-kid <- crossover(x=parent_1, y=parent_2)
-kid <- mutate(x=kid)
-Values[[victim,1]] <- kid
-}else{
-  kid <- 0
-}
-max_value <- max(Values$Values)
-i <- i+1
-}
-  
-answer <- y <- Values$Values
-y <- as.data.frame(y)
-y$x <- seq(0,30,1)
-answer <- ggplot(y, aes(x=x, y=y, group=1)) + 
-  geom_point() + geom_line(linetype = "dashed") + 
-  ggtitle("Plot of the function") 
-return(answer)
-}
-
-# part-a 
-x <- seq(from=0,to=30,by=1)
-y <- vector("numeric", length = length(x))
-for(i in 1:length(x)){y[i] <- function_f(x=i)}
-y <- as.data.frame(y)
-y$x <- seq(0,30,1)
-ggplot(y, aes(x=x, y=y, group=1)) + 
-  geom_point() + geom_line(linetype = "dashed") + 
-  ggtitle("Plot of the function") 
-
-
-myfunction(maxiter=10, mutprob=0.5)
+cat("The maximum values of the function is at x =",which.max(data$y), "and the value is = ",max(data$y))
 
 ```
 
 
-###(a) Plots function f in the range from 0 to 30. Do you see any maximum value?
 
 ###(b) Defines an initial population for the genetic algorithm as X = (0,5,10,15.....30).
+```{r}
+inital_population <- seq(from=0, to=30, by=5)
+inital_population
+
+```
 
 ###(c) Computes vector Values that contains the function values for each population point.
+```{r}
+# generating new values   
+Values <- vector("double", length = 7)
+for(i in seq_along(inital_population)){Values[i] <- function_f(x=inital_population[i])}
+original_max <- max(Values)
+original_values <- Values
+original_populations <- inital_population
+original_values
+```
+
 
 ###(d) Performs maxiter iterations where at each iteration
 
@@ -137,15 +114,202 @@ myfunction(maxiter=10, mutprob=0.5)
 
 ###(e) Add the final observations to the current plot in another colour.
 
-##5. Run your code with different combinations of maxiter= 10,100 and mutprob= 0.1, 0.5,0.9. Observe the initial population and final population. Conclusions?
+```{r}
+myfunction <- function(maxiter, mutprob){
+
+# maxiter = 10
+# mutprob = 0.5 
+
+  
+for(i in seq_along(1:maxiter)){
+# sampling and getting parent and victim position
+parent_index <- sample(x = seq(from = 1, to=7, by=1), size = 2, replace = TRUE) 
+parent_1 <- Values[parent_index[[1]]]
+parent_2 <- Values[parent_index[[2]]]
+victim <- which.min(order(Values))
+
+# performing crossover and mutate based on prob
+kid <- crossover(x = parent_1, y = parent_2)
+
+if(as.numeric(rbinom(1,1,mutprob))==1){kid <- mutate(x=kid)}
+inital_population[victim] <- kid
+
+# generating new values  
+for(j in seq_along(inital_population)){Values[j] <- function_f(x=inital_population[j])}
+
+}
+new_max <- max(Values)
+index_max_val <- inital_population[which.max(Values)]
+
+data2 <- data.frame(cbind(x=inital_population,y=Values))
+data2$flag <- "new_values"                    
+data2$x <- as.numeric(as.character(data2$x))
+data2$y <- as.numeric(as.character(data2$y))
+data3 <- rbind(data2,data)
+
+answer <- ggplot(data3, aes(x=x, y=y, group=1)) + 
+geom_point() + 
+geom_point(aes(colour=flag)) +  
+geom_line(linetype = "dashed") + 
+ggtitle(paste0("Plot of the function with maxiter = ",maxiter," and mutprob = ",mutprob)) 
+return(answer)
+}
+
+```
+
+
+
+
+##5. Run your code with different combinations of maxiter= 10,100 and mutprob= 0.1,0.5,0.9. Observe the initial population and final population. Conclusions?
+```{r}
+myfunction(maxiter=10, mutprob=0.1)
+```
+
+```{r}
+myfunction(maxiter=10, mutprob=0.5)
+```
+
+
+```{r}
+myfunction(maxiter=10, mutprob=0.9)
+```
+
+
+```{r}
+myfunction(maxiter=100, mutprob=0.1)
+```
+
+
+```{r}
+myfunction(maxiter=100, mutprob=0.5)
+```
+
+```{r}
+myfunction(maxiter=100, mutprob=0.9)
+```
+
 
 #2. EM algorithm
 
 The data file physical.csv describes a behavior of two related physical processes Y = Y (X) and Z = Z(X).
 
-###1. Make a time series plot describing dependence of Z and Y versus X. Does it seem that two processes are related to each other? What can you say about the variation of the response values with respect to X?
+##1. Make a time series plot describing dependence of Z and Y versus X. Does it seem that two processes are related to each other? What can you say about the variation of the response values with respect to X?
+```{r, warning=FALSE}
+
+data <- read.csv(file="physical1.csv")
+
+ggplot(data=data,aes(x=X, group=1)) + 
+  geom_line(aes(y = Y, colour = "Y")) + 
+  geom_line(aes(y = Z, colour = "Z")) +
+  ggtitle("Plot of Z and Y vs. X")
+
+```
+Analysis: There is a difference in the amplitude of 'Y' and 'Z' with respect to 'X.' Both of the series vary similarily and show similar patterns of decayed oscillation, however 'Z' has faster decay than 'Y'.
+
+##2. Note that there are some missing values of Z in the data which implies problems in estimating models by maximum likelihood. Use the following model
+
+$$ Y_i \approx  exp(\frac{X_i}{\lambda}),~~~Z_i \approx exp(\frac{X_i}{2 * \lambda}) $$
+Where $\lambda$ is an unknown parameters. The goal is to derive the EM algorithm that estimates $\lambda$.
+
+$$
+\begin{split}
+L(\lambda|Y,Z) & = \prod_{i=1}^{n}f(Y) \times \prod_{i=1}^{n}f(Z) \\
+ & = \prod_{i=1}^{n} \frac{X_i}{\lambda} \cdot e^{-\frac{X_i}{\lambda}Y_i} \times \prod_{i=1}^{n}\frac{X_i}{2\lambda} \cdot e^{-\frac{X_i}{\lambda}Z_i}\\
+ & = \frac{X_1  \cdot \dotso \cdot X_n}{\lambda^n} \times e^{-\frac{1}{\lambda}\sum_{1}^{n}{X_i Y_i}} \times \frac{X_1  \cdot \dotso \cdot X_n}{(2\lambda)^n} \times e^{-\frac{1}{2\lambda}\sum_{1}^{n}{X_i Z_i}} \\
+ lnL(\lambda|Y,Z) & = \sum_{i=1}^{n}ln(X_i)-nln(\lambda)-\frac{1}{\lambda}\sum_{i=1}^{n}{X_i Y_i}~+\sum_{i=1}^{n}ln(X_i)-nln(2\lambda)-\frac{1}{2\lambda}\sum_{i=1}^{n}{X_iZ_i}
+\end{split}
+$$
+
+###E-step : Derive Q function
+Obtaining the expected values for the missing data using an initial parameter estimate.
+
+$$
+\begin{split}
+Q(\theta,\theta^k) & =E[~loglik(\lambda|Y,Z)~|~\lambda^k ,(Y,Z)] \\
+&= \sum_{i=1}^{n}ln(X_i)-nln(\lambda)-\frac{1}{\lambda}\sum_{i=1}^{n}{X_i Y_i}~+\sum_{i=1}^{n}ln(X_i)-nln(2\lambda)\\
+&~~~~~-\frac{1}{2\lambda}\bigg[\sum_{i=1}^{n}{X_iZ_i}~+m\cdot X_i\cdot\frac{2\lambda_{k-1}}{X_i}\bigg]
+\end{split}
+$$
+
+Here, we are taking expectation on the missing values in Z, so we need to seperate the $Z_{obs}$ and $Z_{miss}$.  
+Here we are assuming there are 'm' missing Z values. $\lambda_{k}$ is the lambda value from the previous iteration.
 
 
+###M-step
+Obtain the maximum likelihood estimate of the parameters by taking the derivative with respect to $\lambda$. Repeat till estimate converges. 
+
+$$
+\begin{split}
+-\frac{n}{\lambda}-\frac{n}{\lambda}~+\frac{\sum_{i=1}^{n}{X_i Y_i}}{\lambda^2}~+\frac{\sum_{i}^{m}{X_iZ_i}~+m\cdot2\lambda_{k-1}}{2\lambda^2}&:=0\\
+-2\lambda(2n)+2\sum_{i=1}^{n}{X_iY_i}~+\sum_{i=1}^{n}{X_iZ_i}+m\cdot2\lambda_{k-1} & := 0\\
+\\
+\lambda=\frac{\sum_{i=1}^{n}{X_iY_i}+\frac{1}{2}\sum_{i=1}^{n}{X_i}{Z_i}+m\cdot\lambda_{k-1}}{2n}
+\end{split}
+$$
+
+##3. Implement this algorithm in R, use $\lambda$ = 100 and convergence criterion "stop if the change in $\lambda$ is less than 0.001". What is the optimal $\lambda$ and how many iterations were required to compute it?
+
+```{r}
+my_EM <- function(data,eps,kmax,lamb_0){
+        
+        X <- data$X
+        Y <- data$Y
+        Z <- data$Z
+
+        Xobs <- X[!is.na(Z)]
+        Zobs <- Z[!is.na(Z)]
+        Zmiss <- Z[is.na(Z)]
+        
+        n <- length(X)
+        m <- length(Zmiss)
+        
+        k <<- 0
+        llvalprev <- 0
+        llvalcurr <- lamb_0
+        
+        print(c(llvalprev,llvalcurr,k))
+        
+        while ((abs(llvalprev-llvalcurr)>eps) && (k<(kmax+1))){
+                llvalprev <- llvalcurr
+                llvalcurr <- (sum(X*Y)+sum(Xobs*Zobs)/2+m*llvalprev)/(2*n)
+                
+                k <<- k+1
+        }
+        
+        print(c(llvalprev,llvalcurr,k))
+}
+        
+```
+
+
+```{r}
+my_EM(data,0.001,50,100)
+```
+
+Analysis: The result indicates that the optimal lambda is 10.69566 and after 5 iteration are needed for convergence.
+
+##4. Plot E[Y] and E[Z] versus X in the same plot as Y and Z versus X. Comment whether the computed $\lambda$ seems to be reasonable.
+
+Following the given model for Y and Z, we can easily derive the mean value with obtained.
+$$E[Y]=\frac{\lambda}{X_i}~,~~E[Z]=\frac{2\lambda}{X_i}$$
+
+```{r}
+lambda <- 10.69566
+
+new_data <- data
+new_data$E_Y <- lambda/data$X
+new_data$E_Z <- 2*lambda/data$X
+
+ggplot(data=new_data,aes(x=X, group=1)) + 
+  geom_line(aes(y = Y, colour = "Y")) + 
+  geom_line(aes(y = Z, colour = "Z")) +
+  geom_line(aes(y = E_Y, colour = "E_Y")) +
+  geom_line(aes(y = E_Z, colour = "E_Z")) +
+  ggtitle("Plot of Y,Z and their expected value vs. X")
+
+```
+
+Analysis: From the plot above, we can see that each E[Z] and E[Y] captures the flow of Z and Y on X respectively. So we can say that our computed lambda is reasonable enough.
 
 
 #Appendix
