@@ -23,9 +23,9 @@ set.seed(12345)
 
 ##1. Make a scatterplot of Y(draft_no) versus X(day_of_year) and conclude whether the lottery looks random.
 ```{r}
-lottery <- read.csv("lottery.csv", sep=";")
+data <- read.csv("lottery.csv", sep=";")
 
-ggplot(lottery, aes(x=Day_of_year, y = Draft_No)) + geom_point() + 
+ggplot(data, aes(x=Day_of_year, y = Draft_No)) + geom_point() + 
   ggtitle("Plot of Draft Number vs. day of birth")
 ```
 Analysis: The plot seems random and its very difficult to judge any sort of trend
@@ -33,16 +33,16 @@ Analysis: The plot seems random and its very difficult to judge any sort of tren
 ##2. Compute an estimate Y(hat) of the expected response as a function of X by using a loess smoother (use loess()), put the curve Y(hat) versus X in the previous graph and state again whether the lottery looks random.
 
 ```{r}
-ggplot(lottery, aes(x=Day_of_year, y = Draft_No)) + 
+ggplot(data, aes(x=Day_of_year, y = Draft_No)) + 
   geom_point() +
   geom_smooth(method = loess) +
   ggtitle("Plot of Draft Number vs. Day of birth")
 
 
-model <- loess(Draft_No ~ Day_of_year, lottery)
-lottery$Y_hat <- predict(model, lottery)
+model <- loess(Draft_No ~ Day_of_year, data)
+data$Y_hat <- predict(model, data)
 
-ggplot(lottery, aes(x=Day_of_year, y = Draft_No)) + 
+ggplot(data, aes(x=Day_of_year, y = Draft_No)) + 
   geom_point() +
   geom_line(aes(y = Y_hat)) +
   ggtitle("Plot of Draft Number vs. Day of birth without using ggplot loess")
@@ -50,76 +50,119 @@ ggplot(lottery, aes(x=Day_of_year, y = Draft_No)) +
 ```
 Analysis: One can see that the overall trend is downward, the implies the more people were born in the first half of the year than the later half, however the distribution still seems random.
 
-##3. To check whether the lottery is random, it is reasonable to use test statistics 
+##3. To check whether the lottery is random, it is reasonable to use test statistics :
+$$T=\frac{\hat{Y}(X_b)-\hat{Y}(X_a)}{X_b-X_a},~~where~X_b=argmax_{X}Y(X),~X_a=argmin_{X}Y(X)$$
 
-$$ T = \frac{\hat Y(X_{b}) - \hat Y(X_{a})}{X_{b}-X_{a}} $$
-Where $X_{b} = argmax_x Y(X)$ and $X_{a} = argmin_x Y(X)$.
+If this value is significantly greater than zero, then there should be a trend in the data and lottry is not random. Estimate the distribution of T by using a **non-parametric bootstrap** with B=2000 and comment whether the lottery is random or not. What is the p-value of the test? 
 
-If this value is significantly greater than zero, then there should be a trend in the data and the lottery is not random. Estimate the distribution of T by using a non-parametric bootstrap with B = 2000 and comment whether the lottery is random or not. What is the p-value of the test?
+Since we are doing non-parametric bootstraping, we assume the distribution follows True population. So we simply need to choose the maximum Y and following index X and minimum Y and following index X.
 
-```{r}
+```{r message=FALSE,warning=FALSE}
+set.seed(12345)
 
-stat1 <- function(data, index){
-    data <- data[index,]
-    model <- loess(Draft_No ~ Day_of_year, data)
-    res <- predict(model, data)
-    X_a <- data$Day_of_year[which.min(data$Draft_No)]
-    X_b <- data$Day_of_year[which.max(data$Draft_No)]
-    Y_a <- res[X_a] 
-    Y_b <-res[X_b]
-    answer <- ((Y_b - Y_a) / (X_b - X_a))
-    return(answer)
-}
+X <- data$Day_of_year
+Y <- data$Draft_No
+
+T <- numeric()
+
+for (i in 1:2000) {
+        boot <-sample(length(X), replace=TRUE)
+        data1 <- cbind(X,boot) 
 
 
-res <- boot(data=lottery, statistic = stat1, R=2000)
-pval <- length(which(res$t>=0))/2000
-cat("The estimated p-value is",pval)
-plot(res)
+        X_a <- data1[which.min(data1[,2])]
+        X_b <- data1[which.max(data1[,2])]
+        
+        model2 <- loess(Y~X, data=as.data.frame(data1), method="loess")
+        
+        fitted_X_a <- model2$fitted[X_a]
+        fitted_X_b <- model2$fitted[X_b]
+        
+        test <- (fitted_X_b - fitted_X_a)/(X_b - X_a)
+        T[i] <- test
+        }
+
+
+pval <- length(which(T>=0))
+
+
+hist(T, breaks=30,
+     main="Distribution of T by using non-parametric bootstrapping")
+
+print("Estimated p-value:")
+print(pval/2000)
+
+
 
 ```
-Analysis: From the p-value obtained and plot of the histogram we can conclude that the lottery number is not random. The histogram is has its mean towards the right side and is skewed towards left. The p-value is 0.4865.
-
-
-##4.Implement a function depending on data and B that tests the hypothesis H0: Lottery is random versus H1: Lottery is non-random by using a permutation test with statistics T. The function is to return the p-value of this test. Test this function on our data with B = 2000.
-
-```{r}
-
-permu_function <- function(data, index){
+Obtained plot above is the estimated distribution of T. The distribution seems to be centered around -0.2 in normal distribution shape but with heavier right tail. The value is bigger than 0 at most of the T as well, so we can say that the lottery is not random. The obtained p-value is 0.2185.
   
-  temp <- function(data, index){
-   data <- data[index,]
-    Y <- as.data.frame(data$Draft_No)
-    X <- as.data.frame(data$Day_of_year) 
-    X <- X[sample(nrow(X), replace = FALSE),]
-    data <- as.data.frame(cbind(X,Y))
-    colnames(data) <- c("Day_of_year", "Draft_No")
-    model <- loess(Draft_No ~ Day_of_year, data)
-    res <- predict(model, data)
-    X_a <- data$Day_of_year[which.min(data$Draft_No)]
-    X_b <- data$Day_of_year[which.max(data$Draft_No)]
-    Y_a <- res[X_a] 
-    Y_b <-res[X_b]
-    answer <- ((Y_b - Y_a) / (X_b - X_a))
-return(answer)    
-}
+##4. Implement a *function* depending on data and B that tests the hypothesis
+$$H_0:Lottery~is~random~~~VS~~~H_{1}:Lottery~is~not~random$$
+by using a permutation test with statistics T. The function is to return the p-value of this test. Test this function on our data with B=2000. 
 
-res2 <- boot(data=lottery, statistic = temp, R=2000)
-
-plot(res2)
-pval2 <- length(which(as.vector(abs(res2$t) > abs(res2$t0))))/2000
-return(pval2)
-}
-
-pval <- permu_function(data=lottery, index=2000)
-
-cat("The estimated p-value is",pval)
-```
-Analysis: The plot suggests that lottery number is not random and the p-value is 0.4335.
-
-##5 Make a crude estimate of the power of the test constructed in Step4 :
-####(a) Generate(an obviously non-random) dataset with n=366 observations by using same X as in the original data set and $Y(x)=max(0,min(\alpha x+\beta,366))$, where $\alpha=0.1$ and $\beta \sim N(183,sd=10)$.
+####First, we need to compute the test statistics from observed(original) data
 ```{r}
+data <- cbind(X,Y)
+X_a <- data[which.min(data[,2])]
+X_b <- data[which.max(data[,2])]
+
+model <- loess(Y~X, data=as.data.frame(data), method="loess")
+
+fitted_X_a <- model$fitted[X_a]
+fitted_X_b <- model$fitted[X_b]
+
+test <- (fitted_X_b - fitted_X_a)/(X_b - X_a)
+print(test)
+```
+
+
+####Then, we compute the test statistics from permuted data(B=2000)
+```{r message=FALSE,warning=FALSE}
+#To do permutation - we have to compare two groups (observed data group vs permutated group).
+#for permutated group - We may permute labels (from the lecture note
+#So basically, we are comparing between two groups - Before permutation vs After permutation.
+set.seed(12345)
+permu_T <- numeric()
+
+for (i in 1:2000){
+        permu_Y <- sample(1:length(Y), length(Y), replace=FALSE)
+        permu_data <- cbind(X,permu_Y)
+        
+        #and do the same thing
+        X_a <- permu_data[which.min(permu_data[,2])]
+        X_b <- permu_data[which.max(permu_data[,2])]
+        
+        permu_model <- loess(permu_Y~X, data=as.data.frame(permu_data), method="loess")
+        
+        fitted_X_a <- permu_model$fitted[X_a]
+        fitted_X_b <- permu_model$fitted[X_b]
+        
+        permu_test <- (fitted_X_b - fitted_X_a)/(X_b - X_a)
+        permu_T[i] <- permu_test
+        
+}
+
+
+hist(permu_T, breaks=30,
+     main="Distribution of T by using permutation")
+
+```
+
+```{r}
+#compute p value(two-sided test)
+pval2 <- length(which(abs(permu_T)>=abs(test)))
+
+print("Estimated p-value:")
+print(pval2/2000)
+
+```
+
+Analysis: The plot above indicates that the lottery is random since observed frequencies are significatly bigger than 0. Tehe obtained p-value is 0.058, so we can't reject the null hypothesis, so we can say that the data is lottery is random. However, the p-value has decreased compared to previous step, which could be more likely to reject the null hypothesis.
+  
+The r code following is to put previous steps into function called *permu_test*:
+```{r}
+#always go with set.seed(12345) for the same result
 
 permu_test <- function(B,X,Y){
         
@@ -161,11 +204,18 @@ permu_test <- function(B,X,Y){
         return(estimated_pval)
         
 }
+```
 
+
+##5. Make a crude estimate of the power of the test constructed in Step4 :
+###(a) Generate(an obviously non-random) dataset with n=366 observations by using same X as in the original data set and $Y(x)=max(0,min(\alpha x+\beta,366))$, where $\alpha=0.1$ and $\beta \sim N(183,sd=10)$.
+```{r}
+set.seed(12345)
+
+data <- read.csv("lottery.csv", sep=";")
 
 new_Y <- function(alpha){
-        
-        X <- lottery$Day_of_year
+        X <- data$Day_of_year
         new_y <- numeric()
         
         for (i in 1:length(X)){
@@ -179,13 +229,13 @@ new_Y <- function(alpha){
 non_ran_Y <- new_Y(alpha=0.1)
 head(non_ran_Y)
 ```
-
 ###(b) Plug this data into the permutation test with B=200 and note whether it was rejected.
 ```{r}
-permu_test(B=200, X=lottery$Day_of_year,Y=non_ran_Y)
+permu_test(B=200, X=data$Day_of_year,Y=non_ran_Y)
 
 ```
-Analysis: The obtained p-value is 0.45, so we can't reject null hypothesis.
+The obtained p-value is quite high, so we can't reject 
+Obtained p-value is 0, so the null hypothesis is rejected. 
   
 ###(c) Repeat Steps 5a-5b for $\alpha = 0.2,0.3,...,10$.
 ```{r}
@@ -196,7 +246,7 @@ for (i in 1:length(seq)){
         alpha <- seq[i]
         newY <- new_Y(alpha)
         
-        pvals[i] <- permu_test(B=200, X=lottery$Day_of_year, Y=newY)
+        pvals[i] <- permu_test(B=200, X=data$Day_of_year, Y=newY)
 }
 
 signif_p <- which(pvals<0.05)
@@ -208,6 +258,7 @@ list("total_number_of_hypothesis_test"=length(seq),
 
 ```
 Analysis: From the result above, we can see that 98% of the cases reject the null hypothesis, which indicates that the lottery is not random. Since we have generated obviously non-random dataset, we can say that the test statistics performs well enough. The obtaiend power also supports that the quality of statistics is good enough.
+  
 
 #Question 2: Bootstrap, jackknife and confidence intervals
 

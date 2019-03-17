@@ -28,9 +28,8 @@ In this assignment, you will try to perform one-dimensional maximization with th
 $$f(x) := \frac{x^2}{e^x} - 2 e^-\frac{(9 sinx)}{(x^2 + x + 1)} $$
 ```{r}
 
-function_f <- function(x){
-answer <- x^2/exp(x) - 2*exp(-(9*sin(x))/(x^2+x+1))
-return(answer)
+f <- function(x){
+((x^2)/exp(x))-2*exp(-9*sin(x)/(x^2+x+1))
 }
 
 ```
@@ -39,9 +38,9 @@ return(answer)
 ##2. Define the function crossover(): for two scalars x and y it returns their "kid" as $\frac{(x+y)}{2}$.
 ```{r}
 crossover <- function(x,y){
-answer <- (x+y) * 0.5
-return(answer)
+(x+y)/2
 }
+
 
 ```
 
@@ -50,8 +49,7 @@ return(answer)
 
 ```{r}
 mutate <- function(x){
-answer <- (x^2)%%30  
-return(answer)
+x^2%%30
 }
 
 ```
@@ -61,44 +59,23 @@ return(answer)
 ##4. Write a function that depends on the parameters maxiter and mutprob and:
 ###(a) Plots function f in the range from 0 to 30. Do you see any maximum value?
 ```{r}
-y <- vector("double", length = 30)
-x <- seq(from=0,to=29,by=1)
-for(i in 0:29){y[i+1] <- function_f(x=i)}
+df = data.frame(x = seq(0,30,0.1),F = sapply(X = seq(0,30,0.1),FUN = f))
+ggplot(data = df)+
+geom_line(mapping = aes(x = x,y = F),
+color = 'black',
+size = 1.5)+
+ggtitle('f(x) in the range from 0 to 30') +
+theme(plot.title = element_text(hjust = 0.5))
 
-data <- data.frame(cbind(x,y))
-data$flag <- "original_values"
-data$x <- as.numeric(as.character(data$x))
-data$y <- as.numeric(as.character(data$y))
-
-ggplot(data, aes(x=x, y=y, group=1)) + 
-geom_point() + 
-geom_line(linetype = "dashed") + 
-ggtitle("Plot of the function") 
-
-cat("The maximum values of the function is at x =",which.max(data$y), "and the value is = ",max(data$y))
-
+cat("The maximum values of the function is at x = 2 and the value is =",df[which.max(df$F),2])
 ```
 
 
 
 ###(b) Defines an initial population for the genetic algorithm as X = (0,5,10,15.....30).
-```{r}
-inital_population <- seq(from=0, to=30, by=5)
-inital_population
 
-```
 
 ###(c) Computes vector Values that contains the function values for each population point.
-```{r}
-# generating new values   
-Values <- vector("double", length = 7)
-for(i in seq_along(inital_population)){Values[i] <- function_f(x=inital_population[i])}
-original_max <- max(Values)
-original_values <- Values
-original_populations <- inital_population
-original_values
-```
-
 
 ###(d) Performs maxiter iterations where at each iteration
 
@@ -115,44 +92,18 @@ original_values
 ###(e) Add the final observations to the current plot in another colour.
 
 ```{r}
-myfunction <- function(maxiter, mutprob){
-
-# maxiter = 10
-# mutprob = 0.5 
-
-  
-for(i in seq_along(1:maxiter)){
-# sampling and getting parent and victim position
-parent_index <- sample(x = seq(from = 1, to=7, by=1), size = 2, replace = TRUE) 
-parent_1 <- Values[parent_index[[1]]]
-parent_2 <- Values[parent_index[[2]]]
-victim <- which.min(order(Values))
-
-# performing crossover and mutate based on prob
-kid <- crossover(x = parent_1, y = parent_2)
-
-if(as.numeric(rbinom(1,1,mutprob))==1){kid <- mutate(x=kid)}
-inital_population[victim] <- kid
-
-# generating new values  
-for(j in seq_along(inital_population)){Values[j] <- function_f(x=inital_population[j])}
-
+GA <- function(maxiter,mutprob){
+population <- data.frame(X = seq(0,30,5),Values = sapply(X = seq(0,30,5),FUN = f))
+maximums <- data.frame(X = 0,Values = 0)
+for(i in 1:maxiter){
+parents <- sample(x = population$X,size = 2)
+victim <- population[which.min(population$Values),]
+cross_kid <- crossover(parents[1],parents[2])
+new_member <- ifelse(runif(1)<= mutprob,mutate(cross_kid),cross_kid)
+population[which(population$X == victim$X)[1],] <- c(new_member,f(new_member))
+maximums[i,] <- population[which.max(population$Values),]
 }
-new_max <- max(Values)
-index_max_val <- inital_population[which.max(Values)]
-
-data2 <- data.frame(cbind(x=inital_population,y=Values))
-data2$flag <- "new_values"                    
-data2$x <- as.numeric(as.character(data2$x))
-data2$y <- as.numeric(as.character(data2$y))
-data3 <- rbind(data2,data)
-
-answer <- ggplot(data3, aes(x=x, y=y, group=1)) + 
-geom_point() + 
-geom_point(aes(colour=flag)) +  
-geom_line(linetype = "dashed") + 
-ggtitle(paste0("Plot of the function with maxiter = ",maxiter," and mutprob = ",mutprob)) 
-return(answer)
+unique(maximums)
 }
 
 ```
@@ -161,33 +112,87 @@ return(answer)
 
 
 ##5. Run your code with different combinations of maxiter= 10,100 and mutprob= 0.1,0.5,0.9. Observe the initial population and final population. Conclusions?
-```{r}
-myfunction(maxiter=10, mutprob=0.1)
+```{r,eval=FALSE}
+df1 <- GA(10,0.1)
+df1
+
+ggplot()+
+geom_line(data = df ,mapping = aes(x = x,y = F),color = 'blue',size = 1.5)+
+geom_point(data = df1 ,mapping = aes(x = X,y = Values),color = 'red', size = 2) +
+ggtitle('f(x) in the range from 0 to 30') +
+theme(plot.title = element_text(hjust = 0.5))
 ```
 
-```{r}
-myfunction(maxiter=10, mutprob=0.5)
+```{r, warning=FALSE}
+df2 <- GA(10,0.5)
+df2
+ggplot()+geom_line(data = df,mapping = aes(x = x,y = F),color = 'blue',size = 1.5)+
+geom_point(data = df2,mapping = aes(x = X,y = Values),
+color = 'red',size = 2) +
+ggtitle('f(x) in the range from 0 to 30') +
+theme(plot.title = element_text(hjust = 0.5))
 ```
 
 
-```{r}
-myfunction(maxiter=10, mutprob=0.9)
+```{r, warning=FALSE}
+df3 <- GA(10,0.9)
+df3
+ggplot()+
+geom_line(data = df,mapping = aes(x = x,y = F),
+color = 'blue',
+size = 1.5)+
+geom_point(data = df3,mapping = aes(x = X,y = Values),
+color = 'red',
+size = 2) +
+ggtitle('f(x) in the range from 0 to 30') +
+theme(plot.title = element_text(hjust = 0.5))
 ```
 
 
-```{r}
-myfunction(maxiter=100, mutprob=0.1)
+```{r, warning=FALSE}
+df4 <- GA(100,0.1)
+df4
+ggplot()+
+geom_line(data = df,mapping = aes(x = x,y = F),
+color = 'blue',
+size = 1.5)+
+geom_point(data = df4,mapping = aes(x = X,y = Values),
+color = 'red',
+size = 2) +
+ggtitle('f(x) in the range from 0 to 30') +
+theme(plot.title = element_text(hjust = 0.5))
 ```
 
 
-```{r}
-myfunction(maxiter=100, mutprob=0.5)
+```{r, warning=FALSE}
+df5 <- GA(100,0.5)
+df5
+ggplot()+
+geom_line(data = df,mapping = aes(x = x,y = F),
+color = 'blue',
+size = 1.5)+
+geom_point(data = df5,mapping = aes(x = X,y = Values),
+color = 'red',
+size = 2) +
+ggtitle('f(x) in the range from 0 to 30') +
+theme(plot.title = element_text(hjust = 0.5))
 ```
 
-```{r}
-myfunction(maxiter=100, mutprob=0.9)
+```{r, warning=FALSE}
+df6 <- GA(100,0.9)
+df6
+ggplot()+
+geom_line(data = df,mapping = aes(x = x,y = F),
+color = 'blue',
+size = 1.5)+
+geom_point(data = df6,mapping = aes(x = X,y = Values),
+color = 'red',
+size = 2) +
+ggtitle('f(x) in the range from 0 to 30') +
+theme(plot.title = element_text(hjust = 0.5))
 ```
 
+Analysis: Increasing the number of iterations allows the genetic algorithm to converge to the given functions. The effect of probability is to only ensure that some good parent are not lost due to crossover.
 
 #2. EM algorithm
 

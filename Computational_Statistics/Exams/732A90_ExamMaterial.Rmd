@@ -1,0 +1,1646 @@
+---
+title: "732A90_ExamMaterial"
+author: "Me"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+    pdf_document:
+      toc: true
+header-includes:
+  - \usepackage{booktabs} 
+  - \usepackage{sectsty} \sectionfont{\centering}
+  - \renewcommand{\contentsname}{}\vspace{-2cm} 
+  - \usepackage{pdfpages}      
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 999)
+```
+
+\newpage
+
+#Libraries
+```{r, message=FALSE}
+library("ggplot2")
+library("dplyr")
+library("boot")
+library("knitr")
+```
+
+# Distributions
+
+## Relationship between distributions
+```{r, echo=FALSE}
+knitr::include_graphics(path="Relationships_among_distributions.jpg")
+```
+
+## Bernoulli Distribution
+
+* PDF of Bernoulli
+
+$$
+\begin{split}
+q = 1-p ~~if~k=0 \\
+q = p~~if~k=1
+\end{split}
+$$
+    + p is the probability of success
+    + q is the probability of failure, q=1-p
+
+* CDF of Bernoulli
+
+
+$$
+\begin{split}
+    X(m,n) = \left\{\begin{array}{lr}
+        0, & \text{if } k<1\\
+        1-p, &\text{if } 0\leq k< 1\\
+        1, & \text{if } k\geq 1
+        \end{array}\right\}
+\end{split}
+$$
+
+## Beta Distribution
+```{r, echo=FALSE, out.width = "400px"}
+knitr::include_graphics(path="beta_dist.png")
+```
+
+* PDF of Beta
+
+$$\Gamma(n) = (n-1)! $$
+
+$$ f(x;\alpha,\beta) = \frac{\Gamma(\alpha+\beta)}{\Gamma(\alpha)\Gamma(\beta)}  x^{\alpha-1} (1-x)^{\beta-1} $$
+
+## Exponential distribution
+
+```{r, echo=FALSE, out.width = "400px"}
+knitr::include_graphics(path="expo_dist.png")
+```
+
+* PDF of Exponential
+
+    + lambda is the rate parameter 
+
+$$ 
+\begin{split}
+    f(x;\lambda) = 
+    \left\{\begin{array}{lr}
+        \lambda e^{-\lambda \cdot x}, & \text{if } x\geq0\\
+        0, &\text{if } x<0
+        \end{array}\right\}
+\end{split}
+$$
+
+* CDF of Exponential
+
+$$ F(x;\lambda) = 1 - e^{-\lambda \cdot x}$$
+
+## Pareto Distribution
+
+
+```{r, echo=FALSE, out.width = "400px"}
+knitr::include_graphics(path="pareto_dist.png")
+```
+
+* PDF of Pareto
+
+    + xm is the (necessarily positive) minimum possible value of X
+    + alpha is a positive parameter
+
+$$ 
+\begin{split}
+    f(x) = 
+    \left\{\begin{array}{lr}
+        \frac{\alpha x_m^\alpha}{x^\alpha+1}, & \text{if } x\geq x_m\\
+        0, &\text{if } x<x_m
+        \end{array}\right\}
+\end{split}
+$$
+
+* CDF of Pareto
+
+$$ 
+\begin{split}
+    F(x) = 1 - (\frac{x_m}{x})^\alpha
+\end{split}
+$$
+
+## Uniform Distribution
+
+* PDF of Uniform
+
+$$ 
+\begin{split}
+    f(x) = 
+    \left\{\begin{array}{lr}
+        \frac{1}{b-a}, & \text{if } a\leq x\leq b,\\
+        0 &\text{otherwise } 
+        \end{array}\right\}
+\end{split}
+$$
+
+
+* CDF of Uniform
+
+$$ 
+\begin{split}
+    F(x) = 
+    \left\{\begin{array}{lr}
+        0, & \text{if } x < a\\
+        \frac{x-a}{b-a}, & \text{if } a\leq x \leq b \\
+        1 &\text{otherwise } \\
+        \end{array}\right\}
+\end{split}
+$$
+
+
+## Normal Distribution
+
+```{r, echo=FALSE, out.width = "400px"}
+knitr::include_graphics(path="normal_dist.png")
+```
+
+
+* PDF of normal
+
+    + mu is the mean or expectation of the distribution (and also its median and mode)
+    + sigma is the standard deviation
+    + sigma squares is the variance
+
+$$ f(x|\mu,\sigma^2) = \frac{1}{\sqrt{2\pi\sigma^2}} e^{-\frac{(x-\mu)^2}{2\sigma^2}} $$
+    
+## Extra suggestions
+
+Run the following to get different distributions and their formula
+```{r, eval=FALSE}
+help("Distributions")
+```
+
+# Random Sampling from Uniform distribution
+## Sampling based probabilities proportional to the number of inhabitants of the city
+
+```{r}
+data <- read.csv2("population.csv", header = TRUE)
+```
+
+
+```{r}
+get_city <- function(data){
+
+data$Municipality <- as.character(data$Municipality)
+data$prob <- data$Population/sum(data$Population)
+#sorting the dataset
+data <- data %>% arrange(prob)
+
+data$cum_prob <- cumsum(data$prob)
+data$lead_cum_prob <- lead(data$cum_prob, n=1)
+
+# filling NA
+data$lag_cum_prob[1] <- 0
+data$lead_cum_prob[NROW(data)] <- 1
+
+set.seed(12345)
+num <- runif(1,0,1)
+
+X <- ifelse(((num >= data$cum_prob) & (num <=  data$lead_cum_prob)), row.names(data), NA)
+X <- na.omit(X)
+
+data_name <- data[row.names(data) %in% X,]
+return(data_name$Municipality)
+}
+
+```
+
+
+```{r}
+
+data$Municipality <- as.character(data$Municipality)
+# Select one city
+get_city(data = data)
+
+# Remove one city
+df <- data
+
+
+df <- df[!df$Municipality %in% get_city(data=df),]
+
+# apply function again
+get_city(data = df)
+
+# rempve this city
+df <- df[!df$Municipality %in% get_city(data=df),]
+
+# do this till 20 cities left
+while(NROW(df) >20){
+  df <- df[!df$Municipality %in% get_city(data=df),]
+}
+
+```
+# Numeric Precision
+
+Using a very small number making the numeric precision upto required digits
+
+```{r}
+options(digits = 22)
+tol <- 1e-9
+x1 <- 1/3
+x2 <- 1/4
+
+if(abs(x1-x2-1/12) <= tol){print("Subtraction is correct")
+}else{print("Subtraction is wrong")}
+
+```
+
+# Random Number Generation
+```{r}
+x <- rep(0,10000)
+x[1] <- 1
+
+a <- 7^5
+c <- 0
+m <- 2^31-1
+
+for(i in 1:length(x)){
+  x[i+1] <- (a*x[i] + c) %% m
+}
+
+u <- x/m
+
+hist(u)
+
+```
+
+
+## Implementing the Varience
+
+```{r, warnings=FALSE, warnings=FALSE}
+
+my_rand_num <- rnorm(n=10000, mean=10^8, sd=1)
+
+myvar_better <- function(x){
+  n <- length(x)
+  m <- mean(x)
+answer <- (1/(n - 1)) * sum((x - m)^2)
+return(answer)
+}
+
+Y <- vector(mode = "numeric", length = length(my_rand_num))
+my_mat2 <- vector(mode = "numeric", length = length(my_rand_num)+1)
+
+for(i in 2:length(my_rand_num)){
+  options(digits = 22)
+  X_i = my_rand_num[1:i]
+  X_i = na.omit(X_i)
+  if((myvar_better(X_i) - var(X_i)) <= 1e-15){
+    Y = 0
+  }else{
+      Y = myvar_better(X_i) - var(X_i)
+      }
+  temp <- cbind(i, Y)
+  my_mat2 <- rbind(temp, my_mat2)
+}
+
+my_mat2 <- as.data.frame(my_mat2)
+
+ggplot(my_mat2, aes(x=i, y=Y)) + geom_point() + ggtitle("Plot of Y vs. i")
+
+```
+
+# Scaling to get better results
+
+The numeric precision of storage is highest between '0' and '1'
+
+```{r, eval=FALSE}
+kappa(A)
+```
+
+Analysis: Following the ?kappa function in R, we get a very large number for the condition number. A large value for the condition number indicates that this matrix is close to being singular.
+
+```{r, eval=FALSE}
+
+X_scale <- scale(X)
+Y_scale <- scale(Y)
+
+A_scale <- t(X_scale) %*% X_scale
+b_scale <- t(X_scale) %*% Y_scale
+
+B_hat_scale <- solve(A_scale, b_scale)
+
+kappa(A_scale)
+
+```
+
+# Split the data into train and test
+
+```{r}
+
+data <- read.csv2("mortality_rate.csv")
+data$LMR <- log(data$Rate)
+
+n=NROW(data)
+set.seed(123456)
+id=sample(1:n, floor(n*0.5))
+train = data[id,]
+test = data[-id,]
+
+```
+
+# Loess Model with brute force of finding in minimizing of a function
+
+```{r}
+
+myMSE <- function(pars, lambda){
+
+  X <- pars$X
+  Y <- pars$Y
+  Xtest <- pars$Xtest
+  Ytest <- pars$Ytest
+  
+model <- loess(Y ~ X, enp.target=lambda)
+predicted <- predict(model, Xtest)
+n <- length(Ytest)
+
+exp <- c()
+for(i in 1:n){
+  exp[i] <- (Ytest[i] - predicted[i])^2
+}
+
+answer_mse <- (1/n) * sum(exp)
+     count <<- count + 1
+return(answer_mse)
+}
+
+```
+
+
+```{r, message=FALSE}
+library(dplyr)
+
+X <- train %>% select(c(Day)) %>% as.matrix() 
+Y <- train %>% select(c(LMR)) %>% as.matrix() 
+
+Xtest <- test %>% select(c(Day)) %>% as.matrix() 
+Ytest <- test %>% select(c(LMR)) %>% as.matrix() 
+
+pars <- list(X=X, Y=Y , Xtest=Xtest, Ytest=Ytest)
+
+final <- NULL
+count <- 0 
+for(lambda in seq(from = 0.1, to = 40, by = 0.1)){
+temp <- myMSE(pars, lambda=lambda)
+temp <- cbind(temp, lambda)
+final <- rbind(temp, final)
+}
+
+colnames(final) <- c("MSE", "lambda")
+
+```
+
+
+```{r}
+ggplot(data=data.frame(final), aes(x = lambda, y=MSE)) + geom_point() + 
+  ggtitle("Plot of MSE vs. Lambda")
+```
+
+# Optimize function to find the minimum
+
+```{r}
+count <- 0
+optimize(interval = c(0.1, 40), f = myMSE, pars=pars, tol=0.01, maximum = FALSE)
+cat("iternations: ", count)
+```
+
+
+# Optim function to find the minimum
+
+## BFGS
+```{r}
+count <- 0
+optim(35, myMSE, pars=pars, method = c("BFGS"))
+cat("iternations: ", count)
+
+```
+
+
+## CG
+```{r}
+load("data.RData")
+my_log_likehood <- function(pars){
+  x<-data
+  mu <- pars[1] 
+  sigma <- pars[2]
+  n <- length(x)
+answer <- n*0.5*log(2*pi*sigma^2) + (0.5/sigma^2)* sum((x-mu)^2)  
+
+return(answer)
+}
+
+gradient <- function(pars){
+    x<-data
+  mu <- pars[1] 
+  sigma <- pars[2]
+  n <- length(x)
+  grad_mu <- - (1/sigma^2)* sum(x-mu)
+  grad_sig <- (n/sigma) - (1/sigma^3) * sum((x-mu)^2)
+  return(c(grad_mu, grad_sig))
+}
+```
+
+
+## BFGS with and without gradient
+```{r}
+run1 <- optim(c(0,1), fn = my_log_likehood, gr=NULL, method = c("BFGS"))
+run2 <- optim(c(0,1), fn = my_log_likehood, gr=gradient, method = c("BFGS"))
+```
+
+## CG with and without gradient
+```{r}
+run3 <- optim(c(0,1), fn = my_log_likehood, gr=NULL, method = c("CG"))
+run4 <- optim(c(0,1), fn = my_log_likehood, gr=gradient, method = c("CG"))
+```
+
+## Showing all results in table
+
+```{r}
+final <- NULL
+final$algorithm <- c("BFGS", "CG", "BFGS+gradient", "CG+gradient")
+final$parameters <- rbind(run1$par, run2$par, run3$par, run4$par)
+final$counts <- rbind(run1$counts, run2$counts, run3$counts, run4$counts)
+final$convergence <- rbind(run1$convergence, run2$convergence, run3$convergence, run4$convergence)
+final$value <- rbind(run1$value, run2$value, run3$value, run4$value)
+
+
+knitr::kable(as.data.frame(final), caption = "Table showing the summary from various optimization techniques")
+```
+
+# Parabolic Interpolation using optim
+
+## Write a function that uses optim() and find values of (a0, a1, a2) for which g interpolates f at user provided points x0,x1,x2. Interpolate means f(x0) = ~g(x0), f(x1) = g(x1) and f(x2) = g(x2). optim() should minimize the squared error, i.e. find (a0,a1,a2) that make (f(x0)-g(x0))^2 + (f(x1)-g(x1))^2 + (f(x2)-g(x2))^2 minimum
+
+```{r}
+# Actual function to estimate the minimum value of
+actual <- function(x){
+  result <- -x *(1-x)
+return(result)  
+}
+
+# The estimation function whose parameters a0,a1,a2 are unknown
+parabola <- function(par,x){
+  a0 <- par[1]
+  a1 <- par[2]
+  a2 <- par[3]
+  result <- a0+a1*x+a2*x^2
+return(result)
+}
+
+# finding the difference between the functions for three given values (x0,x1,x2)
+difference_function <- function(par,x){
+  x0 <- par[4]
+  x1 <- par[5]
+  x2 <- par[6] 
+  result <- sum((actual(x0)-parabola(par,x0))^2,(actual(x1)-parabola(par,x1))^2, (actual(x2)-parabola(par,x2))^2)
+  return(result)
+}
+
+find_parameters <- function(){
+temp <- optim(par=c(0,-1,1,0.1,0.8,0.9), fn=difference_function)
+a0 <- temp$par[1]
+a1 <- temp$par[2]
+a2 <- temp$par[3]
+return(list=c(a0=a0,a1=a1,a2=a2))
+}
+
+find_parameters()
+
+# plotting to show the values
+ggplot() + 
+  geom_point(aes(x=seq(0,1,0.01), y=actual(x=seq(0,1,0.01)))) +
+   geom_line(aes(x=seq(0,1,0.01), y=parabola(par=c(0,-1,1),x=seq(0,1,0.01)))) +
+  ggtitle("plot of the first function vs. parabola")
+
+
+```
+
+
+
+# Inverse CDF
+
+
+The inverse transform method is a simple algorithm for generating random variables $x$ from a *continuous* target distribution $f(x)$ using random samples from a $Unif(0,1)$ distribution.
+
+Algorithm:
+
+1. For target probability density function (*pdf*) $f(X)$, calculate the CDF, $F(X)$
+
+2. Set the CDF equal to $U$, $F(X) = U$, then solving for $X$, obtaining $F^{-1}(U) = X$
+
+2. Generate $n$ random variables from $u \sim Unif(0,1)$
+
+3. Plug in $u$ observed values in $F^{-1}(U = u)$ to obtain $n$ values for which $x \sim f(X)$
+
+
+## Example: Pareto Distribution
+
+For information on the Pareto distribution.
+
+The $Pareto(a,b)$ distribution has CDF $F(X \leq x) = 1 - (\frac{b}{x})^a$ for $x \geq b > 0, \ a > 0$
+
+
+1. First set $F(x) = U$, where $U \sim Unif(0,1)$, then solve for $X$
+$$
+\displaystyle
+\begin{aligned}
+1 - \left( \frac{b}{x} \right)^2 & = U \\
+\ \left(\frac{b}{x} \right)^a & = 1 - U \\
+\  \frac{b}{x} & = (1 - U)^{1/a} \\
+\ x & = b \times (1 - U)^{-1/a} \\
+\ & = F_X^{-1}(U) \\
+\end{aligned}
+$$
+
+```{r}
+set.seed(123)
+n = 1000
+U =runif(n)
+a = 3
+b = 2
+X = b*(1-U)^(-1/a)
+pareto = function(x){(a*(b^a)/x^(a+1))}
+
+summary(X)
+
+```
+
+
+```{r}
+hist(X, probability = TRUE, breaks = 25, xlim =c(0, 20),
+     col = "gray", border = "white",
+     main = "Inverse Transform: Pareto(3,2)", xlab = "x")
+curve(pareto(x), from = 0, to = 40, add = TRUE, col = "blue")
+
+```
+
+
+
+##The double exponential (Laplace) distribution is given by formula:
+
+$$ DE(\mu, \alpha) = \frac{\alpha}{2} e^{(-\alpha|x - \mu|)} $$
+
+CDF:
+$$F(x)=\int_{-\infty}^{x} f(x) dx$$
+
+$$F(x)=\int_{-\infty}^{x} \frac{\alpha}{2}e^{-\alpha(x-\mu)} dx ,~~~~~(if~~x>\mu)$$
+$$=1-\int_{x}^{\infty} \frac{\alpha}{2}e^{-\alpha(x-\mu)} dx$$
+
+$$=1-\frac{1}{2}e^{-\alpha(x-\mu)}$$
+
+$$F(x)=\int_{-\infty}^{x} \frac{\alpha}{2}e^{\alpha(x-\mu)} dx ,~~~~~(if~~x\leq\mu)$$
+
+$$=\frac{1}{2}e^{\alpha(x-\mu)}$$
+Inverse of CDF
+
+$$For~~x>\mu,~we~got~F(x)=1-\frac{1}{2}e^{-\alpha(x-\mu)}$$
+$$y=1-\frac{1}{2}e^{-\alpha(x-\mu)}$$
+$$\frac{ln(2-2y)-\alpha\mu}{-\alpha}=x$$
+$$For~U\sim U(0,1),~~~~~\frac{ln(2-2U)-\alpha\mu}{-\alpha}=X$$
+$$For~~x\leq\mu,~we~got~F(x)=\frac{1}{2}e^{\alpha(x-\mu)}$$
+$$y=\frac{1}{2}e^{\alpha(x-\mu)}$$
+$$\frac{ln(2y)}{\alpha}+\mu=x$$
+$$For~U\sim U(0,1),~~~~~\frac{ln(2U)}{\alpha}+\mu=X$$
+
+```{r}
+
+de_dist <- function(u, mu, a){
+  de_distribution <- c()
+
+    for (i in 1:length(u)){
+      if (u[i] > 0.5){
+        de_distribution[i] <- (log(2-2*u[i])-a*mu)/(-a)
+      }
+      else {
+        de_distribution[i] <- (log(2*u[i])/a)+mu
+      }
+    }
+  return(de_distribution)
+}
+```
+
+```{r}
+new_distribution <- de_dist(runif(10000, 0, 1), mu=0, a=1)
+hist(new_distribution, breaks = 1000)
+```
+
+
+# Generate Normal distribution using uniform
+
+```{r}
+
+box_muller <- function(n = 1, mean = 0, sd = 1)
+{
+  x <- vector("numeric", n)
+
+  i <- 1
+  while(i <= n)
+  {
+    u1 <- runif(1, 0, 1)
+    u2 <- runif(1, 0, 1)
+
+    x[i] <- sqrt(-2 * log(u1)) * cos(2 * pi * u2)
+
+    if ((i + 1) <= n)
+    {
+      x[i + 1] <- sqrt(-2 * log(u1)) * sin(2 * pi * u2)
+      i <- i + 1
+    }
+
+    i <- i + 1
+  }
+
+  x * sd + mean
+}
+
+hist(box_muller(1000))
+
+```
+
+# Accpetance/Rejection Method
+
+
+To generate $n$ samples, `for(i in 1:n)`
+
+  1. Generate $Y \sim g_Y(t)$ and $U \sim Unif(0,1)$
+
+  2. If $U \leq \frac{f(Y)}{M \times g(Y)}$ then we accept $Y$, such that $Y =  X$
+
+  3. Repeat until you have sufficient samples
+
+
+
+In order for the algorithm to work we require the following constraings:
+
+1. $f$ and $g$ have to have compatible supports (i.e. $g(x) > 0$ when $f(x) > 0$)
+
+2. There is a constant $M$ such that $\frac{f(t)}{g(t)} \leq M$
+
+
+## Example: Beta(2,2)
+
+Suppose we'd like to generate samples from $Beta(2,2)$ distribution. The density function for $Beta(2,2)$ is simply $f(x) = 6x(1 - x)$ for $0 < x < 1$. Since our domain is between 0 and 1, we can use a simple $Unif(0,1)$ density as our instrumental density, $g$. Then, by the accept-reject algorithm we can simulate a random variable $Y \sim g$, and a random variable $U \sim Unif(0,1)$. Then, if 
+$$
+M \times U \leq \frac{f(Y)}{ g(Y)}
+$$
+we accept the candidate variable $Y \sim g$ as $X$, $X = Y$. Otherwise, we reject $Y$ and simulate again until we get an appropriate sample size. 
+
+
+```{r, echo = FALSE, fig.height=3, fig.width=9}
+
+par(mfrow = c(1,2), mar = c(3, 4, 1, 2))
+beta <- function(x) 6*x*(1-x)
+M = 1.5
+## plot 2
+curve(expr = beta, from = 0, to = 1, 
+      xlim = c(-0.5, 1.5), ylim = c(0,2),
+      main = "Beta(2,2) Density with Unif(0,1)",
+      xlab = "x", ylab = "density")
+
+x = seq(from = -1, to = 2, by = 0.01)
+Unif1 = function(x){ ifelse(x >= 0 & x <= 1, 1, 0) }
+polygon(x, Unif1(x), lty = 9)
+
+## plot 3
+curve(expr = beta, from = 0, to = 1, 
+      xlim = c(-0.2, 1.2), ylim = c(0,2),
+      main = "Beta(2,2) with M*Unif(0,1)",
+      xlab = "x", ylab = "density")
+
+Unif2 = function(x){ ifelse(x >= 0 & x <= 1, 1*M, 0) }
+polygon(x, Unif2(x), lty = 2)
+
+#abline(h = 1.5, col = "red")
+par(mfrow=c(1,1))
+
+
+```
+
+
+### Generating N points and finding maximizing value
+
+
+Note that the target density $f$ has a maximum of 1.5, so we can set M = 1.5 (using calculus or use optimize function as shown)
+
+```{r}
+
+# find M using optimize
+f <- function(x){ 6*x*(1 - x)} ## pdf of Beta(2,2)
+max_find <- optimize(f=f, lower = 0, upper = 10, maximum = TRUE)
+max_find
+
+M <- max_find$objective
+
+
+
+## Accept-Reject
+M = 1.5
+X = rep(x = NA, 5) ## create a vector of length 5 of NAs
+set.seed(123)
+f <- function(x){ 6*x*(1 - x)} ## pdf of Beta(2,2)
+g <- function(x){ 1 } ## pdf of Unif(0,1) is just 1
+
+n = 10000
+
+```
+
+Now, say we needed $n = 10,000$ samples from $Beta(2,2)$, then a better implementation would be
+
+```{r}
+X = rep(NA, n); M = 1.5
+i = 0 ## index set to start at 0
+while(sum(is.na(X))){
+  U = runif(1); Y = runif(1)
+  accept <- U <= f(Y)/(M*g(Y))
+  if(accept){
+    i = i+1 ## update the index
+    X[i] <- Y
+  }
+}
+
+round(summary(X), 4)
+round(qbeta(p = c(0, 0.25, 0.5, 0.75, 1), 2, 2), 4)
+```
+
+
+## Example
+
+$$ \frac{f(y)}{g(y)} \leq c $$
+
+Thus if we maximize the ratio f(y)/g(y) then that would be the value of c. This can be done by using parital derivate of the fraction.
+
+
+$$ Majorizing~density~F_{Y}(y)\sim DE(0,1)=\frac{1}{2}e^{-|x|} $$
+
+$$ Target~density~F_{X}(y)\sim N(0,1)=\frac{1}{\sqrt{2\pi}}e^{-\frac{x^2}{2}}$$
+
+$$ C \ge \frac{\sqrt{2}}{\sqrt{\pi}} e^{-\frac{x^2}{2} + |y|} $$
+Differenitating with respect to x we get that the expression is maximum at x=1, thus C is:
+
+$$ \sqrt{\frac{2}{\pi}}e^\frac{-1}{2}$$
+
+$$=\frac{\sqrt{2}}{C\sqrt{\pi}}\cdotp e^{-\frac{y^2}{2}+|y|}$$
+$$ = e^{-\frac{y^2}{2}+|y|+\frac{1}{2}} $$
+
+
+Thus C is
+
+$$ C = \sqrt(\frac{2*e^1}{\pi})$$   
+
+
+```{r}
+generate_n <- function(c){
+  x <- NA
+  num.reject <- 0
+    while (is.na(x)){
+      u <- runif(1, 0, 1)
+      y <- de_dist(u, 0, 1)
+      U <- runif(1)
+        if (y>0 && U <= sqrt(2/pi)/c*exp(-(y^2)/2)+y){
+          x <- y
+        } else if (y<=0 && U<=sqrt(2/pi)/c*exp(-(y^2)/2-y)){
+            x <- y
+              } else {
+                num.reject <- num.reject + 1
+            }
+    }
+  c(x,num.reject)
+}
+
+
+c <- sqrt(2*exp(1)/pi)
+
+```
+
+
+```{r}
+set.seed(12345)
+nnormal <- sapply(rep(c,2000), generate_n)
+```
+
+```{r}
+hist(nnormal[1,], breaks = 50, freq = FALSE, xlim = c(-4,4),
+     main = "Normal distribution generated by Accept/Reject method")
+lines(density(nnormal[1,]))
+```
+
+```{r}
+average_rejection <- sum(nnormal[2,])/(ncol(nnormal)+sum(nnormal[2,]))
+average_rejection
+```
+
+```{r}
+expected_rejection <- 1-(1/c)
+expected_rejection
+```
+
+```{r}
+rejection_difference <- expected_rejection - average_rejection
+rejection_difference
+```
+
+```{r}
+newnormal <- nnormal[1,]
+random <- rnorm(2000, 0, 1)
+df <- as.data.frame(cbind(newnormal, random))
+```
+
+```{r}
+
+ggplot(df, aes(newnormal, fill = "newnormal")) + geom_histogram(alpha = 0.4, bins = 50) +
+  geom_histogram(aes(random, fill = "random"), alpha = 0.4, bins = 50)
+
+```
+
+
+
+# Monte Carlo Integration
+
+
+Now, to generalize the method used. Given a function $h(x)$ whose integral is well defined, where we wish to evaluate at interval $a$ to $b$. Then
+
+$$
+\begin{aligned}
+\ \theta &= \int_a^b h(x) dx \\
+\ &= (b - a) \int_a^b h(x) \frac{1}{b - a} dx \\
+\ &= (b - a) \int_a^b h(x) f(x) dx \\
+\end{aligned}
+$$
+where $f(x) = \frac{1}{b - a}$ is $Unif(a,b)$, and $x \sim Unif(a,b)$. 
+
+The algorithm to calculate $\hat{\theta}$ is as follows:
+
+1. Find a density $f(x)$ from which we can sample $x$ 
+
+2. Generate $x_1, ..., x_n \sim f(x)$
+
+3. Compute $(b - a) \times \bar{g}_{n}$, where $\bar{g}_{n} = \frac{1}{n} \sum_{i = 1}^n h(x_i)$
+
+###Example
+
+
+Suppose we have a function $h(x) = 3x^2$ for which we wish to integrate over the interval $[0, 2]$.
+
+- Can apply deterministic numerical approximation methods (see R's `integrate`) 
+
+- or we could treat $x$ as a random variable, $X = x$, from a $Unif(0,2)$ whose pdf is simply $f(x) = \frac{1}{2-0} = \frac{1}{2}$. 
+
+If we now generate some $n$ random values from $f(x)$ and evaluate them at $h(x)$, then take the mean, we'd be calculating the expected value of $h(x)$, 
+$$
+\begin{aligned}
+\ \theta &= \int_0^2 h(x) dx \\
+\ &= (\frac{2 - 0}{2 - 0}) \times \int_0^2 h(x) dx = 2 \times \int_0^2 h(x) \frac{1}{2} dx \\
+\ &= 2 \times E[h(X)] = 2 \times \int_{- \infty}^{\infty} h(x) f(x) dx \\
+\ &\approx  2 \times \frac{1}{n} \displaystyle\sum_{i=1}^{n} h(x_i)  \\
+\ &= \hat{\theta} \approx \theta
+\end{aligned}
+$$
+
+
+
+## Monte Carlo Integration, Variance Estimation
+
+We can now calculate the standard error for the former example.
+
+
+```{r}
+N = 10000 ## sample size
+h <- function(x) { 3*x^2 } ## function of interest, h(x)
+X <- runif(n = N, min = 0, max = 2)  ## samples from f(x)
+h_values <- 2 * h(X)
+
+cumMean <- function(x, n){
+  num = cumsum(x)  ## numerator
+  denom = 1:n  ## denominator
+  result = num/denom
+  return(result)
+}
+
+
+cumSE <- function(x, n){
+  m = mean(x)
+  num = sqrt(cumsum((x - m)^2)) ## numerator
+  denom = 1:n ## denominator
+  result = num/denom ## cummulative mean of (x_i - theta)^2
+  return(result)
+}
+
+thetas = cumMean(h_values, N)
+SE = cumSE(h_values, N)
+
+
+plot(x = 1:N, y = thetas, type = "l", ylim = c(4, 12), xlab = "Number of Samples",
+     ylab = "Estimate of theta",
+     main = "Estimate of Theta with 95% CI")
+lines(x = 1:N, y = thetas + 1.96*SE, col = "gray") ## CI
+lines(x = 1:N, y = thetas - 1.96*SE, col = "gray") ## CI
+
+
+## final estimate
+thetaHat = mean(h_values)
+se <- sd(x = h_values)/sqrt(N)
+ci <- thetaHat + 1.96*c(-1,1) * se
+
+print(thetaHat) ## theta estimate
+print(ci) ## 95% CI
+
+```
+
+
+
+
+
+# Metropolis Hastings 
+
+
+The **Independent Metropolis-Hastings algorithm** as described Robert & Casella goes as follows
+
+Given $x^{(t)}$
+
+`1. Generate` $Y_t \sim g(y)$
+
+`2. Take`
+
+$$
+X_{t+1} = 
+  \begin{cases}
+    Y_t       & \quad  \text{with probability }\ \rho(x^{(t)}, Y_t) \\
+    x^{(t)}   & \quad  \text{with probability }\ 1 - \rho(x^{(t)}, Y_t) \\
+  \end{cases}
+$$
+where 
+$$
+\displaystyle \rho(x^{(t)}, Y_t) = \text{min} \left\{ \frac{f(Y_t)}{f(x^{(t)})} \frac{g(x^{(t)})}{g(Y_t)}, 1 \right\}
+$$
+
+
+
+In simpler terms, as we want to generate $X \sim f$, we first take an initial value $x^{(0)}$ (which can almost be any artibrary value in the support of $f$). 
+
+1. We generate a value $Y_0 \sim q(y | x^{(0)})$. 
+2. We calculate $\rho(x^{(t)}, Y_t)$
+3. Generate a random value $U \sim Unif(0,1)$ 
+4. If $U < \rho(x^{(t)}, Y_t)$, then we accept $X^{(1)} = Y_t$;
+else we take $X^{(1)} = X^{(0)}$
+5. Repeate steps 1-4 until you've satisfied the number of samples needed
+
+
+### Example
+Use Metropolis-Hastings algorithm to generate samples from the below distribution by using proposal distribution as chi^2(floor(X(t)+1)), take some starting point. Plot the chain you obtained as a time series plot. What can you guess about the convergence of the chain? If there is a burn-in period, what can be the size of this period?
+
+$$ f(X) \sim  x^5 e^{-x}, x>0$$
+
+```{r}
+#density function from which we want to sample.
+dt <- function(x) {
+  if (x <= 0) {
+    stop("x has to be greater than 0.")
+  }
+  return(x^5 * exp(-x))
+}
+
+#proposal density function, should accept 2 arguments:
+  #   x:  value at which to compute density.
+  #   x_t: value on which the rq is conditioned.
+dp <- function(x, xt) {
+  dchisq(x, floor(xt + 1))
+}
+
+rp <- function(x) {
+  rchisq(1, floor(x+1))
+}
+
+metropolis_hastings <- function(x_0, t_max, dt, dp, rp) {
+  # Perform Metropolis-Hastings sampling of the specified density.
+  # 
+  # Args:
+  #   x_0   starting value.
+  #   t_max maximum numer of iterations.
+  #   dt    density function from which we want to sample.
+  #   dp    proposal density function, should accept 2 arguments:
+  #           x:  value at which to compute density.
+  #           x_t: value on which the rq is conditioned.
+  #   rp    proposal random number generator, should accept 1 argument: 
+  #           x_t: value on which the rq is conditioned.
+  #           
+  # Returns:
+  #   Vector of sampled points of length t_max. 
+  
+  x_t <- x_0
+  x <- vector("numeric", t_max) # pre-allocate
+  
+  # Metropolis-Hastings
+  for (t in 1:t_max) {
+    # Generate a candidate
+    y <- rp(x_t)
+    # Generate U
+    u <- runif(1, 0, 1)
+    # Compute alpha
+    alpha <- min(1, (dt(y) * dp(x_t, y)) / (dt(x_t) * dp(y, x_t)))
+    # Accept the jump or stay in x_t
+    if (u < alpha) {
+      x_t <- y
+    }
+    # Sace x_t in vector
+    x[t] <- x_t
+  }
+  
+  return(x)
+}
+
+
+test <- metropolis_hastings(x_0=1, t_max = 10000, dt, dp, rp)
+
+# compare the distribution
+x=seq(from=0.01, to=20, by=0.002)
+actual <- numeric(length(x))
+for(i in seq_along(x)){
+  actual[i] <- dt(x=x[i])
+}
+
+quantile(test)
+quantile(temp)
+
+
+ggplot() +
+geom_line(aes(x=1:10000, y=test)) +
+labs(x="Iterations", y="X") + 
+ylim(0, 50) +
+ggtitle("Metropolis-Hasting Sampler using Chisquare")
+
+
+```
+
+# Gelman Rubin
+```{r, eval = TRUE}
+
+all_series <- NULL
+for(i in 1:10) { 
+temp <- metropolis_hastings(x_0=i, t_max = 10000, dt, dp, rp)
+temp <- coda::as.mcmc(temp)
+all_series[[i]] <- temp
+}
+
+#convergence analysis
+coda::gelman.diag(all_series)
+```
+
+
+# Gibbs Sampling
+
+```{r}
+calculate_conditional_probability <- function(i, X, Y, ...) {
+  # Returns the conditional probability of an element
+  # Args: (might change with the given task)
+  #   X   Value we are looking for
+  #   Y   Data
+  #   i   position
+  # In the lab we had to consider three cases 
+  # This will change in the exam!
+  d <- length(X)
+  if (i == 1) {
+    # i = 1
+    mean <- (Y[1] + X[2]) / 2
+    variance <- sigma_squared / 2
+  } else if (i == d) {
+    # i = d
+    mean <- (X[d - 1] + Y[d]) / 2
+    variance <- sigma_squared / 2
+  } else { 
+    # i = 2 ... d-1
+    mean <- (X[i - 1]+ Y[i] + X[i + 1]) / 3
+    variance <- sigma_squared / 3
+  }
+  
+  # Generate a random variables
+  X_i <- rnorm(1, mean = mean, sd = sqrt(variance))
+  
+  return(X_i)
+}
+
+gibbs_sampling <- function(Y, n, X0, ...) {
+  # Gibbs sampling
+  # Args:
+  #   Y   Data
+  #   n   Number of generated samples
+  #   X0  Initialization points
+  # Returns:
+  #   X   Matrix with samples (colmeans = value we are looking for)
+  d <- length(Y)
+  X <- matrix(NA, ncol = d, nrow = n)
+  X[1, ] <- X0
+  
+  for (row in 2:n) {
+    for (col in 1:d) {
+      X[row, col] <- calculate_conditional_probability(
+        i = col,
+        X = c(X[row, 1:(col - 1)], X[row - 1, col:d]),
+        Y = Y,
+        sigma_squared = sigma_squared
+      )
+    }
+  }
+  return(X)
+}
+
+
+```
+
+
+# Bootstrap estimation
+
+## Estimating the distribution of T by using a non-parametric bootstrap with B = 2000
+
+### Using Boot library
+$T = \frac{\hat{Y}(X_b)-\hat{Y}(X_a)}{X_b - X_a}$ Where $X_b = argmax_xY(X)$ and $X_a = argmin_xY(X)$
+
+```{r}
+data <- read.csv2('lottery.csv')
+
+stat1 <- function(data,vn){
+  data <- as.data.frame(data[vn,])
+  X_b <- data[which.max(data$Draft_No),]$Day_of_year
+  X_a <- data[which.min(data$Draft_No),]$Day_of_year
+  model <- loess(formula = Draft_No~Day_of_year
+               , data = data)
+  Y_hat <- predict(object = model, newdata = data)
+  Y_hat_a <- Y_hat[X_a]
+  Y_hat_b <- Y_hat[X_b]
+  (Y_hat_b - Y_hat_a)/(X_b - X_a)
+}
+
+res <- boot(data = data, statistic = stat1
+                        # Ordinary nonparametric bootstrap (default)
+            , R = 2000, sim = "ordinary")
+
+
+plot(res)
+
+# P-Value
+mean(abs(res$t0) < abs(res$t-mean(res$t)))
+
+```
+
+
+### Without Boot library
+
+```{r}
+set.seed(12345)
+
+X <- data$Day_of_year
+Y <- data$Draft_No
+
+T <- numeric()
+
+for (i in 1:2000) {
+        boot <-sample(length(X), replace=TRUE)
+        data1 <- cbind(X,boot) 
+
+
+        X_a <- data1[which.min(data1[,2])]
+        X_b <- data1[which.max(data1[,2])]
+        
+        model2 <- loess(Y~X, data=as.data.frame(data1), method="loess")
+        
+        fitted_X_a <- model2$fitted[X_a]
+        fitted_X_b <- model2$fitted[X_b]
+        
+        test <- (fitted_X_b - fitted_X_a)/(X_b - X_a)
+        T[i] <- test
+        }
+
+
+pval <- length(which(T>=0))
+
+
+hist(T, breaks=30,
+     main="Distribution of T by using non-parametric bootstrapping")
+
+print("Estimated p-value:")
+print(pval/2000)
+
+```
+
+
+## Varience Estimate
+
+###Estimate the distribution of the mean price of the house using bootstrap. Determine the bootstrap bias-correction and the variance of the mean price. Compute a 95% confidence interval for the mean price using bootstrap percentile, bootstrap BCa, and first-order normal approximation.
+
+Bias correction
+$$T1 = 2.T(D) - \frac{1}{D} \sum_{i=1}^B T^*_{i} $$
+
+```{r}
+
+price_data <- read.csv("prices1.csv", sep=";")
+
+# Estimation of mean of Price
+stat_mean <- function(data, index){
+    data <- data[index,]
+    answer <- mean(data$Price)
+    return(answer)
+}
+
+res <- boot::boot(data=price_data, statistic = stat_mean, R=2000)
+res
+plot(res,index = 1)
+
+#95% CI for mean using percentile
+boot.ci(res, index=1, type=c('perc'))
+
+#95% CI for mean using bca
+boot.ci(res, index=1, type=c('bca'))
+
+#95% CI for mean using first order normal
+boot.ci(res, index=1, type=c('norm'))
+```
+
+
+```{r}
+# Bias-correction and Varience of Price
+boot.fn <- function(data,index){
+        d <- data[index]
+        res <- mean(d)
+}
+
+boot.result <- boot(data=price_data$Price, statistic=boot.fn, R=1000) 
+bias_cor <- 2*mean(price_data$Price)-mean(boot.result$t)
+
+
+list("bias_correction"=bias_cor, "variance_of_the_mean_price"=35.93^2)
+boot.result
+plot(boot.result)
+boot.ci(boot.result)
+
+
+```
+
+### Estimate the variance of the mean price using the jackknife and compare it with the bootstrap estimate
+**Jacknife(n=B)**:
+$$\widehat{Var[T(\cdot)]}=\frac{1}{n(n-1)}\sum_{i=1}^{n}(T_{i}^*-J(T))^2$$
+where,
+$$T_{i}^*=nT(D)-(n-1)T(D_i^*)~,~~~~J(T)=\frac{1}{n}\sum_{i=1}^{n}T_{i}^*$$
+When you compute the equation given aboce, you got
+$$\frac{n-1}{n}\sum_{i=1}^{n}(T_{i}^*-J(T))^2$$
+Reference:The Jackknife Estimation Method, Avery I. McIntosh (http://people.bu.edu/aimcinto/jackknife.pdf)
+```{r}
+result <- numeric()
+n <- NROW(price_data)
+
+for (i in 1:n){
+        updated_price <- price_data$Price[-i]
+        result[i] <- mean(updated_price)
+}
+
+var_T <- (n-1)/n*sum((result-mean(result))^2)
+mean_T <- mean(result)
+
+cat("The variance from jacknife method is:", var_T)
+```
+Analysis: The obtained variance using Jackknife method is 1320.911 while using bootstrapping the obtained value was 1290.965. Considering the fact that Jackknife overestimate variance, the answer seems reasonable. 
+
+### Compare the confidence intervals obtained with respect to their length and the location of the estimated mean in these intervals.
+
+```{r}
+
+confidence_interval_jackknife <- c((mean_T - 1.96*var_T), (mean_T + 1.96*var_T))
+
+confidence_interval_jackknife
+
+intervals <- c("(1150-1011)","(1148-1011)","(1149-1013)","(1146-1007)")
+length <- c(1150-1011, 1148-1011,1149-1013,1146-1007)
+Center_of_interval <- c((1150+1011)/2,(1148+1011)/2,(1149+1013)/2,(1146+1007)/2)
+ 
+dt <- data.frame(intervals, length, Center_of_interval,row.names = c("Normal", "Basic", "Percentile", "BCa"))
+
+dt %>% kable(col.names = c("Confidence interval", "Length of interval","Center of interval"))
+
+```
+
+# Genetic Algorithm
+
+## Find the max of one-dimensional function
+
+$$f(x) := \frac{x^2}{e^x} - 2 e^-\frac{(9 sinx)}{(x^2 + x + 1)} $$
+```{r}
+
+function_f <- function(x){
+answer <- x^2/exp(x) - 2*exp(-(9*sin(x))/(x^2+x+1))
+return(answer)
+}
+
+```
+
+
+## Crossover function
+```{r}
+crossover <- function(x,y){
+answer <- (x+y) * 0.5
+return(answer)
+}
+
+```
+
+
+##  Mutate Function
+
+```{r}
+mutate <- function(x){
+answer <- (x^2)%%30  
+return(answer)
+}
+
+```
+
+
+## Plot of function
+```{r}
+y <- vector("double", length = 30)
+x <- seq(from=0,to=29,by=1)
+for(i in 0:29){y[i+1] <- function_f(x=i)}
+
+data <- data.frame(cbind(x,y))
+data$flag <- "original_values"
+data$x <- as.numeric(as.character(data$x))
+data$y <- as.numeric(as.character(data$y))
+
+ggplot(data, aes(x=x, y=y, group=1)) + 
+geom_point() + 
+geom_line(linetype = "dashed") + 
+ggtitle("Plot of the function") 
+
+cat("The maximum values of the function is at x =",which.max(data$y), "and the value is = ",max(data$y))
+
+
+inital_population <- seq(from=0, to=30, by=5)
+Values <- vector("double", length = 7)
+for(i in seq_along(inital_population)){Values[i] <- function_f(x=inital_population[i])}
+
+```
+
+## Main function
+```{r}
+myfunction <- function(maxiter, mutprob){
+
+# maxiter = 10
+# mutprob = 0.5 
+
+  
+for(i in seq_along(1:maxiter)){
+# sampling and getting parent and victim position
+parent_index <- sample(x = seq(from = 1, to=7, by=1), size = 2, replace = TRUE) 
+parent_1 <- Values[parent_index[[1]]]
+parent_2 <- Values[parent_index[[2]]]
+victim <- which.min(order(Values))
+
+# performing crossover and mutate based on prob
+kid <- crossover(x = parent_1, y = parent_2)
+
+if(as.numeric(rbinom(1,1,mutprob))==1){kid <- mutate(x=kid)}
+inital_population[victim] <- kid
+
+# generating new values  
+for(j in seq_along(inital_population)){Values[j] <- function_f(x=inital_population[j])}
+
+}
+new_max <- max(Values)
+index_max_val <- inital_population[which.max(Values)]
+
+data2 <- data.frame(cbind(x=inital_population,y=Values))
+data2$flag <- "new_values"                    
+data2$x <- as.numeric(as.character(data2$x))
+data2$y <- as.numeric(as.character(data2$y))
+data3 <- rbind(data2,data)
+
+answer <- ggplot(data3, aes(x=x, y=y, group=1)) + 
+geom_point() + 
+geom_point(aes(colour=flag)) +  
+geom_line(linetype = "dashed") + 
+ggtitle(paste0("Plot of the function with maxiter = ",maxiter," and mutprob = ",mutprob)) 
+return(answer)
+}
+
+myfunction(maxiter=10, mutprob=0.5)
+```
+
+
+# The EM Algorithm
+
+Given a random sample of size $n$, with observed sample $\mathbf{X} = (X_1, ..., X_m)$ and *missing* random sample $\mathbf{Z} = Z_{m+1}, ..., Z_n$ we seek to compute 
+$$
+\hat{\theta} = \text{ arg max } L(\theta | \mathbf{X}, \mathbf{Z}) 
+$$
+Although $\mathbf{Z}$ is unobservable, we assume that $(\bf{X, Z}) \sim f(\bf{x,z} | \theta)$.
+
+We place a conditional distribion on $\mathbf{Z}$ given the observed data $\bf{x}$,
+$$
+k(\mathbf{z}| \theta, \mathbf{x}) = f( \mathbf{x, z} | \theta) / g(\mathbf{x} | \theta)
+$$
+
+Here we assume that that $\mathbf{X} \sim g(\bf{x} | \theta)$, where 
+$$
+g(\bf{x} | \theta) = \int f( \mathbf{x,z} | \theta ) d\bf{z}
+$$
+
+
+Denote the complete-data likelihood as $L^c(\theta | \mathbf{x, z})$ and the observed-data likelihood as $L(\theta | \mathbf{x} )$. Then, for any value of $\theta$, $\theta_i$
+
+$$
+log L(\theta | \mathbf{x}) = E[ log L^c(\theta | \mathbf{x, z}) ] - E [ log k( \bf{Z} | \theta_i, \bf{x} ) ]
+$$
+where the expectation is with respect to $k(\mathbf{z}| \theta_i, \bf{x})$. We can rewrite this as
+
+
+$$
+E[log L^c(\theta | \mathbf{x, z})] = log L(\theta | \mathbf{x}) +  E[log k(\mathbf{Z} | \theta_i, \bf{x})]
+$$
+
+where our focus is concerned with maximizing $E[log L^c(\theta | \mathbf{x, z})]$.
+
+
+Denoting $E[log L^c(\theta | \mathbf{x, z})]$ = $Q(\theta | \theta_i, \mathbf{x})$, the EM algorith iterates through values of $\theta_i$ by maximizing $Q(\theta | \theta_i, \mathbf{x})$.
+
+**The EM Algorithm**
+
+`Pick a starting value` $\hat{\theta_0}$
+
+`Then for i in 1:n do`
+
+`1. Compute` (E-step)
+$$
+Q(\theta | \theta_{i-1}, \mathbf{x}) = E[log L^c(\theta | \mathbf{x, z})]
+$$
+
+`where the expectation is with respect to` $k( \bf{Z} | \theta_i, \bf{x} )$
+
+`2. Maximize` $Q(\theta | \theta_{i-1}, \mathbf{x})$ `in` $\theta$ `and take`
+
+$$
+\hat{\theta_i} = \text{ arg max } Q(\theta | \theta_{i-1}, \mathbf{x})
+$$
+
+`repeat until convergence criteria is met`
+
+
+## Normal Distribution with missing values using EM
+
+Suppose $X = (x_1, ..., x_n)^T$ is a random sample from $N(\mu,1).$ Let the observations be in order such that $x_1 < x_2 < ... < x_n$. 
+Suppose that after time $c$, values are censored or missing, such that only $x_1, ..., x_m$ are observed, and $x_{m+1}, ..., x_n$ are unobserved. 
+Then, $r = (n - m)$ would be the quantity missing. We will use the EM and MCEM algorithms to find approximations for $\mu$.
+Let $Z = (x_{m+1}, ..., x_n)^T$.
+
+First, construct the likelihood function.
+
+$$
+\begin{aligned}
+L(\mu | x) & = \prod^m f(x_i | \mu, 1) \times \prod^r f(z_i | \mu, 1) \\
+\ & = (2 \pi )^{-n/2} exp(-\frac{1}{2} \sum_{i=1}^m (x_i - \mu)^2) \times exp(-\frac{1}{2} \sum_{i=1}^m (z_i - \mu)^2) \\
+\ & \propto exp(-\frac{1}{2} \sum_{i=1}^m (x_i - \mu)^2) \times exp(-\frac{1}{2} \sum_{i=1}^m (z_i - \mu)^2)
+\end{aligned}
+$$
+
+The log-likelihood is then 
+
+$$
+ln(L(\mu | X)) = -\frac{1}{2} \sum_{i=1}^m (x_i - \mu)^2) - \frac{1}{2} \sum_{i=1}^m (z_i - \mu)^2
+$$
+
+We now find the conditional expectation $E[z_i | X]$
+
+$$
+\begin{aligned}
+E[z_i | X] & =  E[z_i | x > c] = \int_c^{\infty} \frac{P(x_i > x | x_i > c)}{P(x_i > c)}   \\
+\ & = \mu + \sigma \frac{\phi(c - \mu)}{1 - \Phi(c - \mu)}
+\end{aligned}
+$$
+
+
+$$
+\begin{aligned}
+Q(\mu | \mu_t) & = -\frac{1}{2} \sum_{i=1}^m (x_i - \mu)^2) - \sum E[z_i | X] \\
+\ & =   -\frac{1}{2} \sum_{i=1}^m (x_i - \mu)^2) - \sum E[z | X] \\
+\ & =   -\frac{1}{2} \sum_{i=1}^m (x_i - \mu)^2) - (n-m) E[z | X] \\
+\end{aligned}
+$$
+
+The MLE for $\mu$ is then,
+
+$$
+\begin{aligned}
+\mu_{t+1} & =  \frac{m \bar{x}}{n} + \frac{(n - m) E[z | X]}{n} \\
+\ & = \frac{m \bar{x}}{n} + \frac{(n - m) (\mu_t)}{n} + \frac{(n-m) \phi(c - \mu_t)}{n \Phi(c-\mu_t)} \\
+\end{aligned}
+$$
+
+```{r}
+set.seed(2345)
+n = 100
+mu = 4
+sd = 1
+x = rnorm(n, mu, sd) ## generate some data
+c = 5 ## time cut off
+w = x[x < c] ## obtain samples before time cut off
+m = sum(x < c) ## number of observed samples
+wbar = mean(w) ## observed mean
+r = n - m ## difference in sample size
+
+```
+
+```{r}
+N = 200
+mu_new = wbar
+results = numeric(N)
+for(i in 1:N){
+    results[i] = mu_new
+    mu_old = mu_new
+    mu_new = m*wbar/n + (r*mu_old/n) + 
+      (r/n)*sd*(dnorm(c - mu_old))/(1 - pnorm(c - mu_old))  ## r/n instead of 1/n
+    #print(mu_new)
+}
+
+print(tail(results))
+
+```
+
+```{r}
+plot(results, type = "l", main = "em estimates for mu", ylim = c(3.5, 4.5))
+abline(h = mu, col = "red")
+abline(h = wbar, col = "green", lty = 2)
+abline(h = mean(x), col = "blue", lty = 3)
+
+
+```
+
+
+
+## EM using Monte Carlo
+
+A MC flavor of the EM algorithm
+
+1. Draw missing data sets $\mathbf{Z_1, Z_2, ..., Z_m} \sim f_{Z|X}(z | x, \theta_i)$ where each $\mathbf{Z_i}$ is a vector of all missing values needed to complete the observed data set $( \mathbf{X, Z} )$.
+
+2. Calculate $\bar{Q}(\theta | \theta_{i-1}, X, \mathbf{Z_1, ..., Z_m}) = \frac{1}{m} \sum_{i=1}^m Q(\theta | \theta_{i-1}, X, \mathbf{Z_i} )$
+
+
+```{r}
+
+set.seed(2345)
+n = 100
+mu = 4
+sd = 1
+x = rnorm(n, mu, sd)
+c = 5
+w = x[x < c]
+m = sum(x < c)
+wbar = mean(w)
+r = n - m
+
+```
+
+```{r}
+M = 10
+N = 100
+mu_new = wbar
+results = numeric(N)
+for(i in 1:N){
+    results[i] = mu_new
+    mu_old = mu_new
+    ## abs(N(0,1)) + mu_old + (c - mu_old) to *approximate*
+    ## the truncated samples we need
+    Z = matrix(data = (c - mu_old) + (mu_old +  abs(rnorm(n = r*M, mean = 0, sd = 1))), 
+        nrow = r, ncol = M)
+    mu_new = (m*wbar/n) + mean(colMeans(Z))*r/n
+    M = M + 1
+}
+
+```
+
+
+```{r, fig.height=3.5}
+plot(results, type = "l", ylim = c(3.5, 4.5))
+abline(h = mu, col = "red")
+abline(h = wbar, col = "green", lty = 2)
+abline(h = mean(x), col = "blue", lty = 3)
+
+```
+
+
+
+
+
+
+
+# Integration Help
+\includepdf[pages={-}]{integral_rules.pdf}
+
+
+# Lecture slides
+
+\includepdf[pages={-}]{lecture_slides.pdf}
+
+

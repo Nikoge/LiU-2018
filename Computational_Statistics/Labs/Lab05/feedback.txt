@@ -1,0 +1,13 @@
+Hej! A few comments to fix:
+
+
+1.3) This is getting weird results. Your test statistic for the whole data is negative, however you find a distribution that is centered on 0 with the bootstrap (and the plot above shows there is a negative trend), this is very weird. The concept is that t<0 implies a curve going down and negative correlation, like the one you plotted above and you want to see how often the opposite occurs when bootstrapping for the p-value. Finding something so perfectly close to 0 (and p=0.5) would imply a horizontal line. Your p-value should be around 0.05 in the end.
+
+
+1.4) There is something wrong with your permutation test too, it is too high. I would start checking if you are doing it two sided (one sided is not enough here). You p-value should be around 0.09 in the end.
+
+
+1.5) This result will change when you change the other stuff, but you should report the power in the end. It should be close to 1.
+
+
+Fixing these two issued should be enough. The rest of the lab seems to be fine.

@@ -1,0 +1,439 @@
+---
+title: "Computational Statistics (732A90) Exam practice"
+author: "Anubhav Dikshit(anudi287)"
+date: "23 January 2019"
+output: 
+    pdf_document:
+      toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 999)
+
+library("ggplot2")
+library("dplyr")
+
+```
+
+\newpage
+
+#20170322
+
+## Assignment 1
+
+### 1.1 Plot of function
+```{r}
+function_f <- function(x){
+  
+answer <- 1 - (sin(5*x) + cos(7*x))^2 - 5 * 1/(sqrt(pi*0.1)) * exp(-x^2/(0.1))  
+return(answer)
+} 
+
+grad_f <- function(x){
+answer <- -2*(sin(5*x) + cos(7*x)) *(5*cos(5*x)-7*sin(7*x))-5*(1/sqrt(0.01 * pi)) * exp(-x^2 * 10) * (-20*x) 
+return(answer)  
+}
+
+
+temp_x <- seq(-10,10,0.01)
+temp_y <- function_f(x=temp_x)
+temp_data <- data.frame(x = temp_x, y = temp_y)
+ggplot(data=temp_data, aes(x=x,y=y)) + geom_point() + ggtitle("Plot of function")
+
+```
+
+### 1.2 
+
+```{r}
+optim(par=-10, fn=function_f, upper = 2, lower = -2, method = c("Nelder-Mead"))
+```
+
+```{r}
+optim(par=0, fn=function_f, upper = 2, lower = -2, method = c("Nelder-Mead"))
+```
+
+```{r}
+optim(par=10, fn=function_f, upper = 2, lower = -2, method = c("Nelder-Mead"))
+```
+
+BFGS
+
+```{r}
+optim(par=-10, fn=function_f, upper = 2, lower = -2, method =c("BFGS"))
+```
+
+```{r}
+optim(par=0, fn=function_f, upper = 2, lower = -2, method = c("BFGS"))
+```
+
+```{r}
+optim(par=10, fn=function_f, upper = 2, lower = -2, method = c("BFGS"))
+```
+
+CG
+
+```{r}
+optim(par=-10, fn=function_f, upper = 2, lower = -2, method = c("CG"))
+```
+
+```{r}
+optim(par=0, fn=function_f, upper = 2, lower = -2, method = c("CG"))
+```
+
+```{r}
+optim(par=10, fn=function_f, upper = 2, lower = -2, method = c("CG"))
+```
+
+SANN
+
+```{r}
+optim(par=-10, fn=function_f, upper = 2, lower = -2, method = c("SANN"))
+```
+
+```{r}
+optim(par=0, fn=function_f, upper = 2, lower = -2, method = c("SANN"))
+```
+
+```{r}
+optim(par=10, fn=function_f, upper = 2, lower = -2, method = c("SANN"))
+```
+
+
+### 1.3
+
+
+```{r}
+optim(par=-10, fn=function_f, gr=grad_f, upper = 2, lower = -2, method = c("Nelder-Mead"))
+```
+
+```{r}
+optim(par=0, fn=function_f, gr=grad_f, upper = 2, lower = -2, method = c("Nelder-Mead"))
+```
+
+```{r}
+optim(par=10, fn=function_f, gr=grad_f, upper = 2, lower = -2, method = c("Nelder-Mead"))
+```
+
+BFGS
+
+```{r}
+optim(par=-10, fn=function_f, gr=grad_f, upper = 2, lower = -2, method =c("BFGS"))
+```
+
+```{r}
+optim(par=0, fn=function_f, gr=grad_f, upper = 2, lower = -2, method = c("BFGS"))
+```
+
+```{r}
+optim(par=10, fn=function_f, gr=grad_f, upper = 2, lower = -2, method = c("BFGS"))
+```
+
+CG
+
+```{r}
+optim(par=-10, fn=function_f, gr=grad_f, upper = 2, lower = -2, method = c("CG"))
+```
+
+```{r}
+optim(par=0, fn=function_f, gr=grad_f, upper = 2, lower = -2, method = c("CG"))
+```
+
+```{r}
+optim(par=10, fn=function_f, gr=grad_f, upper = 2, lower = -2, method = c("CG"))
+```
+
+SANN
+
+```{r}
+optim(par=-10, fn=function_f, gr=grad_f, upper = 2, lower = -2, method = c("SANN"))
+```
+
+```{r}
+optim(par=0, fn=function_f, gr=grad_f, upper = 2, lower = -2, method = c("SANN"))
+```
+
+```{r}
+optim(par=10, fn=function_f, gr=grad_f, upper = 2, lower = -2, method = c("SANN"))
+```
+
+### 1.4
+
+```{r}
+population <- seq(from=-1, to=1, by=0.01)
+parents <- 10 - function_f(x = population)
+
+data <- data.frame(population=population, parents=parents)
+
+my_crossover <- function(x,y){
+  answer <- (x+y) * 0.005
+return(answer)}
+
+my_mutate <- function(x){
+  answer <- (x*x)%%30
+return(answer)}
+
+
+my_scenario <- function(data, N){
+for( i in 1:N)  
+data <- data %>% arrange(desc(parents))
+parent1 <- data[1,1]
+parent2 <- data[2,1]
+
+child <- my_crossover(x=parent1, y=parent2) 
+
+if(runif(1) >0.99){
+  child <- mutate(x=child)
+}
+
+data[NROW(data),1] <- child
+new_parents <- 10 - function_f(x = data$population)
+data$parents <- new_parents
+return(data)
+}
+
+final_result <- my_scenario(data=data, N=20000)
+
+final_result$actual_value <- 10 - final_result$parents
+
+
+```
+
+## Assignment 2
+
+```{r}
+box_muller <- function(n = 1, mean = 0, sd = 1)
+{
+x <- vector("numeric", n)
+i <- 1
+while(i <= n)
+{
+u1 <- runif(1, 0, 1)
+u2 <- runif(1, 0, 1)
+x[i] <- sqrt(-2 * log(u1)) * cos(2 * pi * u2)
+if ((i + 1) <= n)
+{
+x[i + 1] <- sqrt(-2 * log(u1)) * sin(2 * pi * u2)
+i <- i + 1
+}
+i <- i + 1
+}
+x * sd + mean
+}
+
+
+my_num <- box_muller(1000)
+
+function_y <- function(x){
+  y <- 0.5 + 1.5 * log(x)
+  return(y)
+}
+
+my_den <- function_y(x = abs(my_num))
+
+mean(my_num/my_den)
+
+```
+
+#2018/08/27
+
+## Assignment1
+
+### 1.1
+```{r}
+
+my_rand <- function(a,m,x0,nmax){
+  
+if(nmax >10000000){stop("The number is too big")}  
+x <- rep(0,nmax)
+x[1] <- x0 
+for(i in 1:nmax){
+x[i+1] <- (a*x[i]) %% m
+}
+u <- x/m
+return(u)
+}
+
+answer <- my_rand(a=7^5,m=2^31-1,x0=1,nmax=100)
+plot(answer)
+
+
+```
+
+
+
+### 1.2
+
+```{r}
+answer1 <- my_rand(a=69069,m=2^32,x0=1,nmax=10000)
+answer2 <- my_rand(a=630360016,m=2^31 - 1,x0=1,nmax=10000)
+answer3 <- my_rand(a=742938285,m=2^31 - 1,x0=1,nmax=10000)
+answer4 <- my_rand(a=1226874153,m=2^31 - 1,x0=1,nmax=10000)
+
+# plot histogram
+hist(answer1)
+hist(answer2)
+hist(answer3)
+hist(answer4)
+hist(runif(10000,0,1))
+
+# testing the uniform distribution
+ks.test(x=answer1, y=punif(10000,0,1))
+ks.test(x=answer2, y=punif(10000,0,1))
+ks.test(x=answer3, y=punif(10000,0,1))
+ks.test(x=answer4, y=punif(10000,0,1))
+```
+
+### 1.3
+```{r}
+normal_gen <- function(n = 1, mean = 0, sd = 1, uni_function)
+{
+x <- vector("numeric", n)
+i <- 1
+while(i <= n)
+{
+u1 <- uni_function[i]
+u2 <- uni_function[i+1]
+x[i] <- sqrt(-2 * log(u1)) * cos(2 * pi * u2)
+if ((i + 1) <= n)
+{
+x[i + 1] <- sqrt(-2 * log(u1)) * sin(2 * pi * u2)
+i <- i + 1
+}
+i <- i + 1
+}
+x * sd + mean
+}
+
+norm_rand1 <- normal_gen(10000, uni_function=answer1)
+hist(norm_rand1)
+
+norm_rand2 <- normal_gen(10000, uni_function=answer2)
+hist(norm_rand2)
+
+norm_rand3 <- normal_gen(10000, uni_function=answer3)
+hist(norm_rand3)
+
+norm_rand4 <- normal_gen(10000, uni_function=answer4)
+hist(norm_rand4)
+
+
+
+ks.test(x=norm_rand1, y=pnorm(10000))
+ks.test(x=norm_rand2, y=pnorm(10000))
+ks.test(x=norm_rand3, y=pnorm(10000))
+ks.test(x=norm_rand4, y=pnorm(10000))
+
+```
+
+
+## Assignment 2
+
+### 2.1
+```{r}
+
+f_real1 <- function(x){
+  temp <- -x *(1-x)
+return(temp)  
+}
+
+f_real2 <- function(x){
+  temp <- sin(2*pi*(x+1)) * exp(-x-1)
+return(temp)  
+}
+
+f <- function(par,x){
+  a0 <- par[1]
+  a1 <- par[2]
+  a2 <- par[3]
+  temp <- a0+a1*x+a2*x^2
+return(temp)
+}
+
+approx_function_1 <- function(par,x){
+  f_value <- (f_real1(x)-f(par,x)) 
+  return(f_value)
+}
+
+approx_function_2 <- function(par,x){
+  f_value <- (f_real2(x)-f(par,x))
+  return(f_value)
+}
+
+find_parameters_1 <- function(x){
+temp <- optim(par=c(0,-1,1), fn=approx_function_1, x=x)
+a0 <- temp$par[1]
+a1 <- temp$par[2]
+a2 <- temp$par[3]
+return(list=c(a0=a0,a1=a1,a2=a2))
+}
+
+find_parameters_2 <- function(x){
+temp <- optim(par=c(1,1,1), fn=approx_function_2, x=x)
+a0 <- temp$par[1]
+a1 <- temp$par[2]
+a2 <- temp$par[3]
+return(list=c(a0=a0,a1=a1,a2=a2))
+}
+
+
+find_parameters_1(x=x)
+find_parameters_2(x0=0.25, x1=0.55, x2=0.75)
+
+ggplot(aes(x=seq(0,1,0.01), y=seq(-1,1,0.01))) + 
+  geom_point(aes(x=seq(0,1,0.01), y=f_real1(x=seq(0,1,0.01)), color="red")) +
+   geom_line(aes(x=seq(0,1,0.01), y=f(par=c(0,-1,1),x=seq(0,1,0.01)), color="blue")) +
+  ggtitle("plot of the first function vs. parabola")
+
+ggplot() + 
+  geom_point(aes(x=seq(0,1,0.01), y=f_real2(x=seq(0,1,0.01)), color="red")) +
+  geom_line(aes(x=seq(0,1,0.01), y=f(pars=c(4.739983,1.328913,2.483942),x=seq(0,1,0.01)), color="blue")) +
+  ggtitle("plot of the second function vs. parabola")
+
+
+```
+
+```{r}
+
+# Actual function to estimate the minimum value of
+actual <- function(x){
+  result <- -x *(1-x)
+return(result)  
+}
+
+# The estimation function whose parameters a0,a1,a2 are unknown
+parabola <- function(par,x){
+  a0 <- par[1]
+  a1 <- par[2]
+  a2 <- par[3]
+  result <- a0+a1*x+a2*x^2
+return(result)
+}
+
+# finding the difference between the functions for three given values (x0,x1,x2)
+difference_function <- function(par,x){
+  x0 <- par[4]
+  x1 <- par[5]
+  x2 <- par[6] 
+  result <- sum((actual(x0)-parabola(par,x0))^2,(actual(x1)-parabola(par,x1))^2, (actual(x2)-parabola(par,x2))^2)
+  return(result)
+}
+
+find_parameters <- function(){
+temp <- optim(par=c(0,-1,1,0.1,0.8,0.9), fn=difference_function)
+a0 <- temp$par[1]
+a1 <- temp$par[2]
+a2 <- temp$par[3]
+return(list=c(a0=a0,a1=a1,a2=a2))
+}
+
+find_parameters()
+
+
+ggplot() + 
+  geom_point(aes(x=seq(0,1,0.01), y=actual(x=seq(0,1,0.01)))) +
+   geom_line(aes(x=seq(0,1,0.01), y=parabola(par=c(0,-1,1),x=seq(0,1,0.01)))) +
+  ggtitle("plot of the first function vs. parabola")
+
+
+```

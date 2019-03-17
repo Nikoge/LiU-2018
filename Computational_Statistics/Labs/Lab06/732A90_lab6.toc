@@ -1,0 +1,19 @@
+\contentsline {section}{Question 1: Genetic algorithm}{2}{section*.2}
+\contentsline {subsection}{1. Define the function}{2}{section*.3}
+\contentsline {subsection}{2. Define the function crossover(): for two scalars x and y it returns their ``kid'' as \(\frac {(x+y)}{2}\).}{2}{section*.4}
+\contentsline {subsection}{3. Define the function mutate() that for a scalar x returns the result of the integer division x2 mod 30. (Operation mod is denoted in R as \%\%).}{2}{section*.5}
+\contentsline {subsection}{4. Write a function that depends on the parameters maxiter and mutprob and:}{2}{section*.6}
+\contentsline {subsubsection}{(a) Plots function f in the range from 0 to 30. Do you see any maximum value?}{2}{section*.7}
+\contentsline {subsubsection}{(b) Defines an initial population for the genetic algorithm as X = (0,5,10,15\ldots {}..30).}{3}{section*.8}
+\contentsline {subsubsection}{(c) Computes vector Values that contains the function values for each population point.}{3}{section*.9}
+\contentsline {subsubsection}{(d) Performs maxiter iterations where at each iteration}{3}{section*.10}
+\contentsline {subsubsection}{(e) Add the final observations to the current plot in another colour.}{3}{section*.11}
+\contentsline {subsection}{5. Run your code with different combinations of maxiter= 10,100 and mutprob= 0.1,0.5,0.9. Observe the initial population and final population. Conclusions?}{4}{section*.12}
+\contentsline {section}{2. EM algorithm}{9}{section*.13}
+\contentsline {subsection}{1. Make a time series plot describing dependence of Z and Y versus X. Does it seem that two processes are related to each other? What can you say about the variation of the response values with respect to X?}{9}{section*.14}
+\contentsline {subsection}{2. Note that there are some missing values of Z in the data which implies problems in estimating models by maximum likelihood. Use the following model}{10}{section*.15}
+\contentsline {subsubsection}{E-step : Derive Q function}{10}{section*.16}
+\contentsline {subsubsection}{M-step}{11}{section*.17}
+\contentsline {subsection}{3. Implement this algorithm in R, use \(\lambda \) = 100 and convergence criterion ``stop if the change in \(\lambda \) is less than 0.001''. What is the optimal \(\lambda \) and how many iterations were required to compute it?}{11}{section*.18}
+\contentsline {subsection}{4. Plot E{[}Y{]} and E{[}Z{]} versus X in the same plot as Y and Z versus X. Comment whether the computed \(\lambda \) seems to be reasonable.}{12}{section*.19}
+\contentsline {section}{Appendix}{13}{section*.20}
