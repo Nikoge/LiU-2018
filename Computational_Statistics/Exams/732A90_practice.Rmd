@@ -437,3 +437,85 @@ ggplot() +
 
 
 ```
+
+
+#2018/03/19
+
+## 1.1
+
+```{r}
+
+function_f <- function(x,alpha,beta){
+  temp <- (beta^alpha * x^(alpha-1) * exp(-beta*x))/gamma(alpha)
+  return(temp)
+}
+
+function_g <- function(x, lambda){
+   temp <- lambda * exp(-lambda * x)
+  return(temp) 
+}
+
+
+x <- seq(0,1,0.01)
+y_f <- function_f(x=x, alpha = 2 ,beta = 2)
+y_g <- function_g(x=x,lambda = 1)
+
+ggplot() + geom_point(aes(x=x,y=y_f)) + geom_point(aes(x=x,y=y_g))
+
+generate_beta <- function(n, alpha, beta){
+  X = rep(NA, n)
+  M = 4
+  i = 0 ## index set to start at 0
+  while(sum(is.na(X))){
+  U = runif(1)
+  Y = rexp(1,rate=1)
+  accept <- U <= function_f(x=Y,alpha=alpha,beta=beta)/(M*function_g(x=Y, lambda=1))
+  if(accept){
+  i = i+1 ## update the index
+  X[i] <- Y
+  }
+  }
+  return(X)
+}
+
+hist(generate_beta(n=10000, beta=2, alpha=2))
+hist(rgamma(n=10000, shape=2, rate=2))
+
+
+mean(generate_beta(n=10000, beta=2, alpha=5))
+mean(rgamma(n=10000, shape=5, rate=2))
+
+
+```
+
+
+## 2
+
+```{r}
+min_function <- function(x){
+  temp <- -x * sin(10*pi*x) + 1
+    return(temp)
+}
+
+value_at_x <- function(v){
+  temp <- v[15] * 1 + v[14] * 2 + v[13] * 4 + v[12] * 8 + v[11] * 16 + v[10] * 32 + v[9] * 64 + v[8] * 128 + v[7] * 256 + v[6] * 512 + v[5] * 1024 + v[4] * 2048 + v[3] * 4096 + v[2]*8192 + v[1]* 16384
+  temp2 <- min_function(x=temp)
+  return(temp2)
+}
+
+
+
+
+
+
+x_plot <- seq(-1,2,0.001)
+y_plot <- min_function(x=x_plot)
+
+ggplot() + geom_point(aes(x=x_plot,y=y_plot)) + ggtitle("Plot of the function to be minimized")
+
+
+
+
+```
+
+
