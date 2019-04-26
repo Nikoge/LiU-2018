@@ -1,5 +1,5 @@
 set.seed(1234567890)
-spam <- read.csv2("../Lab2aBlock2/spambase.csv")
+spam <- read.csv2("spambase.csv")
 ind <- sample(1:nrow(spam))
 spam <- spam[ind,c(1:48,58)]
 h <- 1

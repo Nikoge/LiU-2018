@@ -1,0 +1,180 @@
+---
+title: "2015_attempt"
+author: "Anubhav Dikshit"
+date: "22/04/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(12345)
+library("ggplot2")
+library("dplyr")
+library("tree")
+library("neuralnet")
+```
+
+
+# Assignment 1
+
+##1
+
+```{r}
+data <- read.csv2(file="glass.csv")
+
+# 50-25-25 split
+n=nrow(data)
+set.seed(12345)
+id=sample(1:n, floor(n*0.5))
+train=data[id,]
+id1=setdiff(1:n, id)
+set.seed(12345)
+id2=sample(id1, floor(n*0.25))
+valid=data[id2,]
+id3=setdiff(id1,id2)
+test=data[id3,]
+
+tree_model <- tree::tree(Al~., data=train, split = c("deviance"))
+
+tree_prune_train <- prune.tree(tree_model, method = c("deviance"))
+tree_prune_valid <- prune.tree(tree_model, newdata = test ,method = c("deviance"))
+
+result_train <- cbind(tree_prune_train$size,tree_prune_train$dev, "Train")
+result_valid <- cbind(tree_prune_valid$size,tree_prune_valid$dev, "Valid")
+
+result <- as.data.frame(rbind(result_valid, result_train))
+colnames(result) <- c("Leaf", "Deviance", "Type")
+
+result$Leaf <- as.numeric(as.character(result$Leaf))
+result$Deviance <- as.numeric(as.character(result$Deviance))
+
+# plot of deviance vs. number of leafs
+ggplot(data = result, aes(x = Leaf, y = Deviance, colour = Type)) +
+geom_point() + geom_line() +
+ggtitle("Plot of Deviance vs. Tree Depth")
+
+
+best_model <- prune.tree(tree_model, method = c("deviance"), best = 8)
+plot(best_model)
+text(best_model)
+
+predict_test <- predict(tree_model, newdata = test)
+error <- (predict_test - test$Al)^2
+MSE <- mean(predict_test)
+MSE
+
+
+```
+
+# Assignment 2
+
+##1
+```{r}
+rm(list = ls())
+gc()
+
+data <- mtcars
+new_data <- mtcars %>% select(-c("hp", "qsec"))
+temp <- mtcars %>% select(c("hp", "qsec")) %>% scale()
+new_data <- cbind(new_data, temp)
+new_data$am <- as.factor(new_data$am)
+
+ggplot(data=new_data, aes(x=hp,y=qsec, color=am)) +
+  geom_point() +
+  ggtitle("Plot of Hp vs. Qsec coloured by am")
+
+
+```
+
+##2.
+
+```{r}
+
+n=NROW(new_data)
+set.seed(12345)
+id=sample(1:n, floor(n*0.5))
+train=new_data[id,]
+test=new_data[-id,]
+
+
+equal_priors_model <- MASS::lda(am~hp+qsec, data = train, prior=c(0.5, 0.5))
+propo_priors_model <- MASS::lda(am~hp+qsec, data = train, prior = c(0.59375,0.40625))
+
+test$predict_am_equal_model <- predict(equal_priors_model, newdata = test)$class
+test$predict_am_propo_model <- predict(propo_priors_model, newdata = test)$class
+
+equal_model_table <- table(test$am, test$predict_am_equal_model)
+names(dimnames(equal_model_table)) <- c("Actual", "Predicted")
+caret::confusionMatrix(equal_model_table)
+
+prop_model_table <- table(test$am, test$predict_am_propo_model)
+names(dimnames(equal_model_table)) <- c("Actual", "Predicted")
+caret::confusionMatrix(equal_model_table)
+
+
+
+```
+
+##3. kernel density estimation with Epanechnikov kernel
+
+Formula:
+
+$$y_p = \frac{\sum k(\frac{x-x_p}{\lambda})\cdot y}{\sum k(\frac{x-x_p}{\lambda})}$$
+$$Given~Epanechnikov~kernel:\\ k(u) =  (1-abs(u))\\where~u~is~distance~in~limit~of~-1~1$$
+
+Where 
+$$y-> actual~value \\ \lambda-> window~factor\\x_p ->point~to~be~calculated~at\\y-> actual~value~to~be~estimated$$
+
+```{r}
+#X, Xtest, lambda
+
+X <- new_data %>% filter(am == "0") %>% select(hp,qsec)
+Xtest <- new_data %>% select(hp,qsec)
+
+X2 <- new_data %>% filter(am == "1") %>% select(hp,qsec)
+Xtest2 <- new_data %>% select(hp,qsec)
+
+
+my_kernel_smooth <- function(X, lambda, am,hp_given){
+distance_hp <- abs(hp_given - X$hp) 
+distance_hp_Epanechnikov <- ifelse(distance_hp > 1, (distance_hp - floor(distance_hp)), distance_hp)
+distance_hp_Epanechnikov_lambda <- distance_hp_Epanechnikov/lambda
+distance_hp_Epanechnikov_lambda_mul_al <-  distance_hp_Epanechnikov_lambda  * am #am is zero actually for first case
+num <- sum(distance_hp_Epanechnikov_lambda_mul_al)
+den <- sum(distance_hp_Epanechnikov_lambda)
+value <- num/den
+return(value)
+}
+
+predicted_am <- NULL
+for(i in 1:NROW(Xtest)){
+tmp <- my_kernel_smooth(X=X2, lambda = 0.2, am=1, hp_given = Xtest2[i,1])
+predicted_am <- rbind(tmp, predicted_am)
+}
+
+
+
+
+
+
+
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

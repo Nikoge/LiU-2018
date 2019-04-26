@@ -1,0 +1,90 @@
+---
+title: "2018_attempt"
+author: "Anubhav Dikshit"
+date: "22/04/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(12345)
+library("ggplot2")
+library("dplyr")
+library("tree")
+library("e1071")
+library("caret")
+library("glmnet")
+library("bootstrap")
+library("kernlab")
+library("neuralnet")
+library("mboost")
+library("pamr")
+rm(list=ls())
+gc()
+```
+
+# Assignment 1
+
+##1.
+```{r}
+video_data <- read.csv("video.csv")
+video_data$codec <- as.character(video_data$codec)
+
+## Create test and training set
+n=nrow(video_data)
+id=sample(1:n, floor(n*0.8))
+train=video_data[id,]
+test=video_data[-id,]
+
+## Scaled and unscaled data
+train_unscaled <- train %>% select(-c("utime", "codec"))
+train_scaled <- train %>% select(-c("utime", "codec")) %>% scale() %>% as.matrix()
+
+## PCA
+pca_unscaled = prcomp(train_unscaled)
+pca_scaled = prcomp(train_scaled)
+
+## Contribution
+contribution_unscaled <- summary(pca_unscaled)$importance
+knitr::kable(contribution_unscaled[,1:5], caption = "Contribution of PCA axis towards varience explaination of Unscaled Data")
+
+contribution_scaled <- summary(pca_scaled)$importance
+knitr::kable(contribution_scaled[,1:10], caption = "Contribution of PCA axis towards varience explaination of Scaled Data")
+```
+
+
+##2.
+```{r}
+
+train_scaled_100 <- train %>% select(-c("utime", "codec")) %>% scale() 
+train_scaled_100 <- train_scaled_100[1:100,]
+data=t(apply(as.matrix(train_scaled_100), 1, combn, 3, prod))
+rownames(data)=1:nrow(data)
+
+x=t(data)
+y=train[1:100,2]
+mydata1=list(x=x,y=as.factor(y),geneid=as.character(1:nrow(x)), genenames=rownames(x))
+model=pamr.train(mydata1,threshold=seq(0,4, 0.1))
+set.seed(12345)
+cvmodel=pamr.cv(model,mydata1)
+pamr.plotcv(cvmodel)
+
+cvmodel$threshold[which.max(cvmodel$loglik)]
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,294 @@
+---
+title: "2016_attempt"
+author: "Anubhav Dikshit"
+date: "22/04/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(12345)
+library("ggplot2")
+library("dplyr")
+library("tree")
+library("e1071")
+library("caret")
+library("glmnet")
+library("bootstrap")
+library("kernlab")
+library("neuralnet")
+library("mboost")
+rm(list=ls())
+gc()
+```
+
+# Assignment 1
+
+##1. Plot the dependence of CW versus BD where the points are colored by Species. Are CW and BD good predictors of the Species?
+
+```{r}
+crab_data <- read.csv("australian-crabs.csv")
+
+ggplot(data=crab_data, aes(x=CW, y=BD, color=species)) +
+  geom_point() +
+  ggtitle("Plot of Carapace Width vs. Body depth")
+
+
+```
+
+Analysis: Yes these features are a good predictor of species
+
+##2. Create a Naive Bayes classifier model with Species as target and CW and BD as predictors. Present the confusion matrix and comment on the quality of the classification. Based on the assumptions of the Naive Bayes, explain why this model is not appropriate for these data
+
+```{r}
+naive_model <- e1071::naiveBayes(formula = species ~ CW + BD, data = crab_data)
+crab_data$predicted_species <- predict(naive_model, newdata = crab_data )
+
+conf_naive_crab_data <- table(crab_data$species, crab_data$predicted_species)
+names(dimnames(conf_naive_crab_data)) <- c("Actual", "Predicted")
+caret::confusionMatrix(conf_naive_crab_data)
+```
+
+Analysis: Naive Bayes assumes features are indepedent, whereas CW and BD are correleatted.
+
+
+##3. it the logistic regression now with Species as target and CW and BD as predictors and present the equation of the decision boundary. Plot the classified data and the decision boundary and comment on the quality of the classification
+
+```{r}
+
+logistic_model <- glm(formula = species ~ CW + BD, family = binomial, data = crab_data)
+summary(logistic_model)
+crab_data$predicted_species_logisitic_prob <- predict(logistic_model, newdata = crab_data, type = "response")
+crab_data$predicted_species_logisitic <- ifelse(crab_data$predicted_species_logisitic_prob > 0.50, "Orange", "Blue")
+
+conf_logistics <- table(crab_data$species, crab_data$predicted_species_logisitic)
+names(dimnames(conf_logistics)) <- c("Actual", "Predicted")
+caret::confusionMatrix(conf_logistics)
+
+slope <- coef(logistic_model)[2]/(-coef(logistic_model)[3])
+intercept <- coef(logistic_model)[1]/(-coef(logistic_model)[3]) 
+
+
+ggplot(data=crab_data, aes(x=CW, y=BD, colour = species)) +
+  geom_point() +
+  geom_abline(intercept = intercept , slope = slope, color = "black") +
+  ggtitle("Plot of CW vs. BD with decision boundary")
+
+```
+
+##4. Scale variables CW and BD and perform principal component analysis with these two variables. Present the proportion of variation explained by PC1 and PC2 and based on results from step 1 explain why the first principal component contains so much variation.
+
+```{r}
+crab_data_scaled <- crab_data %>% select(CW, BD) %>% scale() %>% as.data.frame()
+
+pca_result = prcomp(crab_data_scaled)
+
+contribution <- summary(pca_result)$importance
+knitr::kable(contribution[,1:2], caption = "Contribution of PCA axis towards varience explaination")
+
+# pca components and the viscocity
+pca_result_data = cbind(first_component = pca_result$x[,1],
+second_component = pca_result$x[,2]) %>% as.data.frame()
+# plotting the data variation and the viscocity
+ggplot(data = pca_result_data, aes(x = first_component, y = second_component)) +
+geom_point() + ggtitle("Score Plot of PCA components")
+
+
+# showing the score of PCA component
+factoextra::fviz_pca_var(pca_result,
+col.var = "contrib", # Color by contributions to the PC
+gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+repel = TRUE # Avoid text overlapping
+)
+
+```
+
+# Assignment 2
+
+##1. Fit a generalized linear model in which response is Poisson distributed, and the canonical link (log) is used for regression. Report the probabilistic expression for the fitted model (how the target is distributed based on the feature)
+
+```{r}
+rm(list=ls())
+gc()
+
+bank_data <- read.csv2("bank.csv", sep=";")
+
+model_bank <- glm(data=bank_data, formula = Visitors ~Time, family = "poisson")
+
+
+```
+
+##2. Compute a prediction band for the values of Time=12,12.05,12.1,.,13.0 by using the model from step 1 and the parametric bootstrap with B=1000. Plot the original data values and the prediction band into one figure and comment whether the band seems to give a correct forecasting. How many customers (report a range) should the bank expect at 13.00?
+
+```{r, eval=FALSE}
+
+mle=model_bank
+
+
+
+rng=function(data, mle) {
+data1=data.frame(Visitors=bank_data$Visitors, Time=bank_data$Time)
+n=NROW(bank_data)
+pred <- predict(mle, newdata = data1)
+residual <- data1$Visitors - pred
+#generate new Price
+data1$Visitors = rnorm(n, pred, sd(residual))
+return(data1)
+}
+
+# computing bootstrap samples
+conf.fun <- function(data){
+model <- glm(data=bank_data, formula = Visitors ~Time, family = "poisson")
+final_fit_boot <- predict(model, newdata = bank_data)
+return(final_fit_boot)
+}
+
+# computing bootstrap samples
+pred.fun <- function(data){
+model <- glm(data=data, formula = Visitors ~Time, family = "poisson")
+final_fit_boot <- predict(model, newdata = bank_data)
+final_fit <- rnorm(n = length(final_fit_boot), mean = final_fit_boot, sd=sd(residuals(mle)))
+return(final_fit)
+}
+
+
+conf_para = boot::boot(bank_data, statistic=conf.fun, R=1000, mle=mle, ran.gen=rng, sim="parametric")
+pred_para = boot::boot(bank_data, statistic=pred.fun, R=1000, mle=mle, ran.gen=rng, sim="parametric")
+e1 <- envelope(conf_para, level = 0.95)
+e2 <- envelope(pred_para, level = 0.95)
+
+# puring the tree for leaf size of 3
+state_cv_tree_purned <- prune.tree(state_tree_regression, best = 3)
+predict_for_ci <- predict(state_cv_tree_purned, state_data)
+data_for_ci_para <- cbind(upper_bound = e1$point[1,],
+lower_bound = e1$point[2,],
+upper_bound_pred = e2$point[1,],
+lower_bound_pred = e2$point[2,],
+EX = state_data$EX,
+MET = state_data$MET,
+predicted_value = predict_for_ci) %>% as.data.frame()
+ggplot(data=data_for_ci_para, aes(x = MET, y = EX)) +
+geom_point(aes(x = MET,y=EX)) +
+geom_line(aes(x = MET, y=predicted_value), colour="blue") +
+geom_ribbon(aes(x = MET, ymin=lower_bound, ymax=upper_bound),alpha = 0.3) +
+geom_ribbon(aes(x = MET, ymin=lower_bound_pred, ymax=upper_bound_pred), alpha = 0.3) +
+ggtitle("EX value along with 95% Confidence(dark grey) and Prediction band")
+
+```
+
+
+# Assignment 3
+
+```{r}
+rm(list=ls())
+gc()
+set.seed(1234567890)
+
+
+spam_data <- read.csv("spam.csv")
+spam_data$type <- as.factor(spam_data$type)
+
+# 50-50 split
+n=nrow(spam_data)
+set.seed(12345)
+id=sample(1:n, floor(n*0.5))
+train=spam_data[id,]
+test=spam_data[-id,]
+
+
+model_1 <- kernlab::ksvm(type~., data=spam_data, kernel="rbfdot", kpar=list(sigma=0.05), C=1, cross = 2)
+conf_model_1 <- table(spam_data[,58], predict(model_1, spam_data[,-58]))
+names(dimnames(conf_model_1)) <- c("Actual Test", "Predicted Test")
+caret::confusionMatrix(conf_model_1)
+
+model_2 <- kernlab::ksvm(type~., data=spam_data, kernel="rbfdot", kpar=list(sigma=0.05), C=10, cross = 2)
+conf_model_2 <- table(spam_data[,58], predict(model_2, spam_data[,-58]))
+names(dimnames(conf_model_2)) <- c("Actual Test", "Predicted Test")
+caret::confusionMatrix(conf_model_2)
+
+model_3 <- kernlab::ksvm(type~., data=spam_data, kernel="rbfdot", kpar=list(sigma=0.05), C=100, cross = 2)
+conf_model_3 <- table(spam_data[,58], predict(model_3, spam_data[,-58]))
+names(dimnames(conf_model_3)) <- c("Actual Test", "Predicted Test")
+caret::confusionMatrix(conf_model_3)
+
+
+# model comparsion
+#model with C = 1, accuracy = 96.02%
+#model with C = 10, accuracy = 98.30%
+#model with C = 100, accuracy = 99.26%
+
+
+```
+
+## Neural Network
+
+```{r}
+set.seed(1234567890)
+Var <- runif(50, 0, 10)
+tr <- data.frame(Var, Sin=sin(Var))
+tr1 <- tr[1:25,] # Fold 1
+tr2 <- tr[26:50,] # Fold 2
+
+weights <- runif(20,-1,1)
+
+model <- neuralnet(Sin~Var, data=tr1, threshold = 0.001, hidden = c(10))
+
+predicted_y <- predict(model, tr2)
+
+test <- cbind(tr2, predicted_y)
+
+
+ggplot() + 
+  geom_line(data =test, aes(x=Var, y=Sin, color="Actual Value")) +
+  geom_point(data =test, aes(x=Var, y=predicted_y, color="Predicted")) +
+  ggtitle("Predicted vs. Actual")
+
+
+
+
+
+```
+
+
+## Ensemble Model
+
+```{r}
+bf <- read.csv2("bodyfatregression.csv")
+
+set.seed(1234567890)
+m <- blackboost(Bodyfat_percent~Waist_cm+Weight_kg, data=bf) 
+mstop(m)
+cvf <- cv(model.weights(m),type="kfold") 
+cvm <- cvrisk(m, folds=cvf, grid=1:100) 
+plot(cvm)
+mstop(cvm)
+
+```
+
+
+
+## estimate error
+
+```{r}
+n=NROW(bf)
+set.seed(1234567890)
+id=sample(1:n, floor(n*0.66))
+train=bf[id,]
+test=bf[-id,]
+
+
+model <- mboost::blackboost(Bodyfat_percent~Waist_cm+Weight_kg, data=train, control=boost_control(mstop=mstop(cvm)))
+
+test$predicted_body_fat <- predict(model, test)
+  
+test$error <- (test$Bodyfat_percent - test$predicted_body_fat)^2
+MSE <- sum(test$error)
+MSE
+
+```
+
+
+
+
+
+

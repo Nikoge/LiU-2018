@@ -1,0 +1,104 @@
+---
+title: "2016_attempt"
+author: "Anubhav Dikshit"
+date: "22/04/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(12345)
+library("ggplot2")
+library("dplyr")
+library("tree")
+```
+
+
+##1. Divide the dataset into training and test sets (80/20), use seed 12345. Fit a decision tree with default settings to the training data and plot the resulting tree. Finally, remove the second observation from the training data, fit the tree model again and plot the tree. Compare the trees and comment why the tree structure changed so much although only one observation is deleted.
+
+```{r}
+data <- read.csv(file="crx.csv")
+data$Class <- as.factor(data$Class)
+# 8-20 split
+n=nrow(data)
+set.seed(12345)
+id=sample(1:n, floor(n*0.8))
+train=data[id,]
+test=data[-id,]
+
+```
+
+### default tree
+```{r}
+tree_deviance <- tree::tree(Class~., data=train)
+# Visualize the decision tree with rpart.plot
+plot(tree_deviance)
+text(tree_deviance)
+```
+
+### tree with second observation removed
+```{r}
+temp_data <- data[c(1, 3:NROW(data)),]
+tree_deviance_new <- tree::tree(Class~., data=temp_data)
+# Visualize the decision tree with rpart.plot
+plot(tree_deviance_new)
+text(tree_deviance_new)
+```
+
+Analysis: The tree looks so different becuase decision trees are prone to be very sensitive for data changes.
+
+
+##2. Prune the tree fitted to the training data by using the cross-validation. Provide a cross-validation plot and comment how many leaves the optimal tree should have. Which variables were selected by the tree?
+
+```{r}
+set.seed(12345)
+cv_tree <- cv.tree(tree_deviance, FUN = prune.tree, K = 10)
+df_result <- as.data.frame(cbind(size = cv_tree$size, dev = cv_tree$dev))
+# puring the tree for leaf size of 2
+best_tree <- prune.tree(tree_deviance, best = 2)
+plot(best_tree, main="Pruned Tree for the given dataset")
+text(best_tree)
+
+
+ggplot(df_result, aes(x = as.factor(size), y = dev)) + 
+  geom_point() + 
+geom_path() + 
+ggtitle("Plot of deviance vs. nodes")
+
+
+```
+
+Analysis: The feature selected is A9
+
+##3. Fit a GAM model with features A3 and A9, comment on the choice of family parameter. Why is it pointless to include a spline component of A9? Provide an equation of the fitted model. Comment which components are significant. Plot the spline component of A3 and interpret the plot.
+
+```{r}
+set.seed(12345)
+# using family = binomial for classfication
+gam_model <- mgcv::gam(data=train, formula = Class~s(A3)+A9, family=binomial)
+summary(gam_model)
+plot(gam_model)
+
+test$Predicted_Class_probability <- predict(object = gam_model, newdata=test, type = "response")
+
+```
+
+Analysis: Class = A9 + f(A3), where f is a smoothing function in our case determined by REML.
+
+
+##4. Use the following error function to compute the test error for the GAM and tree models: 𝐸=Σ𝑌𝑖log𝑝̂𝑖+(1−𝑌𝑖)log(1−𝑝̂𝑖)𝑖, where 𝑌𝑖 are target values and 𝑝̂𝑖 are predicted probabilities of 𝑌𝑖=1. Which model is the best according to this criterion? Why is this criterion sometimes more reasonable to use than the misclassification rate?
+
+```{r}
+
+test$error_rate = as.numeric(test$Class) * log(test$Predicted_Class_probability) + (1 - as.numeric(test$Class)) * log(1-test$Predicted_Class_probability)
+
+sum(test$error_rate)
+
+```
+
+
+
+
+
+
+

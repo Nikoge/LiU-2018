@@ -1,0 +1,416 @@
+---
+title: "Lab 1: SQL-Queries and Views"
+author: "Anubhav Dikshit(anudi287) and Sae Won Jun (saeju204)"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. List all employees, i.e. all tuples in the jbemployee relation.
+
+```{r, eval=FALSE}
+SELECT name
+  FROM jbemployee;
+```
+
+```{r, eval=FALSE}
++--------------------+
+| name               |
++--------------------+
+| Ross, Stanley      |
+| Ross, Stuart       |
+| Edwards, Peter     |
+| Thompson, Bob      |
+| Smythe, Carol      |
+| Hayes, Evelyn      |
+| Evans, Michael     |
+| Raveen, Lemont     |
+| James, Mary        |
+| Williams, Judy     |
+| Thomas, Tom        |
+| Jones, Tim         |
+| Bullock, J.D.      |
+| Collins, Joanne    |
+| Brunet, Paul C.    |
+| Schmidt, Herman    |
+| Iwano, Masahiro    |
+| Smith, Paul        |
+| Onstad, Richard    |
+| Zugnoni, Arthur A. |
+| Choy, Wanda        |
+| Wallace, Maggie J. |
+| Bailey, Chas M.    |
+| Bono, Sonny        |
+| Schwarz, Jason B.  |
++--------------------+
+
+25 rows in set (0,00 sec)
+```
+
+## 2. List the name of all departments in alphabetical order. Note: by "name" we mean the name attribute for all tuples in the jbdept relation.
+
+```{r, eval=FALSE}
+SELECT name 
+FROM jbdept 
+ORDER BY name;
+```
+
+```{r eval=FALSE}
++------------------+
+| name             |
++------------------+
+| Bargain          |
+| Book             |
+| Candy            |
+| Children's       |
+| Children's       |
+| Furniture        |
+| Giftwrap         |
+| Jewelry          |
+| Junior Miss      |
+| Junior's         |
+| Linens           |
+| Major Appliances |
+| Men's            |
+| Sportswear       |
+| Stationary       |
+| Toys             |
+| Women's          |
+| Women's          |
+| Women's          |
++------------------+
+19 rows in set (0,00 sec)
+```
+
+
+## 3. What parts are not in store, i.e. qoh = 0? (qoh = Quantity On Hand)
+
+```{r eval=FALSE}
+SELECT name
+FROM jbparts 
+WHERE jbparts.qoh=0;
+```
+
+```{r eval=FALSE}
++-------------------+
+| name              |
++-------------------+
+| card reader       |
+| card punch        |
+| paper tape reader |
+| paper tape punch  |
++-------------------+
+4 rows in set (0,00 sec)
+```
+
+## 4. Which employees have a salary between 9000 (included) and 10000 (included)?
+
+```{r, eval=FALSE}
+SELECT name 
+FROM jbemployee
+WHERE jbemployee.salary BETWEEN 9000 AND 10000;
+```
+
+```{r eval=FALSE}
++----------------+
+| name           |
++----------------+
+| Edwards, Peter |
+| Smythe, Carol  |
+| Williams, Judy |
+| Thomas, Tom    |
++----------------+
+4 rows in set (0,00 sec)
+```
+
+
+## 5. What was the age of each employee when they started working (startyear)?
+
+```{r, eval=FALSE}
+SELECT name, (jbemployee.startyear - jbemployee.birthyear) as age  
+FROM jbemployee;
+```
+
+
+```{r eval=FALSE}
++------+-------------+------+
+| name               | age  |
++------+-------------+------+
+| Ross, Stanley      |   18 |
+| Ross, Stuart       |    1 |
+| Edwards, Peter     |   30 |
+| Thompson, Bob      |   40 |
+| Smythe, Carol      |   38 |
+| Hayes, Evelyn      |   32 |
+| Evans, Michael     |   22 |
+| Raveen, Lemont     |   24 |
+| James, Mary        |   49 |
+| Williams, Judy     |   34 |
+| Thomas, Tom        |   21 |
+| Jones, Tim         |   20 |
+| Bullock, J.D.      |    0 |
+| Collins, Joanne    |   21 |
+| Brunet, Paul C.    |   21 |
+| Schmidt, Herman    |   20 |
+| Iwano, Masahiro    |   26 |
+| Smith, Paul        |   21 |
+| Onstad, Richard    |   19 |
+| Zugnoni, Arthur A. |   21 |
+| Choy, Wanda        |   23 |
+| Wallace, Maggie J. |   19 |
+| Bailey, Chas M.    |   19 |
+| Bono, Sonny        |   24 |
+| Schwarz, Jason B.  |   15 |
++------+--------------------+
+25 rows in set (0,00 sec)
+```
+
+
+## 6. Which employees have a last name ending with "son"?
+Here, we tried two approachs
+6-1)
+```{r eval=FALSE}
+SELECT name
+FROM jbemployee
+WHERE name LIKE '%son,%'
+```
+
+```{r eval=FALSE}
+
++---------------+
+| name          |
++---------------+
+| Thompson, Bob |
++---------------+
+```
+
+6-2)
+```{r eval=FALSE}
+SELECT *
+FROM jbemployee 
+WHERE jbemployee.name LIKE '%son';
+```
+
+## 7. Which items (note items, not parts) have been delivered by a supplier called Fisher-Price? Formulate this query using a subquery in the where-clause.
+
+```{r, eval=FALSE}
+SELECT * 
+FROM jbitem AS itm 
+WHERE itm.supplier = (SELECT sup.id 
+                      FROM jbsupplier as sup 
+                      WHERE sup.name = 'Fisher-Price');
+```
+
+```{r eval=FALSE}
++-----+-----------------+------+-------+------+----------+
+| id  | name            | dept | price | qoh  | supplier |
++-----+-----------------+------+-------+------+----------+
+|  43 | Maze            |   49 |   325 |  200 |       89 |
+| 107 | The 'Feel' Book |   35 |   225 |  225 |       89 |
+| 119 | Squeeze Ball    |   49 |   250 |  400 |       89 |
++-----+-----------------+------+-------+------+----------+
+3 rows in set (0,00 sec)
+```
+
+
+## 8. Formulate the same query as above, but without a subquery.
+
+```{r eval=FALSE}
+SELECT itm.id, itm.name, itm.dept, itm.price, itm.qoh, itm.supplier 
+FROM jbitem AS itm, jbsupplier AS sup 
+WHERE itm.supplier = sup.id AND sup.name = 'Fisher-Price';
+```
+
+```{r eval=FALSE}
++-----+-----------------+------+-------+------+----------+
+| id  | name            | dept | price | qoh  | supplier |
++-----+-----------------+------+-------+------+----------+
+|  43 | Maze            |   49 |   325 |  200 |       89 |
+| 107 | The 'Feel' Book |   35 |   225 |  225 |       89 |
+| 119 | Squeeze Ball    |   49 |   250 |  400 |       89 |
++-----+-----------------+------+-------+------+----------+
+3 rows in set (0,16 sec)
+```
+
+
+## 9. Show all cities that have suppliers located in them. Formulate this query using a subquery in the where-clause.
+
+```{r eval=FALSE}
+SELECT * FROM jbcity AS cty 
+WHERE cty.id IN (SELECT sup.city 
+                 FROM jbsupplier AS sup);
+```
+
+```{r eval=FALSE}
++-----+----------------+-------+
+| id  | name           | state |
++-----+----------------+-------+
+|  10 | Amherst        | Mass  |
+|  21 | Boston         | Mass  |
+| 100 | New York       | NY    |
+| 106 | White Plains   | Neb   |
+| 118 | Hickville      | Okla  |
+| 303 | Atlanta        | Ga    |
+| 537 | Madison        | Wisc  |
+| 609 | Paxton         | Ill   |
+| 752 | Dallas         | Tex   |
+| 802 | Denver         | Colo  |
+| 841 | Salt Lake City | Utah  |
+| 900 | Los Angeles    | Calif |
+| 921 | San Diego      | Calif |
+| 941 | San Francisco  | Calif |
+| 981 | Seattle        | Wash  |
++-----+----------------+-------+
+15 rows in set (0,00 sec)
+```
+
+## 10. What is the name and color of the parts that are heavier than a card reader? Formulate this query using a subquery in the where-clause. (The SQL query must not contain the weight as a constant.)
+
+```{r eval=FALSE}
+SELECT prts.name, prts.color 
+FROM jbparts AS prts 
+WHERE prts.weight > (SELECT prts.weight 
+                     FROM jbparts AS prts 
+                     WHERE prts.name = 'card reader');
+```
+
+```{r eval=FALSE}
++--------------+--------+
+| name         | color  |
++--------------+--------+
+| disk drive   | black  |
+| tape drive   | black  |
+| line printer | yellow |
+| card punch   | gray   |
++--------------+--------+
+4 rows in set (0,00 sec)
+```
+
+## 11. Formulate the same query as above, but without a subquery. (The query must not contain the weight as a constant.)
+
+```{r eval=FALSE}
+SELECT prts.name, prts.color 
+FROM jbparts AS prts, jbparts AS prts2 
+WHERE prts2.name = 'card reader' AND prts.weight > prts2.weight;
+```
+
+```{r eval=FALSE}
++--------------+--------+
+| name         | color  |
++--------------+--------+
+| disk drive   | black  |
+| tape drive   | black  |
+| line printer | yellow |
+| card punch   | gray   |
++--------------+--------+
+4 rows in set (0,00 sec)
+```
+
+## 12. What is the average weight of black parts?
+
+```{r eval=FALSE}
+SELECT avg(prts.weight) AS avg_weight 
+FROM jbparts AS prts WHERE prts.color = 'black';
+```
+
+```{r eval=FALSE}
++------------+
+| avg_weight |
++------------+
+|   347.2500 |
++------------+
+1 row in set (0,00 sec)
+```
+
+## 13. What is the total weight of all parts that each supplier in Massachusetts ("Mass") has delivered? Retrieve the name and the total weight for each of these suppliers. Do not forget to take the quantity of delivered parts into account. Note that one row should be returned for each supplier.
+
+```{r eval=FALSE}
+SELECT sup.name, SUM(prts.weight*sp.quan) AS total_weight 
+FROM jb.jbparts AS prts, jbsupplier AS sup, jbsupply AS sp, jbcity AS cty 
+WHERE prts.id = sp.part AND sup.id = sp.supplier 
+AND sup.city = cty.id AND cty.state = 'Mass'
+GROUP BY sup.id;
+```
+
+```{r eval=FALSE}
++--------------+--------------+
+| name         | total_weight |
++--------------+--------------+
+| Fisher-Price |      1135000 |
+| DEC          |         3120 |
++--------------+--------------+
+2 rows in set (0,00 sec)
+```
+
+## 14. Create a new relation (a table), with the same attributes as the table items using the CREATE TABLE syntax where you define every attribute explicitly (i.e. not as a copy of another table). Then fill the table with all items that cost less than the average price for items. Remember to define primary and foreign keys in your table!
+
+```{r eval=FALSE}
+CREATE TABLE jbitem_replica
+    (
+    `id` INT(11),
+    `name` VARCHAR(20),
+    `price` INT(11),
+    `qoh` INT(10) UNSIGNED,
+    `dept` INT(11),
+    `supplier` INT(11),
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`dept`) REFERENCES `jbdept`(`id`),
+    FOREIGN KEY (`supplier`) REFERENCES `jbsupplier`(`id`)
+    );
+```
+
+```{r eval=FALSE}
+Query OK, 0 rows affected (0,47 sec)
+```
+
+```{r eval=FALSE}
+INSERT INTO jb.jbitem_replica(`id`, `name`, `price`, `qoh`, `dept`, `supplier`)
+    SELECT itm.id, itm.name, itm.price, itm.qoh, itm.dept, itm.supplier
+    FROM jb.jbitem AS itm 
+    WHERE (itm.price) < (SELECT AVG(jb.jbitem.price) FROM jb.jbitem);
+```
+
+```{r eval=FALSE}
+Query OK, 14 rows affected (0,14 sec)
+Records: 14  Duplicates: 0  Warnings: 0
+```
+
+```{r eval=FALSE}
+SELECT * 
+FROM jb.jbitem_replica;
+```
+
+```{r eval=FALSE}
++-----+-----------------+-------+------+------+----------+
+| id  | name            | price | qoh  | dept | supplier |
++-----+-----------------+-------+------+------+----------+
+|  11 | Wash Cloth      |    75 |  575 |    1 |      213 |
+|  19 | Bellbottoms     |   450 |  600 |   43 |       33 |
+|  21 | ABC Blocks      |   198 |  405 |    1 |      125 |
+|  23 | 1 lb Box        |   215 |  100 |   10 |       42 |
+|  25 | 2 lb Box, Mix   |   450 |   75 |   10 |       42 |
+|  26 | Earrings        |  1000 |   20 |   14 |      199 |
+|  43 | Maze            |   325 |  200 |   49 |       89 |
+| 106 | Clock Book      |   198 |  150 |   49 |      125 |
+| 107 | The 'Feel' Book |   225 |  225 |   35 |       89 |
+| 118 | Towels, Bath    |   250 | 1000 |   26 |      213 |
+| 119 | Squeeze Ball    |   250 |  400 |   49 |       89 |
+| 120 | Twin Sheet      |   800 |  750 |   26 |      213 |
+| 165 | Jean            |   825 |  500 |   65 |       33 |
+| 258 | Shirt           |   650 | 1200 |   58 |       33 |
++-----+-----------------+-------+------+------+----------+
+14 rows in set (0,00 sec)
+```
+
+
+
+
+
+
+
+
+
+

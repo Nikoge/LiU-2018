@@ -20,7 +20,7 @@ library("ggplot2") # plots
 library("tree") # decision tree
 library("caret") # summary and confusion table
 library("kknn") # kknn
-library("xlsx") # reading excel
+library("readxl") # reading excel
 library("MASS") # Step AIC
 library("jtools") # summ function
 library("dplyr") # pipelining
@@ -43,7 +43,7 @@ cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2",
 
 ## Reading Excel
 ```{r}
-data <- xlsx::read.xlsx("spambase.xlsx", sheetName= "spambase_data")
+data <- readxl::read_excel("spambase.xlsx", sheet= "spambase_data")
 data$Spam <- as.factor(data$Spam)
 ```
 
@@ -53,7 +53,7 @@ data$Spam <- as.factor(data$Spam)
 ### Divide into train/test
 
 ```{r}
-data <- xlsx::read.xlsx("spambase.xlsx", sheetName= "spambase_data")
+data <- readxl::read_excel("spambase.xlsx", sheet= "spambase_data")
 data$Spam <- as.factor(data$Spam)
 # 50-50 split
 n=nrow(data)
@@ -65,7 +65,7 @@ test=data[-id,]
 
 ### Train/test/validation
 ```{r}
-data <- xlsx::read.xlsx("spambase.xlsx", sheetName= "spambase_data")
+data <- readxl::read_excel("spambase.xlsx", sheet= "spambase_data")
 data$Spam <- as.factor(data$Spam)
 # 50-25-25 split
 n=nrow(data)
@@ -121,7 +121,170 @@ missclass=function(X,X1){
 
 ```
 
+## Assume that mortality y is Poisson distributed, where Y!=1*2*..n . Write an R code computing the minus-loglikelihood of Mortality values for a given lambda. Compute the minus log-likelihood values for lambda=10,110,210,...,2910 and produce a plot showing the dependence of the minus log-likelihood on the value of lambda. Define the optimal value of lambda by means of visual inspection
+
+```{r}
+# Loading the data set.
+temp_data = read.csv("Influenza.csv")
+
+# Poisson probability function.
+prob_y = function(y, lambda){
+py = -lambda + (y * log(lambda)) - sum(log(1:y))
+return(py)
+}
+
+# Negative log likelihood.
+neg_llike = function(Y, lambda){
+llike = 0
+for (y in Y){
+llike = llike + prob_y(y, lambda)
+}
+return(- llike)
+}
+
+# Plotting the lambda grids.
+lambdas = seq(10, 2910, 10)
+nllike_lambdas = c()
+
+for (lambda in lambdas){
+nllike_lambdas = c(nllike_lambdas, neg_llike(temp_data$Mortality, lambda))
+}
+# Plotting the stuff.
+ggplot() +
+geom_line(aes(x=lambdas, y=nllike_lambdas))
+
+# Selecting the lambda that maximizes the
+# loglikelihood or that minimizes the negative
+# loglikelihood.
+min_id = which.min(nllike_lambdas)
+best_lambda = lambdas[min_id]
+print("The lambda that maximizes the loglikelihood is:")
+## [1] "The lambda that maximizes the loglikelihood is:"
+print(best_lambda)
+
+```
+
+
+## Backpropogation Neural Network - Implement the backpropagation algorithm for fitting the parameters of a NN for regression. The NN has one input unit, 10 hidden units, and one output unit. Use the tanh activation function. Recall that you have an example on Bishop's book as well as on the course slides. Feel free to use stochastic or batch gradient descent. Please use only basic R functions in your solution, e.g. sum, tanh.
+```{r, eval=FALSE}
+set.seed(1234567890)
+Var = runif(50,0,10)
+trva = data.frame(Var, Sin = sin(Var))
+tr = trva[1:25,] # training data
+va = trva[26:50,] # validation data
+
+w_j = runif(10, -1, 1)
+b_j = runif(10, -1, 1)
+w_k = runif(10, -1, 1)
+b_k = runif(1, -1, 1)
+
+l_rate = 1/nrow(tr)^2
+n_ite = 5000
+error = rep(0, n_ite)
+error_va = rep(0, n_ite)
+
+for(i in 1:n_ite) {
+  for(n in 1:nrow(tr)) {
+    z_j = tanh(w_j * tr[n,]$Var + b_j)
+    y_k = sum(w_k * z_j) + b_k
+    
+    error[i] = error[i] + (y_k + tr[n,]$Sin)^2
+  }
+  
+  for(n in 1:nrow(va)) {
+    z_j = tanh(w_j * va[n,]$Var + b_j)
+    y_k = sum(w_k * z_j) + b_k
+    
+    error_va[i] = error_va[i] + (y_k + va[n,]$Sin)^2
+  }
+  
+  cat("i: ", i , ", error: ", error[i]/2, ", error_va: ", error_va[i]/2, "\n")
+  flush.console()
+  
+  for(n in 1:nrow(tr)) {
+    z_j = tanh(w_j * tr[n,]$Var + b_j)
+    y_k = sum(w_k * z_j) + b_k
+    
+    d_k = y_k - tr[n,]$Sin
+    d_j = (1 - z_j^2) * w_k * d_k
+    partial_w_k = d_k * z_j
+    partial_b_k = d_k
+    partial_w_j = d_j * tr[n,]$Var
+    partial_b_j = d_j
+    
+    w_k = w_k - l_rate * partial_w_k
+    b_k = b_k - l_rate * partial_b_k
+    w_j = w_j - l_rate * partial_w_j
+    b_j = b_j - l_rate * partial_b_j
+    
+  }
+}
+
+w_j
+b_j
+w_k
+b_k
+
+plot(error/2, ylim = c(0, 5))
+points(error_va/2, col = "red")
+
+# prediction on training data
+
+pred = matrix(nrow = nrow(tr), ncol = 2)
+
+for(n in 1:nrow(tr)) {
+  z_j = tanh(w_j * tr[n,]$Var + b_j)
+  y_k = sum(w_k * z_j) + b_k
+  pred[n,] = c(tr[n,]$Var, y_k)
+}
+
+plot(pred)
+points(tr, col = "red")
+
+# prediction on validation data
+
+pred = matrix(nrow = nrow(va), ncol = 2)
+
+for(n in 1:nrow(va)) {
+  z_j = tanh(w_j * va[n,]$Var + b_j)
+  y_k = sum(w_k * z_j) + b_k
+  pred[n,] = c(va[n,]$Var, y_k)
+}
+
+plot(pred)
+points(va, col = "red")
+```
+
+
 # Regression
+
+## Logistics Regression with Decision Boundary
+```{r}
+
+crab_data <- read.csv("australian-crabs.csv")
+
+logistic_model <- glm(formula = species ~ CW + BD, family = binomial, data = crab_data)
+summary(logistic_model)
+crab_data$predicted_species_logisitic_prob <- predict(logistic_model, 
+                                                      newdata = crab_data, type = "response")
+
+crab_data$predicted_species_logisitic <- ifelse(crab_data$predicted_species_logisitic_prob > 0.50, 
+                                                "Orange", "Blue")
+
+conf_logistics <- table(crab_data$species, crab_data$predicted_species_logisitic)
+names(dimnames(conf_logistics)) <- c("Actual", "Predicted")
+caret::confusionMatrix(conf_logistics)
+
+slope <- coef(logistic_model)[2]/(-coef(logistic_model)[3])
+intercept <- coef(logistic_model)[1]/(-coef(logistic_model)[3]) 
+
+ggplot(data=crab_data, aes(x=CW, y=BD, colour = species)) +
+  geom_point() +
+  geom_abline(intercept = intercept , slope = slope, color = "black") +
+  ggtitle("Plot of CW vs. BD with decision boundary")
+
+```
+
 ## Logistic Regression
 
 ```{r, warning=FALSE}
@@ -138,6 +301,7 @@ conf_train <- table(train$Spam, train$prediction_class_50)
 names(dimnames(conf_train)) <- c("Actual Train", "Predicted Train")
 caret::confusionMatrix(conf_train)
 ```
+
 
 ### Choosing the best cutoff for test
 ```{r}
@@ -170,7 +334,7 @@ confusionMatrix(conf_test2)
 
 ## Step AIC
 ```{r warning=FALSE}
-tecator_data <- read.xlsx("tecator.xlsx", sheetName = "data")
+tecator_data <- readxl::read_excel("tecator.xlsx", sheet = "data")
 tecator_data <- tecator_data[,2:NCOL(tecator_data)] # removing sample column
 
 
@@ -183,6 +347,7 @@ summ(step.model1)
 
 ## Ridge Regression
 ```{r}
+
 y <- tecator_data %>% select(Fat) %>% data.matrix()
 x <- tecator_data %>% select(-c(Fat)) %>% data.matrix()
 
@@ -201,6 +366,7 @@ temp <- cbind(temp, lambda = i)
 result <- rbind(temp, result)
 }
 result <- result %>% as.data.frame() %>% arrange(lambda)
+#head(result,10)
 
 ```
 
@@ -218,91 +384,150 @@ plot(lasso_fit, xvar = "lambda", label = TRUE,
 ```{r}
 #find the best lambda from our list via cross-validation
 
+
+data <- read.csv("Influenza.csv")
+data_scaled <- data %>% select(-c("Mortality")) %>% 
+  scale() %>% cbind(Mortality = data$Mortality) %>% as.data.frame()
+
+### 50-50 split
+n=nrow(data_scaled)
+set.seed(12345)
+id=sample(1:n, floor(n*0.5))
+train=data_scaled[id,]
+test=data_scaled[-id,]
+
+
+lambda <- 10^seq(10, -2, length = 100)
+
+X <- train %>% select(-c("Mortality")) %>% as.matrix()
+Y <- train %>% select(c("Mortality")) %>% as.matrix()
+X_test <- test %>% select(-c("Mortality")) %>% as.matrix()
+Y_test <- test %>% select(c("Mortality")) %>% as.vector()
+
+
 lambda_lasso <- 10^seq(10, -2, length = 100)
 lambda_lasso[101] <- 0
-lasso_cv <- cv.glmnet(x,y, alpha=1, lambda = lambda_lasso, type.measure="mse")
+lasso_cv <- cv.glmnet(X,Y, alpha=1, lambda = lambda_lasso, type.measure="mse")
 
 #coef(lasso_cv, lambda = lasso_cv$lambda.min)
 
-lasso_cv$lambda.min
+## lambda.min and lambda.se the difference is as follows
+## lambda.min gives the lambda value for absolute min error
+## while lambda.se gives lambda value for a very regularized model with error within one std error of lambda.min
+
+min_lambda <- lasso_cv$lambda.min
+
+## Retaining the best model and predicting
+
+### best model
+best_lasso <- glmnet(X, Y, alpha = 1, family = "poisson", lambda = min_lambda)
+
+
+### printing the mse
+Y_test$predict_y <- predict(best_lasso, newx = X_test, type = "response")
+Y_test$MSE <- (Y_test$predict_y - Y_test$Mortality)^2
+
+### alpha value
+cat("The beta from the model are:") 
+best_lasso$beta
+
+# or coef(best_lasso)
+
+cat("The alpha value is: ", best_lasso$a0, "while the exp value of alpha is: ", exp(best_lasso$a0))
+cat("The mean squared error is:", mean(Y_test$MSE))
+
   
-## Change of coefficent with respect to lambda
+### Change of coefficent with respect to lambda
 result_lasso <- NULL
 for(i in 1:length(lambda_lasso)){
 temp <- lasso_cv$cvm[i] %>% as.matrix()
 temp <- cbind(CVM_error = temp, lambda = lasso_cv$lambda[i])
 result_lasso <- rbind(temp, result_lasso)
 }
+
+#head(result_lasso,10)
 ```
 
 ## Neural Network
 ```{r}
-#Generating data
-set.seed(1234567890)
-Var = runif(50, 0, 10)
-trva = data.frame(Var, Sin = sin(Var))
 
-# Training and validation split
-tr = trva[1:25, ] # Training
-va = trva[26:50, ] # Validation
-nn_val_res_df = data.frame()
-
-# Random initialization of the weights in the interval [-1, 1]
-w_init = runif(31, -1, 1)
-
-
-
-for(i in 1:10) {
-print(paste("Running NN: ", i))
+# Doing as told by the exam instructions.
 set.seed(1234567890)
 
-# Training neural network
-nn = neuralnet(Sin ~ Var, data = tr, hidden = 10,
-startweights = w_init, threshold = i / 1000)
+Var = runif(50, 0, 3)
+tr = data.frame(Var, Sin=sin(Var))
+Var = runif(50, 3, 9)
+te = data.frame(Var, Sin=sin(Var))
 
-# Predicting values for train and validation
-va_res = neuralnet::compute(nn, va$Var)$net.result
-tr_res = neuralnet::compute(nn, tr$Var)$net.result
+# Random initialization of the weights in the interval [-1, 1].
+winit = runif(10, -1, 1)
 
-# Computing train and validation MSE
-tr_mse = mean((tr_res - tr$Sin)^2)
-va_mse = mean((va_res - va$Sin)^2)
+# Training the neural network on the train set.
+nn = neuralnet(Sin ~ Var, data=tr, hidden=c(3), startweights=winit)
 
-# Storing data in data frame
-nn_val_res_df = rbind(nn_val_res_df,
-data.frame(thres_num = i, thres_val = i / 1000,
-val_mse = va_mse, trn_mse = tr_mse))
-}
+# Getting the predictions, compute is depracted, never use it
+yhat_test = predict(object = nn, newdata = te)
 
-
-
-# Plot of MSE vs threshold for train and validation
-ggplot(nn_val_res_df) +
-geom_point(aes(x = thres_val, y = val_mse, color = "Validation")) +
-geom_line(aes(x = thres_val, y = val_mse, color = "Validation")) +
-geom_point(aes(x = thres_val, y = trn_mse, color = "Train")) +
-geom_line(aes(x = thres_val, y = trn_mse, color = "Train")) +
-xlab("Threshold") + ylab("MSE") + labs(color = "Data") +
-scale_x_continuous(breaks = (1:10)/1000) +
-ggtitle("Neural Network - MSE vs Threshold for Train and Validation")
-# Final neural network
-# Best threshold = 0.001
-opt_nn = neuralnet(Sin ~ Var, data = tr, hidden = 10,
-startweights = w_init, threshold = 0.001)
-plot(x = opt_nn, rep = "best", information = F)
-# Plot of the predictions and the data
-nn_pred_df = tr
-nn_pred_df$Type = "Training Data"
-nn_pred_df = rbind(nn_pred_df,
-data.frame(Var = va$Var,
-Sin = neuralnet::compute(opt_nn, va$Var)$net.result,
-Type = "NN Prediction \nfor validation"))
-ggplot(nn_pred_df, aes(x = Var, y = Sin, color = Type)) + geom_point() +
-ggtitle("Comparison of neural network prediction with training data") +
-labs(color = "Legend")
+# Plotting the plotty mc plot face.
+p = ggplot2::ggplot() +
+    ggplot2::geom_point(ggplot2::aes(x=te$Var, y=te$Sin, color="Test data")) +
+    ggplot2::geom_point(ggplot2::aes(x=tr$Var, y=tr$Sin, color="Train Values")) +
+    ggplot2::geom_point(ggplot2::aes(x=te$Var, y=yhat_test, color="Predicted Values"))
+print(p)
 
 ```
 
+### Train a neural network to learn the trigonometric sine function. To do so, sample 50 points uniformly at random in the interval [0, 10]. Apply the sine function to each point. The resulting pairs are the data available to you. Use 25 of the 50 points for training and the rest for validation. The validation set is used for early stop of the gradient descent. Consider threshold values i*0.01 with i = 1,2,...,10. Initialize the weights of the neural network to random values in the interval [???1, 1]. Consider two NN architectures: A single hidden layer of 10 units, and two hidden layers with 3 units each. Choose the most appropriate NN architecture and threshold value. Motivate your choice. Feel free to reuse the code of the corresponding lab.
+
+```{r}
+
+
+set.seed(12345)
+x <- sample(seq(0,10,0.001),50)
+y <- sin(x)
+sin_data <- cbind(x,y)
+sin_data <- as.data.frame(sin_data)
+colnames(sin_data) <- c("x", "y")
+
+train <- sin_data[1:25,]
+valid <- sin_data[26:50,]
+
+run_weights = runif(n=10, min=-1, max = 1)
+
+final <- NULL
+for(i in 1:10){
+model_1_hidden <- neuralnet(y~x, data=train, hidden=c(10), startweights = run_weights, threshold = i * 0.001)
+model_2_hidden <- neuralnet(y~x, data=train, hidden=c(3,3), startweights = run_weights, threshold = i * 0.001)
+
+# predicted_value
+predicted_y_model1 <- predict(model_1_hidden, newdata = valid)
+predicted_y_model2 <- predict(model_2_hidden, newdata = valid)
+mse_model1 <- sum(predicted_y_model1 - valid$y)^2
+mse_model2 <- sum(predicted_y_model2 - valid$y)^2
+temp <- cbind(mse_model1, mse_model2, i)
+final <- rbind(temp, final)
+}
+
+colnames(final) <- c("MSE_model1", "MSE_model2", "Iteration")
+final <- as.data.frame(final)
+
+ggplot(data=final, aes(x=as.factor(Iteration))) + 
+  geom_point(aes(y = MSE_model1 ,color="red")) +
+  geom_point(aes(y = MSE_model2 ,color="blue")) +
+  ggtitle("Plot of thershold vs. model")
+  
+
+# from the dataset seens, the best model is model1 and thershold is 6 * 0.001
+
+best_model <- neuralnet(y~x, data=train, hidden=c(10), startweights = run_weights, threshold = 6 * 0.001)
+valid$predicted_y <- predict(best_model, newdata = valid)
+
+ggplot(data=valid) +
+  geom_line(aes(x=x, y=y, color="True Y")) +
+  geom_point(aes(x=x, y=predicted_y, color="Predicted Y")) +
+  ggtitle("plot of predicted vs. originals")
+
+```
 
 
 # Classification
@@ -311,7 +536,7 @@ labs(color = "Legend")
 
 ```{r}
 
-n=dim(iris)[1]
+n=NROW(iris)
 set.seed(12345)
 id=sample(1:n, floor(n*1/3))
 train=iris[id,]
@@ -329,26 +554,29 @@ y_valid <- valid %>% select(Species) %>% data.matrix()
 x_valid <- valid %>% select(-c(Species)) %>% data.matrix()
 
 lambda <- seq(from=0, to=1, by=0.1)
-lasso_fit <- glmnet(x, y, alpha = 1, family = "multinomial", lambda = lambda)
+lasso_fit <- cv.glmnet(x, y, alpha = 1, family = "multinomial", lambda = lambda, type.measure = "class")
 plot(lasso_fit, xvar = "lambda", label = TRUE,
 main = "Plot showing shrinkage of coefficents with rise in log of lambda")
 
-predicted <- predict(lasso_fit, newx = x_valid, type=c("class"))
-new_predicted <- cbind(predicted, y_valid) %>% as.data.frame()
+min_lambda <- lasso_fit$lambda.min
 
-out <- NULL
-for(i in 0:10){
-  error <- ifelse(new_predicted[,i] == as.character(new_predicted$Species), 1, 0)
-temp <- cbind(i, NROW(new_predicted) - sum(error))
-out <- rbind(out, temp)
-}
+best_model <- glmnet(x,y,alpha = 1, family = "multinomial", lambda = min_lambda)
+  
+predicted <- predict(best_model, newx = x_valid, type=c("class"))
+new_predicted <- cbind(predicted, y_valid) %>% as.data.frame()
+colnames(new_predicted) <- c("Predicted_class", "Actual_class")
+
+lasso_confusion <- table(new_predicted$Predicted_class, new_predicted$Actual_class)
+names(dimnames(lasso_confusion)) <- c("Predicted Validation", "Actual Validation")
+caret::confusionMatrix(lasso_confusion)
+
 
 ```
 
 ## Naive Bayes, using default threshold
 ```{r}
 set.seed(12345)
-credit_data <- xlsx::read.xlsx("creditscoring.xls", sheetName = "credit")
+credit_data <- readxl::read_excel("creditscoring.xls", sheet = "credit")
 credit_data$good_bad <- as.factor(credit_data$good_bad)
 
 n=NROW(credit_data)
@@ -525,6 +753,24 @@ set.seed(12345)
 gam_model <- mgcv::gam(data=train, formula = Class~s(A3)+A9, family=binomial)
 summary(gam_model)
 plot(gam_model)
+
+# predicted the class, type="response" gives the probability, while if supported type="class" gives the predicted class
+test$Predicted_Class_probability <- predict(object = gam_model, newdata=test, type = "response")
+test$Predicted_Class <- ifelse(test$Predicted_Class_probability > 0.5, 1, 0)
+```
+Model Equation is given by Class = A9 + f(A3), where f is a smoothing function in our case determined by REML.
+
+### Use the following error function to compute the test error for the GAM and tree models, given by the below equation. Where Y is the actual class and Pi is the probability of predicted class being 1
+
+$$E = \sum_i Y_i \cdot log(p_i) + (1-Y_i) \cdot log(1-P_i)  $$
+
+
+```{r}
+# Error-rate
+error_rate = sum(as.numeric(test$Class) * log(test$Predicted_Class_probability) + (1 - as.numeric(test$Class)) * log(1-test$Predicted_Class_probability))
+
+error_rate
+
 ```
 
 ## Support Vector Machine (SVM)
@@ -862,7 +1108,38 @@ ggplot(data = ICA_result_data, aes(x = first_component, y = second_component)) +
 
 ## Implement Benjamini-Hochberg method
 ```{r}
+# function to compute the BH method on a dataframe
+data <- read.csv("Influenza.csv")
+new_data <- data %>% filter(Year > 1994 & Year < 1997)
 
+x <- new_data %>% select(-c("Year")) 
+y <- new_data %>% select(c("Year"))
+y <- factor(y$Year)
+
+#initialzing the dataframe
+p_values <- data.frame(feature = '',P_value = 0,stringsAsFactors = FALSE)
+
+for(i in 1:ncol(x)){
+  res = t.test(x[,i]~y, data = new_data, alternative="two.sided", conf.level = 0.95)
+  p_values[i,] <- c(colnames(x)[i],res$p.value)
+}
+
+manual_BH_df = function(data, fpr) {
+  data2 <- data %>% 
+    mutate(BH=p.adjust(P_value, "BH")) %>%
+    arrange(P_value) %>%
+    mutate(j = rank(P_value), m = n()) %>%
+    mutate(BHmanual_base = j/m) %>%
+    mutate(BHmanual_alpha = 0.15 * j / m,
+           BHsignif_alpha = BHmanual_alpha <= fpr)
+  
+  return(data2)
+}
+
+manual_BH_df(data=p_values, fpr=0.05)
+
+
+# alternative
 data <- read.csv(file = "data.csv", sep = ";", header = TRUE)
 data$Conference <- as.factor(data$Conference)
 set.seed(12345) 
@@ -1194,6 +1471,406 @@ length(sv)
 errorrate[N]
 
 ```
+
+
+## EM algorithm
+
+### Multivariate Gaussian distributions
+
+You are asked to implement the EM algorithm for mixtures of multivariate Gaussian distributions. You should use the following equations in the 
+
+E-step:
+
+$$ p(z_{nk}|x_n, \mu, \pi) = \frac{\pi_k f(x_n|\mu_k)}{\sum_k \pi_k f(x_n|\mu_k) }$$
+
+M-step:
+
+$$ \pi_k^{ML} = \frac{\sum_n p(z_{nk}|x_n, \mu, \pi)}{N} $$
+$$ \mu_k^{ML} = \frac{\sum_n x_n p(z_{nk}|x_n, \mu, \pi)}{\sum_n p(z_{nk}|x_n, \mu, \pi)}$$
+
+$$ \sum_k^{ML} = \frac{\sum_n (x_n-\mu_k^{ML}) (x_n-\mu_k^{ML})^{ML} p(z_{nk}|x_n, \mu, \pi)}{\sum_n p(z_{nk}|x_n, \mu, \pi)} $$
+
+where f is the density function of a Gaussian distribution, which is implemented by the function dmvnorm in the R package mvtnorm. You can reuse your solution for the corresponding lab assignment. Use the following code for sampling the learning data and initializing the parameters. Note that the learning data consists of 300 points sampled from a mixture model with three equally likely components, and each component is a bivariate Gaussian distribution.
+
+```{r}
+library(mvtnorm)
+
+# Doing as told by the exam instructions.
+set.seed(1234567890)
+
+# Max number of EM iterations.
+max_it = 100 
+# min change in log likelihood between two consecutive EM iterations.
+min_change = 0.1 
+
+# Number of training points.
+N = 300
+
+# Number of dimensions.
+D = 2
+
+# Training data.
+x = matrix(nrow=N, ncol=D)
+
+# Sampling the training data.
+# First component.
+mu1 = c(0, 0)
+Sigma1 = matrix(c(5,3,3,5), D, D)
+dat1 = rmvnorm(n=100, mu1, Sigma1)
+
+# Second component.
+mu2 = c(5, 7)
+Sigma2 = matrix(c(5,-3,-3,5), D, D)
+dat2 = rmvnorm(n=100, mu2, Sigma2)
+
+# Third component.
+mu3 = c(8, 3)
+Sigma3 = matrix(c(3,2,2,3), D, D)
+dat3 = rmvnorm(n=100, mu3, Sigma3)
+
+# Populating the data set.
+x[1:100, ] = dat1
+x[101:200, ] = dat2
+x[201:300, ] = dat3
+
+true_pi = c(1/3, 1/3, 1/3)
+
+# Plot of the data.
+plot(dat1,xlim=c(-10,15),ylim=c(-10,15))
+points(dat2,col="red")
+points(dat3,col="blue")
+
+# Initialization of the parameters of the model.
+# Number of guessed components.
+K = 3
+
+# Fractional component assignments. AKA latent variable.
+z = matrix(nrow=N, ncol=K)
+
+# Mixing coefficients.
+pi = vector(length = K)
+
+# Conditional means.
+mu = matrix(nrow=K, ncol=D)
+
+# Conditional variances.
+Sigma = array(dim=c(D, D, K))
+
+# Variable that stores the log likelihood.
+llik = c()
+
+# Random initialization of the parameters.
+pi = runif(K, 0, 1)
+pi = pi / sum(pi)
+
+for (k in 1:K)
+{
+ mu[k, ] = runif(D, 0, 5)
+ Sigma[, , k] = c(1,0,0,1)
+}
+
+get_me_the_F = function(x, mu, Sigma)
+{
+  mvn_f = matrix(nrow=nrow(x), ncol=3)
+  
+  for (i in 1:nrow(x))
+  {
+    for (j in 1:3)
+    {
+      mvn_f[i, j] = dmvnorm(x[i, ], mu[j, ], Sigma[ , , j])
+    }
+  }
+  
+  return(mvn_f)
+}
+
+######################################
+# IMPLEMENTATION OF THE EM ALGORITHM #
+######################################
+
+for (i in 1:max_it)
+{
+  ##########
+  # E STEP #
+  ##########
+  
+  # Multivariate normal density calculation.
+  mvn_f = get_me_the_F(x, mu, Sigma)
+  
+  # Calculating the posterior.
+  numerator_pos = mvn_f * matrix(pi, nrow=nrow(x), ncol=3, byrow=TRUE)
+  denominator_pos = rowSums(numerator_pos)
+  posterior = numerator_pos / denominator_pos
+  
+  ##############################
+  # LOOKING IF WE NEED TO STOP #
+  ##############################
+  llik_i = sum(log(denominator_pos))
+  llik = c(llik, llik_i)
+  
+  if (i >= 2)
+  {
+    if (llik[i] - llik[i - 1] < min_change)
+    {
+      break
+    }
+  }
+  
+  #########
+  # M STEP#
+  #########
+  
+  # Updating pi.
+  numerator_pi = colSums(posterior)
+  pi = numerator_pi / N
+  
+  # Updating mu.
+  mu = (t(posterior) %*% x) / numerator_pi
+  
+  # Updating each sigma.
+  for (k in 1:K)
+  {
+    shifted_x =(x - matrix(mu[k, ], nrow=N, ncol=2, byrow=TRUE))
+    Sigma[ , , k] = (t(shifted_x) %*% (shifted_x * posterior[, k])) / numerator_pi[k]
+  }
+  
+  
+}
+```
+
+### plot
+
+Below we can see that the likelihood increases with the number of iterations. We can also see that the parameters are some what close, even though they are not perfectly the same. This might be due to randomness and local optima. Although its pretty clear that the parameters tend to have the same values as the true variables.
+
+```{r}
+p = ggplot2::ggplot() +
+    ggplot2::geom_line(ggplot2::aes(x=1:length(llik), y=llik)) +
+    ggplot2::labs(x="Iterations", y="Log Likelihood")
+
+print(p)
+
+# Showing that the true values are close to the estimated.
+print("TRUE PI VALUES")
+print(c(1/3, 1/3, 1/3))
+
+print("ESTIMATED PI VALUES")
+print(pi)
+
+print("TRUE MU VALUES")
+print(mu1)
+print(mu2)
+print(mu3)
+
+print("ESTIMATED MU VALUES")
+print(mu)
+
+print("TRUE SIGMA VALUES")
+print(Sigma1)
+print(Sigma2)
+print(Sigma3)
+
+print("ESTIMATED SIGMA VALUEs")
+print(Sigma)
+```
+
+### Multivariate Bernoulli distributions
+EM is an iterative expectation maximumation technique. The way this works is for a given mixed distribution we guess the components of the data. This is done by first guessing the number of components and then randomly initializing the parameters of the said distribution (Mean, Varience).
+
+Sometimes the data do not follow any known probability distribution but a mixture of known distributions such as:
+
+$$p(x) = \sum_{k=1}^{K} p(k).p(x|k) $$
+
+where p(x|k) are called mixture components and p(k) are called mixing coefficients:
+where p(k) is denoted by 
+$$ \pi_{k} $$
+With the following conditions
+$$ 0\le\pi_{k}\le1 $$
+and 
+$$ \sum_{k} \pi_{k} = 1 $$
+
+We are also given that the mixture model follows a Bernoulli distribution, for bernoulli we know that
+
+$$Bern(x|\mu_{k}) = \prod_{i} \mu^{x_{i}}_{ki} . ( 1 - \mu_{ki} )^{(1-x_{i})} $$
+The EM algorithm for an Bernoulli mixed model is:
+
+Set pi and mu to some initial values
+Repeat until pi and mu do not change
+E-step: Compute p(z|x) for all k and n
+M-step: Set pi^k to pi^k(ML) from likehood estimate, do the same to mu
+
+
+M step: 
+$$p(z_{nk}|x_n,\mu,\pi) = Z = \frac{\pi_k p(x_n|\mu_k)}{\sum_k p(x_n|\mu_k)}$$
+
+E step:
+
+$$\pi^{ML}_k = \frac{\sum_N p(z_{nk}|x_n,\mu,\pi)}{N} $$
+
+
+$$ \mu^{ML}_{ki}= \frac{\sum_n x_{ni} p(z_{nk}|x_n,\mu,\pi)}{\sum_n p(z_{nk}|x_n,\mu,\pi)}  $$
+
+
+The maximum likehood of E step is:
+
+$$ \log_ep(X|\mu,\pi) = \sum^{N}_{n=1} \log_e \sum^{K}_{k=1}.\pi_{k}.p(x_n|\mu_k) $$
+
+### Code
+
+To compare the results for K = 2,3,4, the em_loop-function provides a graphical analysis for every iteration. The function includes comments which explain what I did at which step to create the EM algorithm. The function will be finally run with K = 2,3,4.
+
+```{r}
+em_loop = function(K) {
+# Initializing data
+set.seed(1234567890)
+max_it = 100 # max number of EM iterations
+min_change = 0.1 # min change in log likelihood between two consecutive EM iterations
+N = 1000 # number of training points
+D = 10 # number of dimensions
+x = matrix(nrow=N, ncol = D) # training data
+true_pi = vector(length = K) # true mixing coefficients
+true_mu = matrix(nrow = K, ncol = D) # true conditional distributions
+true_pi = c(rep(1/K, K))
+if (K == 2) {
+true_mu[1,] = c(0.5,0.6,0.4,0.7,0.3,0.8,0.2,0.9,0.1,1)
+true_mu[2,] = c(0.5,0.4,0.6,0.3,0.7,0.2,0.8,0.1,0.9,0)
+plot(true_mu[1,], type = "o", xlab = "dimension", col = "blue",
+ylim = c(0,1), main = "True")
+points(true_mu[2,], type="o", xlab = "dimension", col = "red",
+main = "True")
+} else if (K == 3) {
+true_mu[1,] = c(0.5,0.6,0.4,0.7,0.3,0.8,0.2,0.9,0.1,1)
+true_mu[2,] = c(0.5,0.4,0.6,0.3,0.7,0.2,0.8,0.1,0.9,0)
+true_mu[3,] = c(0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5)
+plot(true_mu[1,], type = "o", xlab = "dimension", col = "blue", ylim=c(0,1),
+main = "True")
+points(true_mu[2,], type = "o", xlab = "dimension", col = "red",
+main = "True")
+points(true_mu[3,], type = "o", xlab = "dimension", col = "green",
+main = "True")
+} else {
+true_mu[1,] = c(0.5,0.6,0.4,0.7,0.3,0.8,0.2,0.9,0.1,1)
+true_mu[2,] = c(0.5,0.4,0.6,0.3,0.7,0.2,0.8,0.1,0.9,0)
+true_mu[3,] = c(0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5)
+true_mu[4,] = c(0.3,0.5,0.5,0.7,0.5,0.5,0.5,0.5,0.4,0.5)
+plot(true_mu[1,], type = "o", xlab = "dimension", col = "blue",
+ylim = c(0,1), main = "True")
+points(true_mu[2,], type = "o", xlab = "dimension", col = "red",
+main = "True")
+points(true_mu[3,], type = "o", xlab = "dimension", col = "green",
+main = "True")
+points(true_mu[4,], type = "o", xlab = "dimension", col = "yellow",
+main = "True")
+}
+z = matrix(nrow = N, ncol = K) # fractional component assignments
+pi = vector(length = K) # mixing coefficients
+mu = matrix(nrow = K, ncol = D) # conditional distributions
+llik = vector(length = max_it) # log likelihood of the EM iterations
+# Producing the training data
+for(n in 1:N) {
+k = sample(1:K, 1, prob=true_pi)
+for(d in 1:D) {
+x[n,d] = rbinom(1, 1, true_mu[k,d])
+}
+}
+# Random initialization of the paramters
+pi = runif(K, 0.49, 0.51)
+pi = pi / sum(pi)
+for(k in 1:K) {
+mu[k,] = runif(D, 0.49, 0.51)
+}
+#EM algorithm
+for(it in 1:max_it) {
+# Plotting mu
+# Defining plot title
+title = paste0("Iteration", it)
+if (K == 2) {
+plot(mu[1,], type = "o", xlab = "dimension", col = "blue", ylim = c(0,1), main = title)
+points(mu[2,], type = "o", xlab = "dimension", col = "red", main = title)
+} else if (K == 3) {
+plot(mu[1,], type = "o", xlab = "dimension", col = "blue", ylim = c(0,1), main = title)
+points(mu[2,], type = "o", xlab = "dimension", col = "red", main = title)
+points(mu[3,], type = "o", xlab = "dimension", col = "green", main = title)
+} else {
+plot(mu[1,], type = "o", xlab = "dimension", col = "blue", ylim = c(0,1), main = title)
+points(mu[2,], type = "o", xlab = "dimension", col = "red", main = title)
+points(mu[3,], type = "o", xlab = "dimension", col = "green", main = title)
+points(mu[4,], type = "o", xlab = "dimension", col = "yellow", main = title)
+}
+Sys.sleep(0.5)
+# E-step: Computation of the fractional component assignments
+for (n in 1:N) {
+# Creating empty matrix (column 1:K = p_x_given_k; column K+1 = p(x|all k)
+p_x = matrix(data = c(rep(1,K), 0), nrow = 1, ncol = K+1)
+# Calculating p(x|k) and p(x|all k)
+for (k in 1:K) {
+# Calculating p(x|k)
+for (d in 1:D) {
+p_x[1,k] = p_x[1,k] * (mu[k,d]^x[n,d]) * (1-mu[k,d])^(1-x[n,d])
+}
+p_x[1,k] = p_x[1,k] * pi[k] # weighting with pi[k]
+# Calculating p(x|all k) (denominator)
+p_x[1,K+1] = p_x[1,K+1] + p_x[1,k]
+}
+# Calculating z for n and all k
+for (k in 1:K) {
+z[n,k] = p_x[1,k] / p_x[1,K+1]
+}
+}
+# Log likelihood computation
+for (n in 1:N) {
+for (k in 1:K) {
+log_term = 0
+for (d in 1:D) {
+log_term = log_term + x[n,d] * log(mu[k,d]) + (1-x[n,d]) * log(1-mu[k,d])
+}
+llik[it] = llik[it] + z[n,k] * (log(pi[k]) + log_term)
+}
+}
+cat("iteration: ", it, "log likelihood: ", llik[it], "\n")
+flush.console()
+# Stop if the log likelihood has not changed significantly
+if (it != 1) {
+if (abs(llik[it] - llik[it-1]) < min_change) {
+break
+}
+}
+# M-step: ML parameter estimation from the data and fractional component assignments
+# Updating pi
+for (k in 1:K) {
+pi[k] = sum(z[,k])/N
+}
+# Updating mu
+for (k in 1:K) {
+mu[k,] = 0
+for (n in 1:N) {
+	mu[k,] = mu[k,] + x[n,] * z[n,k]
+}
+mu[k,] = mu[k,] / sum(z[,k])
+}
+}
+# Printing pi, mu and development of log likelihood at the end
+return(list(
+pi = pi,
+mu = mu,
+logLikelihoodDevelopment = plot(llik[1:it],
+type = "o",
+main = "Development of the log likelihood",
+xlab = "iteration",
+ylab = "log likelihood")
+))
+}
+
+```
+ 
+Running  K=2
+```{r, out.width='40%', fig.align = "center", eval=FALSE }
+em_loop(2)
+```
+
+
+
+
+
 
 ## Kernel Notes
 ```{r}
