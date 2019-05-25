@@ -29,7 +29,6 @@ mu <- as.vector(rep(0,nPara)) # Prior mean vector
 Sigma <- tau^2*diag(nPara);
 
 # Defining the functions that returns the log posterior (Logistic and Probit models). Note that the first input argument of
-
 # this function must be the one that we optimize on, i.e. the regression coefficients.
 
 LogPostLogistic <- function(betaVect,y,X,mu,Sigma){

@@ -1,0 +1,228 @@
+---
+title: "720A04 Philosophy of Science Home Exam"
+author: "Anubhav Dikshit(anudi287)"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  pdf_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+\newpage
+
+## 1. What is the hypothetico-deductive method, and what are its strengths and weaknesses with respect to its ability to verify and/or falsify hypotheses? Do you think science revolves around the use of the H-D method?
+
+### What is the hypothetico-deductive method
+
+Hypothetico-deductive method is one of the scientific methodology that aims to solve the demarcation problem, that is identify what science constitutes of and what does not. Since this problem is too hard to solve, we rely on scientific methodology as a proxy solution this problem.
+
+The Hypothetico-deductive method is built upon the foundations of "Bacon's view of induction" which I believe has great value. Bacon's induction method is as follows:
+
+.	Collect data
+.	Classify data into subsets
+.	Form hypothesis based on data and subsets
+.	Draw implications based on hypothesis
+.	Perform tests based on implications
+.	If the test holds, then hypothesis is deemed correct too. If not repeat from the top
+
+While the Hypothetico-deductive method is as follows:
+
+.	Observe the nature/system and decide on the main hypothesis
+.	Invent a hypothesis via the creative process
+.	Decide which of the implications are applicable/testable based on the hypothesis
+.	Collect data for the hypothesis
+.	See if the data collected is in line with hypothesis, then it is considered more probable, else hypothesis is rejected and go back to step 1
+
+
+### Strength of the method:
+
+From the above steps, we can see that the strength of Hypothetico-deductive methods in terms of its ability to verify/falsify hypothesis is in the final step of the process. One of the reasons for the strength of this method is that data collection occurs much later in the process. Thereby providing the ability to the designer of the experiment, to use creativity in framing the hypothesis. Thus, one does not end up in the trap of framing hypothesis that cannot be tested or hypothesis which is too trivial.
+
+Personally, I feel that one of the best aspects of this method is the very first step in the process - "observe the nature/system". I find this step to be very profound in the sense that this method urges one to embrace humility in realizing that there is a lot to be learnt and we all can benefit from just merely observing. Even if we claim to know enough to be conducting an experiment to study the subject.
+
+
+### Weakness of the method:
+
+Since this method (Hypothetico-deductive) builds upon Bacon's method, it also inherits the same weakness. There is no caution/warning suggested in the method to avoid the classic "black swan" case (all swans were assumed to be white, while black swans existed in Australia).
+
+There is also the problem of irrelevant conjunctions. That is, any conjugation statement is also considered to be true if the hypothesis is true. Take the example of "Black plague is caused by rats". This might be confirmed by observing the rat population but so is "Black plague is caused by rats and spread of Christianity", which is very random to claim.
+
+
+### Does science revolves around this method?
+
+Like everything in life and science there is no silver bullet. Although it is evident that this method (HD) is superior to say Bacon's method, we find that science uses a hybrid method. It uses different methods in different scenario. A good example of this is high schools. High schools around the world still use Bacon's method and make pretty posters of the same. Why? Because it is simple to begin with; a good stepping stone to affirm the faith of young mind towards the alluring world of science.
+
+\newpage
+
+## 2. What is a scientific paradigm and how do they influence scientific practice? Is it good or bad that science is guided by paradigms? Do you think the programme you have chosen is schooling you into a particular paradigm?
+
+### What is a scientific paradigm and how do they influence scientific practice?
+
+Kuhn defines a scientific paradigm as: "universally recognized scientific achievements that, for a time, provides model problems and solutions for a community of practitioners, i.e.,
+
+.	what is to be observed and scrutinized
+.	the kind of questions that are supposed to be asked and probed for answers in relation to this subject
+.	how these questions are to be structured
+.	what predictions made by the primary theory within the discipline
+.	how the results of scientific investigations should be interpreted
+.	how an experiment is to be conducted and what equipment is available to conduct the experiment.
+
+Yes, paradigm does influence the scientific practices until a scientific revolution occurs and then a new paradigm starts to dominate a particular field. For example:
+.	In medicine, the major paradigm is the "evidence-based" paradigm
+.	In social psychology, emphasis is on replication
+.	In software engineering it is the "Empirical" Paradigm
+
+  
+### Is it good or bad that science is guided by paradigms?
+
+I think it is very difficult for one to answer whether it's good or bad that science is driven and guided by paradigms. Since science is not immune to bias, we also should identify that certain domains are more tuned to follow a set of approach or paradigms. Hence, it is not clear if the domain is guided by a paradigm or the paradigms manifests itself organically. We also know from Khun's work that paradigms are incommensurable. Thus, even if we were to debate that its bad to be driven by a paradigm there is no way for us to realize we might lead to creation of a new paradigms in our efforts to curtail existing practices. An example of this is Popper's disagreement of Hempel's Hypothetico-deductive method. 
+
+While Popper agreed with Hempel about flaws of Bacon's method and the fact that Hempel recognized the creativity aspect of science, Popper was of the belief that science due to its probabilistic nature should attempt to try and falsify as many hypotheses as possible. Even failure to falsify the hypothesis should not imply the confirmation of it, but rather be understood that the hypothesis is said to be 'yet to falsify' status.
+
+Thus, paradigms are an essential byproduct of science and we can only hope to hone the paradigms to ensure progress in science.
+
+
+### Do you think the programme you have chosen is schooling you into a particular paradigm?
+
+Yes, I agree in my programme, we are leaning towards the falsification and evidence-based paradigms. The reason for this is essentially due to the nature of our work. Generally speaking, in a corporate setting, we tend to get data first and asked to solve the problem. It may be evident; this is leaning towards Bacon's method.
+
+In academic setting however, we are also told to use creativity in our thinking and come up with as many hypothesis as possible. Almost as to use data to falsify as many hypothesis as possible. The objective being that we exploit the overwhelming amount of data and come up with a battle tested model for the system or process that we are interested to study.
+
+\newpage
+
+## 3. What does it mean for a scientific hypothesis to be falsifiable, and: (i) why is it good that they are falsifiable, and (ii) why is even better that they can be falsified in many different ways?
+
+
+### What does it mean for a scientific hypothesis to be falsifiable?
+
+A scientific hypothesis is said to be falsifiable if it is contradicted by a basic statement. Which in an eventual successful or failed falsification, must respectively correspond to a true or hypothetical observation.
+
+
+### Why is it good that they are falsifiable?
+
+Falsifiability of a theory is a strength and not weakness. The reason for this is as follows. If one can come up with a test case for falsifiability then eventually, they can find in principle if the hypothesis holds on its own. However, if one cannot even come with scenarios for falsification then i) either we don't understand the proposed hypothesis and system or ii) we have trapped ourselves into a situation.
+
+Eg: 2+2=4 is a falsifiable statement. We can build a building with 2 floors and then 2 floors to test if 2+2=5. If it is not, then we can hope that we are more certain about our statement.
+
+Consider the following statement "God is an omniscient, ever present, ever powerful being, whose actions beyond our understanding", now this statement is not falsifiable because no matter what one argues this infinitely wrapping tautology can keep extending.
+
+### Why is even better that they can be falsified in many different ways?
+
+Since we have argued that a theory which can be falsifiable implies that the theory has strength, we can extend the logic and assume that the degree to which we can say that a hypothesis is falsifiable is proxy for our understanding of the said hypothesis.
+
+Thus, if a hypothesis can be falsified in many different ways then we know exactly the limits of the model. Thereby making us aware of what we don't know. It also helps us to know if our hypothesis is applicable to only a subset of the population or condition. Then, we would have a condition to specify the hypothesis.
+
+I, for one, argue that the more you know what you don't know, the better you are doing as a student (Dunning-Kruger effect). If one can come with many falsifiable hypothesis then the more one understands what one is proposing. This ability also grants us to understand every perspective of a proposed theory.
+
+Consider the classic example of 'flying pink monkeys exist'. This statement can never be proved wrong. No matter what we were to say there will always remain the possibility that one exists somewhere. Thus, this is not a valid scientific hypothesis.
+
+On the other hand, if you were to say, 'flying pink monkeys do not exist', then this is a valid scientific hypothesis. Simply because if we were to ever find one, we will immediately prove the statement wrong. Thus, the statement is falsifiable.
+
+In science, we must always assume nonexistence of something until it is found. If we were to get rid of the principle of noncontradiction, then no hypothesis would be falsifiable, science would cease to exist, and the universe would implode (haha!).
+
+
+\newpage
+
+## 4. In what way are observations theory-dependent, and why does that challenge the idea that hypotheses are generated inductively from observations?
+
+Observation is defined by Wikipedia as: "Observation is the active acquisition of information from a primary source". In living beings, observation employs the senses. In science, observation can also involve the recording of data using scientific instruments. The term may also refer to any data collected during the scientific activity. Observations can be qualitative, that is, only the absence or presence of a property is noted, or quantitative if a numerical value is attached to the observed phenomenon by counting or measuring.
+
+The very first line in the definition is enough to justify that what you see, or I see may not ever be the same. Consider the case of rainbow, they say that "Rainbows are (literally) in the eye of the beholder", the reasoning is rather complex, but a conscience version is as follows:
+A few lucky humans are born with an extra cone cell that seems to allow them to see more colors within the visible spectrum. It's hard to talk about these colors because we literally don't have names for them, but we think some other animals like mantis shrimps can also see more colors within the rainbow.
+
+For example, Russian speakers can better tell shades of blue apart than English speakers can. Russian has two categories for blue - light and dark, instead of just blue. English obviously has many words for blue shades, but we still classify them under a single umbrella. Russian separates them.
+
+So even depending on aspects like the language you speak, you might see a rainbow differently from a person standing right next to you. Our eyes may physically perceive the same wavelengths of light, but if your brain isn't processing those rays the same, you'll "see" different colors. Color is mostly in your brain-not your eyes. 
+
+The above examples suggest the idea that if two people were to follow the same paradigm then both of them should lead to the same hypothesis and ultimately conclusions (ideally) is seldom true. The differences arise from even bias or background of the people conducting the experiment. We know from the history that not only do we find disparity in the conclusion when two people conduct the same experiment but also in their hypothesis formed, despite following the same paradigm. I would argue that the beauty of science lies in this very fact, that science allows for freedom of thought and experiment and any consensus in science is only after exhausting various attempts to study any given phenomenon.
+
+Let's consider another case - Heinrich Hertz who was studying radio-waves. It is said that when Hertz was studying radio-waves he concluded that radio-waves as being 'useless' since he found them to be much slower than light. He also failed to accurate note various conditions and learnings from the experiment such as wavelength of radio-waves, the time difference in theoretical and measured speed of radio waves. These clearly show that if Hertz is to be totally unbiased when making his observations, then he would be obliged to record everything. Thankfully in time we realized that not only were the conclusion of Hertz wrong but so were many of his hypothesis.
+
+All this above leads to the question if 'observation is theory dependent'. I believe that saying yes would do little justice to honor the difference in bias, culture and background of people conducting the experiment. It is no surprise that the hypothesis generated by people will vary despite being inductively from the observation. Another example although away from science is how successive governments in the US have wildly different ideas about how to fix the economy. Despite the shared experience and age, every congressperson across the board have their ideas, be it tax-cut for the rich or more socialistic approach of making student loans or health care being affordable.
+
+
+\newpage
+
+## 5. What is the difference between the natural and the human sciences according to Ingthorsson? Include a reflection on what Ingthorsson says about the nature of the phenomena that the natural and human sciences study, and relate to what that nature implies about differences in method.
+
+### What is the difference between the natural and the human sciences according to Ingthorsson?
+
+According to Ingthorsson, natural science is the study of what he calls the 'merely physical'; unconscious physical matter in all its forms. The most important aspects of this science is that everything in the physical domain, we assume, is
+  + (i)	completely governed by natural laws
+  + (ii)	mind independent; it has a certain nature independently of what we happen to believe
+  
+One of the examples used by Ingthorsson is the study of salt. Salt studied in Holland has the same properties as exhibited in Sweden (factoring the environmental changes).
+The study of human science is defined by him as study of humans, but not primarily as physical bodies but study of meaningful phenomena: social interactions, experiences, thoughts, intentional actions, attitudes, humor, phobias, etc.; everything that involves human beings qua self-conscious beings.
+
+Example offered for this science by Ingthorsson are the following: Impact of how 1% price increase in raw cotton from India could affect British households.
+
+
+### Reflection on what Ingthorsson says about the nature of the phenomena that the natural and human sciences study, and relate to what that nature implies about differences in method.
+
+What I found to be impressive is when the author (Ingthorsson) used the example of hammer to drive the difference in natural sciences vs. human science. I found that the argument that even if there is an overlap of the entities under the study, the human science lens allows us to study things with ability to get the bigger picture.
+
+The author points that there is a dynamic nature to what is of value in a entity under the study by human science. This is due to the ever-changing needs and understanding of human brain and thoughts. For example, the value provided to diamonds as a gem is only due to clever marketing campaign by a media house - "diamonds are women's best friend". As author rightly mentions that the phenomena studied by the human sciences are also in a certain sense particularly difficult to study because they appear to lack a determinate physical shape. e.g.: Where is 'rationality' as an object of inquiry?
+
+In the example of studying salt, the reasoning behind why there is a difference in the methods employed by human science and natural science becomes clear. As author says salt as a subject is not unreliable as the case is always in matters of human science. Salt crystals don't lie or cheat, they don't change their very nature, something that is far too much of a reality in human science. Throughout the paper the author tries to dispel the myth that natural science is superior to human science, he also tries to show that both human science and natural science in its places are equally correct and fulfill their purposes.
+
+As a conclusion I would like to add that oftentimes human science is questioned to justify its contribution towards science, or quantify in some $ value, to this I remember one of the quote by Robin Williams. This quote which although answers the need for humanities more than human science given the circumstance is more relevant than ever, the quote is as follows: "We don't read and write poetry because it's cute. We read and write poetry because we are members of the human race. And the human race is filled with passion. And medicine, law, business, engineering, these are noble pursuits and necessary to sustain life. But poetry, beauty, romance, love, these are what we stay alive for."
+
+\newpage
+
+## 6. What is the difference between science and pseudo-science according to Sven-Ove Hansson, and why should we care?
+
+Science is defined as "the intellectual and practical activity encompassing the systematic study of the structure and behavior of the physical and natural world through observation and experiment."
+
+Pseudoscience is defined as the one with a doctrine whose major proponents try to create the impression that it represents the most reliable knowledge on its subject matter.
+From the definition we get some sort of hints of the difference in them, but according to Hasson and other we can differentiate between them by the following:
+
+.	Belief in authority: Pseudoscience is contended that some person or people have a special ability to determine what is true or false. Others have to accept their judgments, this is rarely the case in science, although there will be committee of people as represent science, but they don't hold any authority, they simply disseminate new leanings.
+.	Unrepeatable experiments: Pseudoscience emphasis on some experiments and reliance is put on these experiments which often cannot be repeated by others with the same outcome. This is never the case in science as throughout the history even today scientist keep testing the theory and try to falsify them.
+.	Handpicked examples: Pseudoscience thrives on handpicked examples are used although they are not representative of the general category that the investigation refers to.
+.	Unwillingness to test: Pseudoscience a theory is not tested although it is possible to test it, as the case with flat earthers.
+.	Disregard of refuting information: A classic sign of pseudoscience is that observations or experiments that conflict with a theory are neglected, while in science there is a simple yet humbling option of saying 'we don't have an answer for this', be it the case of 'Are we alone?' to 'what came before big bang?'.
+.	Built-in subterfuge: In Pseudoscience the testing of a theory is so arranged that the theory can only be confirmed, never dis-confirmed, by the outcome, basically the hypothesis can never be falsified. As evident from the many paradigms established in science, we can see that almost all of them are based on the falsification of hypothesis.
+.	Explanations are abandoned without replacement: In Pseudoscience tenable explanations are given up without being replaced, so that the new theory leaves much more unexplained than the previous one.
+
+It is an unusual time to be alive while as humans we have progressed and achieved more than any known species, there exists today more than ever before group of people that are willing to do anything and everything in their hands to undo everything that we has a species have achieved. These attacks vary in their lethality, but they do some varying level of damage for sure.
+
+These bunch of folks are of the opinion that it is they who are leading the baton of research, the true crusader of science. I refer to people who still believe that the earth is flat, vaccines are a conspiracy, climate change is a hoax and universal health care will lead to their downfall. Many of these people if not all will insist that they have done their research and firmly believe that they are no different from scientist.
+If we should ever be careful of pseudoscience then these people provide the biggest evidence of it, everyone owes humanity the promise of continuing the progress at the very least not undo the progress.
+
+Personally, with the current job market, it is not unlikely that some decision will be taken by business heads based on analysis done by my fellow colleague from this programme and field. Thus, we should always be as true as possible and scientific thinking enables me to do the same.
+
+
+\newpage
+
+## 7. What does it involve to be a scientific realist, and what reasons can we have for adopting that position? Do you think those reasons are convincing, and do think it would make any difference for you to take a realist or anti-realist approach to research in your discipline?
+
+### What does it involve to be a scientific realist, and what reasons can we have for adopting that position?
+
+For us to understand about scientific realist, we must talk about being a realist. A realist demands certain commitments and depending on whom you talk to these commitments varies however they can be broadly classified into three:
+
+.	Metaphysical commitments: Based on the denial of idealism, which is based on two core ideas
+    -	There exists a physical world independent of our minds
+    -	It is world that scientist study
+.	Semantic commitments: This is the denial of scientific instrumentalism, being one of semantic realist person requires one to believe that science is literally true and there is no need to be justified, almost like a religious person belief on god.
+.	Epistemic commitments: Here one believes that theory(scientific) consists of knowledge, here people conflict with 'Skepticism'
+
+So, what is being a scientific realist? Well, if one believes that fundamental particles exists such as 'Higgs boson' and it is only a matter of time before we discover them that person would be called a scientific realist.
+
+Now let's answer why would one want one to be 'scientific realist'. In some sense, it is like belonging to a religion, having faith in science would make one to be motivated and in some sense scientist who spends sometimes their lives researching on one theory (theoretical physicists are a good example) need something to believe in and being a 'scientific realist' enables it. Another good example would be a researching trying to cure cancer, there needs to an undying thirst and faith which enables one to keep pushing despite failing several times and seeing no light at the end of the tunnel.
+
+
+### Do you think those reasons are convincing, and do think it would make any difference for you to take a realist or anti-realist approach to research in your discipline?
+
+I don't think there exists a silver bullet ever and so is the case with being a 'scientific realist' or even just a 'realist'. One of the requirements which is the crux of the whole idea is faith. Faith manifests into a religion and from history we know the countless battles in the name of religion. We should also consider what other side as to say, which is the 'anti-realist' side.
+
+Being an 'anti-realist' allows one to choose between not commitments like realist but more of choosing to be on a spectrum. Anti-realism varies from the 'rejectionist' (eliminationism - reject ideals of that there is a realism without rejecting reality itself) to all the way to 'idealism' (believing that we live in a simulation eg: Matrix movie).
+I truly believe choosing to be a realist and anti-realist does impact your choice of work and mood. Would you care to burn the midnight oil in pursuit of the perfect solution or code (realist) or would you say there is no point and treat things of little consequence and do your job diligently enough but not die for it. I for one like to be what can be called a 'Quasi realist' which is a term made popular by Simon Blackburn, where we get the best of both worlds sort of approach.
+
+By being a 'quasi realist' one allows one to even believe in god, let's say, but not everything that Bible or Quran or Gita or such says. Similarly, in the context of science, being a quasi-realist allows me to believe that 'Higgs Boson' exists but not that my existence is all but a program running on some machine. This allows me to hold myself to high standards in my work, believing that I have a purpose in my life. For example, being a good analyst or 'discovering the patterns that I believe exist and not simply say the data does not support this. Because more often than not, one needs to look a little deeper, think of some wild ideas to make things happen!
+
+
+
+

@@ -10,6 +10,7 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 options(scipen=999)
+set.seed(12345)
 
 library("ggplot2")
 library("tidyverse")
@@ -90,9 +91,9 @@ nu_0 = 4
 sigma_sq_0 = 1 
 
 # calculating X and other vectors
-X = temp_data %>% select(intercept, time, time_square) %>% as.matrix()
+X = temp_data[,c("intercept", "time", "time_square")] %>% as.matrix()
 X_T = t(X)
-Y = temp_data %>% select(temp) %>% as.matrix()
+Y = temp_data[,c("temp")] %>% as.matrix()
 Y_T = t(Y)
 
 # defining a function to sample and predict temperature
@@ -102,7 +103,7 @@ x = rchisq(n = 1, df = nu_0)
 # Calculating sigma_sq.
 sigma_sq = (nu_0*sigma_sq_0)/x
 beta <- mvtnorm::rmvnorm(n = 1 , mean=mu_0, sigma=sigma_sq * solve(omega_0))
-final <-  X %*% t(beta)  + rnorm(n=1,mean = 0, sd=sqrt(sigma_sq))
+final <-  X %*% t(beta) + rnorm(n=1,mean = 0, sd=sqrt(sigma_sq))
 colnames(final) <- c("Predicted_temperature")
 return(final)
 }
@@ -145,7 +146,7 @@ Analysis: Its aparent that low values of sigma work well (0-0.5), thus we will s
 
 ### Best fit
 ```{r}
-set.seed("12345")
+set.seed(12345)
 
 # Initialzing final hyper-parameters
 mu_0 = t(c(-10,100,-100))
@@ -175,6 +176,7 @@ Write a program that simulates from the joint posterior distribution of $\beta_0
 \end{minipage}}
 
 ```{r}
+set.seed(12345)
 # initialized values from above
 mu_0 = c(-10,100,-100)
 mu_0_T = t(mu_0)
@@ -209,7 +211,7 @@ x = rchisq(n = 1, df = nu_n)
 # Calculating sigma_sq.
 sigma_sq = as.vector((nu_n*sigma_sq_n)/x) 
 betas <- mvtnorm::rmvnorm(n = 1 , mean=mu_n, sigma=sigma_sq * solve(omega_n))
-temp2 <-  X %*% t(betas)  # add the error term you get prediction band
+temp2 <-  X %*% t(betas) + rnorm(n=1,mean = 0, sd=sqrt(sigma_sq)) # add the error term you get prediction band
 temp2 <- cbind(temp2, X, Y)
 predicted_data <- rbind(temp2, predicted_data)
 temp <- cbind(betas,sigma_sq)
@@ -297,13 +299,13 @@ where y is the binary variable with y = 1 if the woman works and y = 0 if she do
 \end{minipage}}
 
 ```{r}
+set.seed(12345)
 data <- read.csv("WomenWork.csv")
-
 model <- glm(Work~0 +., data = data, family = binomial)
 summary(model)
 ```
 
-##b) Approximating the posterior distribution of $\beta$ with a multivariate normal distribution
+## b) Approximating the posterior distribution of $\beta$ with a multivariate normal distribution
 
 \fbox{\begin{minipage}{46.7em}
 Now the fun begins. Our goal is to approximate the posterior distribution of the 8-dim parameter vector $\beta$ with a multivariate normal distribution
@@ -355,9 +357,12 @@ $J(\widetilde{\beta}) = - \frac{\partial^2lnp(\beta|y)}{\partial\beta\partial\be
 Both $\widetilde{\beta}$ and $J(\widetilde{\beta})$ are computed by the `optim`-function in R. We use the prior $\beta \sim N(0, \tau^2I)$ with $\tau = 10$.
 
 ```{r}
+
+set.seed(12345)
 # creating matrix for calculation
-X <- data %>% select(-c(Work)) %>% as.matrix()
-Y <- data %>% select(c(Work)) %>% as.matrix()
+X <- data[,c("Constant", "HusbandInc", "EducYears", "ExpYears", 
+             "ExpYears2", "Age", "NSmallChild", "NBigChild" )] %>% as.matrix()
+Y <- data[,c("Work")] %>% as.matrix()
 
 # Prior.
 tau = 10
@@ -421,6 +426,7 @@ $$\beta|y,X\sim N \bigg(\widetilde{\beta},J^{-1}_y(\widetilde{\beta})\bigg)$$
 
 by usage of our obtained parameters $\widetilde{\beta}$ and $J^{-1}_y(\widetilde{\beta})$.
 ```{r}
+set.seed(12345)
 # Simulating 1000 times from approximated posterior.
 posterior_sim_beta_all = rmvnorm(n = 1000,
                                  mean = results_optim$par,
@@ -459,6 +465,7 @@ Write a function that simulates from the predictive distribution of the response
 To perform a simulation from the predictive distribution of the response variable in a logistic regression, we use the drawn posterior $\beta$-coefficiencts (`posterior_sim_beta_all`) from *2b)* to predict the *Work*-value. For every drawn $\beta$-vector, we calculate $Pr(y=1|x) = \frac{exp(x^T\beta)}{1+exp(x^T\beta)}$. Since the goal is to predict the *Work*-value for 40-year-old woman with two children (3 and 9 years old), 8 years of education, 10 years of experience and a husband with an income of 10, we use this data for every different drawn $\beta$-vector.
 
 ```{r}
+set.seed(12345)
 # Implementing specified data.
 X = matrix(c(Constant = 1, 
              HusbandInc = 10, 
@@ -472,7 +479,8 @@ X = matrix(c(Constant = 1,
 
 X_T <- t(X)
 
-colnames(posterior_sim_beta_all) <- c("Constant", "HusbandInc", "EducYears", "ExpYears", "ExpYears2", "Age", "NSmallChild", "NBigChild")
+colnames(posterior_sim_beta_all) <- c("Constant", "HusbandInc", "EducYears", 
+                                      "ExpYears", "ExpYears2", "Age", "NSmallChild", "NBigChild")
 
 # Using all drawn posterior beta coeffiecients and specified data vector 
 # to compute distribution for Pr(y=1|x).

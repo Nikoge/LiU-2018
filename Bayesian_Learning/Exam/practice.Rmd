@@ -1,0 +1,333 @@
+---
+title: "Bayesian Learning (732A91) Reference"
+author: "Anubhav Dikshit(anudi287)"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+    pdf_document:
+      toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen=999)
+
+Sys.setenv(USE_CXX14 = 1)
+
+library("LaplacesDemon")
+library("tidyverse")
+library("mvtnorm")
+library("Hmisc")
+library("gridExtra")
+library("rstan") #stan
+library("xtable") # model summary as table
+library("knitr")
+
+
+options(mc.cores = parallel::detectCores())
+rstan_options(auto_write = TRUE)
+Sys.setenv(LOCAL_CPPFLAGS = '-march=native')
+  
+
+
+# The palette with black:
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", 
+                "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+```
+
+\newpage
+
+#2017-08-16
+
+## 1. Bayesian inference for Cauchy data
+
+### a)
+```{r}
+# Loading the data
+load("CauchyData.RData")
+
+
+dCauchy <- function(x, theta, gamma){
+  return(dens = (1/(pi*gamma))*(1/(1+((x-theta)/gamma)^2)))
+}
+
+dlognormal <- function(x, mu, sigma2){
+  return(dens = (1/(sqrt(2*pi*sigma2)*x))*exp((-1/(2*sigma2))*(log(x)-mu)^2))
+}
+
+cauchy_posterior <- function(x, theta){
+  answer <- sum(log(dCauchy(x, theta = theta, gamma = 1)) + dnorm(x=x, mean = 0, sd=10, log = TRUE), na.rm = TRUE)
+  return(answer)
+}
+
+theta <- seq(0.01, 10, 0.01)
+final <- as.data.frame(x=theta)
+
+temp2 <- NULL
+for(i in 1:length(theta)){
+  temp <- cauchy_posterior(x=yVect, theta = theta[i])
+  temp2 <- rbind(temp, temp2)
+}
+
+final$posterior <- temp2
+final$actual_poster <- exp(final$posterior)
+
+ggplot(data = final, aes(x=theta, y=posterior)) +
+  geom_point() +
+  ggtitle("Plot of theta vs. posterior")
+
+
+```
+
+### b)
+```{r}
+
+cauchy_posterior2 <- function(x, theta, gamma){
+  answer <- sum(log(dCauchy(x, theta, gamma)) + 
+                  dnorm(x=x, mean = 0, sd=10, log = TRUE) + 
+                  log(dlognormal(x=x, mu = 0, sigma2=1)), na.rm = TRUE)
+  return(answer)
+}
+
+
+initVal = c(1,1)
+optRes <- optim(par = c(1,1), fn  = cauchy_posterior2, gr = NULL, x=yVect, gamma=1, method = c("L-BFGS-B"),
+      lower = c(-Inf,0.0001), upper = c(Inf,Inf), control = list(fnscale = -1), hessian = TRUE)
+
+
+postMean <- optRes$par # This is the mean vector
+postMean
+postCov <- -solve(optRes$hessian) # This is posterior covariance matrix
+postCov
+
+
+```
+
+### c)
+
+```{r}
+# posterior ~ N(postmena, postCov)
+
+posterior_values = rmvnorm(n = 1000, mean = optRes$par, sigma = -solve(optRes$hessian))
+
+quant99 = posterior_values[,1] + posterior_values[,2]*tan(pi*(0.99-1/2))    # Computing the 99th percentile for each draw
+hist(quant99,100, freq = FALSE, col = "yellow", main = "Posterior density for the 99th percentile")  
+lines(density(quant99), col = "red", lwd = 2)
+
+```
+
+## 2. Regression
+
+### a)
+```{r}
+
+# Reading the data from file
+library(MASS)
+
+BostonHousing = Boston
+y = BostonHousing$medv
+X = cbind(1,BostonHousing[,1:13]) # Adding a column of ones for the intercept
+names(X)[1] <- "intercept"
+covNames <- names(X)
+y <- as.numeric(y)
+X <- as.matrix(X)
+
+
+# Defining a function that simulates from the scaled inverse Chi-square distribution
+rScaledInvChi2 <- function(n, df, scale){
+  return((df*scale)/rchisq(n,df=df))
+}
+
+BayesLinReg <- function(y, X, mu_0, Omega_0, v_0, sigma2_0, nIter){
+  # Direct sampling from a Gaussian linear regression with conjugate prior:
+  #
+  # beta | sigma2 ~ N(mu_0, sigma2*inv(Omega_0))
+  # sigma2 ~ Inv-Chi2(v_0,sigma2_0)
+  # 
+  # Author: Mattias Villani, IDA, Linkoping University. http://mattiasvillani.com
+  #
+  # INPUTS:
+  #   y - n-by-1 vector with response data observations
+  #   X - n-by-nCovs matrix with covariates, first column should be ones if you want an intercept.
+  #   mu_0 - prior mean for beta
+  #   Omega_0  - prior precision matrix for beta
+  #   v_0      - degrees of freedom in the prior for sigma2
+  #   sigma2_0 - location ("best guess") in the prior for sigma2
+  #   nIter - Number of samples from the posterior (iterations)
+  #
+  # OUTPUTS:
+  #   results$betaSample     - Posterior sample of beta.     nIter-by-nCovs matrix
+  #   results$sigma2Sample   - Posterior sample of sigma2.   nIter-by-1 vector
+  
+
+  # Compute posterior hyperparameters
+  n = length(y) # Number of observations
+  nCovs = dim(X)[2] # Number of covariates
+  XX = t(X)%*%X
+  betaHat <- solve(XX,t(X)%*%y)
+  Omega_n = XX + Omega_0
+  mu_n = solve(Omega_n,XX%*%betaHat+Omega_0%*%mu_0)
+  v_n = v_0 + n
+  sigma2_n = as.numeric((v_0*sigma2_0 + ( t(y)%*%y + t(mu_0)%*%Omega_0%*%mu_0 - t(mu_n)%*%Omega_n%*%mu_n))/v_n)
+  invOmega_n = solve(Omega_n)
+  
+  # The actual sampling
+  sigma2Sample = rep(NA, nIter)
+  betaSample = matrix(NA, nIter, nCovs)
+  for (i in 1:nIter){
+    
+    # Simulate from p(sigma2 | y, X)
+    sigma2 = rScaledInvChi2(n=1, df = v_n, scale = sigma2_n)
+    sigma2Sample[i] = sigma2
+    
+    # Simulate from p(beta | sigma2, y, X)
+    beta_ = rmvnorm(n=1, mean = mu_n, sigma = sigma2*invOmega_n)
+    betaSample[i,] = beta_
+    
+  }
+  return(results = list(sigma2Sample = sigma2Sample, betaSample=betaSample))
+}
+
+# Initialzing hyper-parameters
+  y=y
+  X=X
+  mu_0 = rep(0,14)
+  Omega_0 = diag(x=100,nrow=14,ncol=14)
+  v_0 = 1
+  sigma2_0 = 36
+
+temp <- BayesLinReg(y, X, mu_0, Omega_0, v_0, sigma2_0, nIter=5000)
+
+betas <- temp$betaSample
+betas <- betas %>% as.data.frame()
+colnames(betas) <- c( "intercept", "crim", "zn", "indus", "chas", "nox", "rm", "age", 
+                     "dis", "rad", "tax", "ptratio", "black", "lstat")
+
+temp <- quantile(x = betas$rm, probs = c(0.0250,0.975))
+betas$rm_flag <- ifelse(betas$rm > as.vector(temp[2]), "Outside",
+                        ifelse(betas$rm > as.vector(temp[1]), "Inside", 
+                               "Outside"))
+
+ggplot(data=betas, aes(x=rm)) +
+  geom_histogram(bins=30) +
+  geom_point(aes(x=rm, y=1,color=rm_flag), size=4) +
+  ggtitle("Histogram of RM")
+
+```
+
+### b)
+```{r}
+
+house_381 <- X[381,1:14, drop=FALSE] %>% as.data.frame()
+house_381$crim <- 10
+house_381 <- t(house_381)
+
+
+final <- NULL
+for(i in 1:NROW(betas)){
+temp2 <- house_381 %*% t(betas[i,]) + rnorm(n=1,mean = 0, sd=sqrt(36)) #
+final <- rbind(temp2, final)
+}
+
+final <- final %>% as.data.frame()
+colnames(final) <- c("predicted_medv")
+
+ggplot(data = final, aes(x=predicted_medv)) +
+  geom_histogram(bins=50) +
+  ggtitle("Histogram of predicted medv $")
+
+# price of 20K$
+NROW(final[final$predicted_medv > 19.9999,])/NROW(final) * 100
+
+# price of 30K$
+NROW(final[final$predicted_medv > 29.999,])/NROW(final) * 100
+
+```
+
+Analysis: The probability of getting 20K or above is 74% but above 30K is merely 17% 
+
+
+## 3 is paper based
+
+## 4. Prediction and decision
+
+### a)
+
+```{r}
+# model is poisson, mean=250, sd=50
+x_quaters <- c(220, 323, 174, 229)
+
+temp_funtion <- function(alpha, beta, mean_x){
+  temp <- rgamma(n=1000, shape=4*alpha, rate = 4*beta+mean_x)
+  return(temp)
+}
+
+result <- temp_funtion(alpha=0.1, beta=10, mean_x = mean(x_quaters))
+
+histogram(result)
+```
+
+
+# 2017-10-27
+
+##1. Bayesian inference for proportions data
+
+###a)
+
+```{r}
+
+# Reading the data vector yProp from file
+load(file = 'yProportions.RData')
+thetaGrid = seq(0.01, 15, length=1000) 
+df <- as.data.frame(thetaGrid)
+
+my_fun <- function(x,theta){
+  answer <- prod(dgamma(x, shape = theta, rate=theta)*dexp(x, rate = 1))
+}
+
+for(i in 1:NROW(df)){
+  df$posterior[i] <- my_fun(x=yProp, theta = df$thetaGrid[i])
+}
+
+ggplot(data=df, aes(x=thetaGrid, y=posterior))+
+  geom_point() +
+  ggtitle("Posterior distribution")
+
+```
+
+### b)
+
+```{r}
+my_fun2 <- function(x, theta1, theta2){
+  answer <- prod(dgamma(x, shape = theta1, rate=theta2)*dexp(x, rate = 1)*dexp(x, rate = 1))
+}
+
+inital <- c(2,2)
+results_optim = optim(fn = my_fun2, x=yProp, par=inital, theta2=2,  method=c("BFGS"),
+# Multiplying objective function by -1 to find maximum instead of minimum.
+control=list(fnscale=-1), hessian=TRUE)
+
+mean = results_optim$par
+mean
+hessian = -solve(results_optim$hessian)
+hessian
+
+```
+
+### c)
+
+Bayes factor can be used
+
+## 2) Regression
+
+ 
+ 
+ 
+
+
+
+
+
+
+
+
+
