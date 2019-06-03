@@ -319,9 +319,1013 @@ Bayes factor can be used
 
 ## 2) Regression
 
+### a)
+
+```{r}
+# Reading the data from file
+library(MASS)
+BostonHousing = Boston
+y = BostonHousing$medv
+X = cbind(1,BostonHousing[,1:13]) # Adding a column of ones for the intercept
+names(X)[1] <- "intercept"
+covNames <- names(X)
+y <- as.numeric(y)
+X <- as.matrix(X)
+
+library(mvtnorm)
+
+# Defining a function that simulates from the scaled inverse Chi-square distribution
+rScaledInvChi2 <- function(n, df, scale){
+  return((df*scale)/rchisq(n,df=df))
+}
+
+BayesLinReg <- function(y, X, mu_0, Omega_0, v_0, sigma2_0, nIter){
+  # Direct sampling from a Gaussian linear regression with conjugate prior:
+  #
+  # beta | sigma2 ~ N(mu_0, sigma2*inv(Omega_0))
+  # sigma2 ~ Inv-Chi2(v_0,sigma2_0)
+  # 
+  # Author: Mattias Villani, IDA, Linkoping University. http://mattiasvillani.com
+  #
+  # INPUTS:
+  #   y - n-by-1 vector with response data observations
+  #   X - n-by-nCovs matrix with covariates, first column should be ones if you want an intercept.
+  #   mu_0 - prior mean for beta
+  #   Omega_0  - prior precision matrix for beta
+  #   v_0      - degrees of freedom in the prior for sigma2
+  #   sigma2_0 - location ("best guess") in the prior for sigma2
+  #   nIter - Number of samples from the posterior (iterations)
+  #
+  # OUTPUTS:
+  #   results$betaSample     - Posterior sample of beta.     nIter-by-nCovs matrix
+  #   results$sigma2Sample   - Posterior sample of sigma2.   nIter-by-1 vector
+  
+  # Compute posterior hyperparameters
+  n = length(y) # Number of observations
+  nCovs = dim(X)[2] # Number of covariates
+  XX = t(X)%*%X
+  betaHat <- solve(XX,t(X)%*%y)
+  Omega_n = XX + Omega_0
+  mu_n = solve(Omega_n,XX%*%betaHat+Omega_0%*%mu_0)
+  v_n = v_0 + n
+  sigma2_n = as.numeric((v_0*sigma2_0 + ( t(y)%*%y + t(mu_0)%*%Omega_0%*%mu_0 - t(mu_n)%*%Omega_n%*%mu_n))/v_n)
+  invOmega_n = solve(Omega_n)
+  
+  # The actual sampling
+  sigma2Sample = rep(NA, nIter)
+  betaSample = matrix(NA, nIter, nCovs)
+  for (i in 1:nIter){
+    
+    # Simulate from p(sigma2 | y, X)
+    sigma2 = rScaledInvChi2(n=1, df = v_n, scale = sigma2_n)
+    sigma2Sample[i] = sigma2
+    
+    # Simulate from p(beta | sigma2, y, X)
+    beta_ = rmvnorm(n=1, mean = mu_n, sigma = sigma2*invOmega_n)
+    betaSample[i,] = beta_
+    
+  }
+  return(results = list(sigma2Sample = sigma2Sample, betaSample=betaSample))
+}
+
+mu_0 = rep(1,14)
+Omega_0 = diag(x=0.01,nrow=14,ncol=14)
+v_0  = 4
+sigma2_0 = 1
+nIter = 5000
+
+temp <- BayesLinReg(y,X, mu_0, Omega_0, v_0, sigma2_0, nIter)
+
+betas <- temp$betaSample %>% as.data.frame()
+colnames(betas) <- c("intercept", "crim", "zn", "indus", "chas", "nox", "rm", "age", "dis", "rad", "tax", "ptratio", "black", "lstat")
+
+temp <- density(betas$lstat)
+values_df <- data.frame(x = temp$x, Density = temp$y)
+total <- sum(values_df$Density)
+
+values_df_sorted <- values_df %>%
+arrange(desc(Density)) %>%
+mutate(running_per_sort = 100 * cumsum(Density)/total) %>%
+mutate(flag_sort = ifelse(running_per_sort < 95.00, "Accept", "Drop"))
+
+ggplot(data=values_df_sorted, aes(x=x, y=Density)) +
+geom_line() +
+geom_point(aes(x=x,y=0,color=flag_sort)) +
+ggtitle("Posterior distribution for G using Highest Posterior Density")
+
+
+
+```
  
+### b)
+
+```{r}
+
+house_no_9 <- BostonHousing[9,]
+house_no_9_lower_lstat <- house_no_9
+house_no_9_lower_lstat$lstat <- 0.70 * house_no_9_lower_lstat$lstat 
+
+X_old = cbind(1,house_no_9[,1:13]) %>% as.matrix()
+X_new = cbind(1,house_no_9_lower_lstat[,1:13]) %>% as.matrix()
+
+final <- NULL
+for(i in 1:NROW(betas)){
+  final[i] <-  X_old %*% t(betas[i,]) + rnorm(n=1, mean=0, sd=sqrt(temp$sigma2Sample[i]))
+}
+
+final2 <- NULL
+for(i in 1:NROW(betas)){
+  final2[i] <-  X_new %*% t(betas[i,]) + rnorm(n=1, mean=0, sd=sqrt(temp$sigma2Sample[i]))
+}
+
+data_predictions <- cbind(final,final2) %>% as.data.frame()
+
+ggplot(data=data_predictions) + 
+  geom_histogram(aes(x=final), bins=30, color="green") +
+  geom_histogram(aes(x=final2), bins=30, color="red") +
+  ggtitle("Histograms of before and after")
+
+```
+
+Analysis: Clearly after reduction the price will increase
+
+## 3) Paper based
+
+## 4) Prediction and decision
+
+### a)
+```{r}
+# model is y=10*a where a is build cost and y is weight that bridge can hold
+y <- c(195, 191, 196, 197, 189)
+sigma_sq <- 100
+temp2 <- rnorm(n=1000, mean=mean(y), sd=sqrt(sigma_sq + sigma_sq/n))
+
+temp2 <- temp2 %>% as.data.frame()
+temp2$index <- seq(1:NROW(temp2))
+colnames(temp2) <- c("value", "index")
+
+ggplot(data=temp2, aes(x=value)) +
+  geom_histogram(bins=30) +
+  ggtitle("Histogram of the Weight")
+
+```
+
+### b)
+```{r}
+
+max_weight <- NULL
+for(i in 1:1000){
+max_weight[i] <- max(rnorm(n=365, mean=mean(y), sd=sqrt(sigma_sq + sigma_sq/n)))  
+}
+
+max_weight <- max_weight %>% as.data.frame()
+colnames(max_weight) <- c("max_weight")
+
+NROW(max_weight[max_weight > 230,])/NROW(max_weight)
+
+
+```
+
+### c)
+
+```{r}
+
+aGrid = seq(20,30,by = 0.01)
+temp3 <- crossing(aGrid, max_weight)
+
+temp4 <- temp3 %>% group_by(aGrid) %>% 
+  mutate(loss = (1-sum(max_weight>10*aGrid)/1000)*(aGrid) + sum(max_weight>10*aGrid)/1000*(100+aGrid)) %>% 
+  summarise(loss=mean(loss))
+
+ggplot(data=temp4, aes(x=aGrid, y=loss)) +
+  geom_line() +
+  ggtitle("Loss function vs. a")
+
+```
+
+# 2018-06-01
+
+## 1. Poisson predictions
+
+### a)
+
+```{r}
+
+prior = rgamma(n=1000, shape = 20, rate = 2)
+histogram(prior)
+
+posterior = rgamma(n=1000, shape = 520, rate = 52)
+histogram(posterior)
+
+
+
+temp <- data.frame(p1 = rbeta(100, 1,1), p2=rbeta(100, 1,1), p3=rep(0.5,100))
+```
+
+## 2) Regression
+
+
+### a)
+```{r}
+
+# Reading the data from file
+load(file = 'fish.RData')
+
+library(mvtnorm)
+
+# Defining a function that simulates from the scaled inverse Chi-square distribution
+rScaledInvChi2 <- function(n, df, scale){
+  return((df*scale)/rchisq(n,df=df))
+}
+
+BayesLinReg <- function(y, X, mu_0, Omega_0, v_0, sigma2_0, nIter){
+  # Direct sampling from a Gaussian linear regression with conjugate prior:
+  #
+  # beta | sigma2 ~ N(mu_0, sigma2*inv(Omega_0))
+  # sigma2 ~ Inv-Chi2(v_0,sigma2_0)
+  # 
+  # Author: Mattias Villani, IDA, Linkoping University. http://mattiasvillani.com
+  #
+  # INPUTS:
+  #   y - n-by-1 vector with response data observations
+  #   X - n-by-nCovs matrix with covariates, first column should be ones if you want an intercept.
+  #   mu_0 - prior mean for beta
+  #   Omega_0  - prior precision matrix for beta
+  #   v_0      - degrees of freedom in the prior for sigma2
+  #   sigma2_0 - location ("best guess") in the prior for sigma2
+  #   nIter - Number of samples from the posterior (iterations)
+  #
+  # OUTPUTS:
+  #   results$betaSample     - Posterior sample of beta.     nIter-by-nCovs matrix
+  #   results$sigma2Sample   - Posterior sample of sigma2.   nIter-by-1 vector
+  
+  # Compute posterior hyperparameters
+  n = length(y) # Number of observations
+  nCovs = dim(X)[2] # Number of covariates
+  XX = t(X)%*%X
+  betaHat <- solve(XX,t(X)%*%y)
+  Omega_n = XX + Omega_0
+  mu_n = solve(Omega_n,XX%*%betaHat+Omega_0%*%mu_0)
+  v_n = v_0 + n
+  sigma2_n = as.numeric((v_0*sigma2_0 + ( t(y)%*%y + t(mu_0)%*%Omega_0%*%mu_0 - t(mu_n)%*%Omega_n%*%mu_n))/v_n)
+  invOmega_n = solve(Omega_n)
+  
+  # The actual sampling
+  sigma2Sample = rep(NA, nIter)
+  betaSample = matrix(NA, nIter, nCovs)
+  for (i in 1:nIter){
+    
+    # Simulate from p(sigma2 | y, X)
+    sigma2 = rScaledInvChi2(n=1, df = v_n, scale = sigma2_n)
+    sigma2Sample[i] = sigma2
+    
+    # Simulate from p(beta | sigma2, y, X)
+    beta_ = rmvnorm(n=1, mean = mu_n, sigma = sigma2*invOmega_n)
+    betaSample[i,] = beta_
+    
+  }
+  return(results = list(sigma2Sample = sigma2Sample, betaSample=betaSample))
+}
+
+y = fish$length %>% as.matrix()
+X = fish[,c("intercept", "age", "temp")] %>% as.matrix()
+mu_0 = c(0,0,0)
+Omega_0 = diag(x=0.01,nrow=3,ncol=3)
+v_0 = 1
+sigma2_0 = 10000
+nIter =  5000
+
+regression_run <- BayesLinReg(y, X, mu_0, Omega_0, v_0, sigma2_0, nIter)
+
+sigmas <- regression_run$sigma2Sample
+betas <- regression_run$betaSample %>% as.data.frame()
+colnames(betas) <- c("intercept", "age", "temp")
+
+histogram(betas$intercept)
+histogram(betas$age)
+histogram(betas$temp)
+
+
+```
+
+### b)
+
+```{r}
+
+temp <- density(betas$age)
+values_df <- data.frame(x = temp$x, Density = temp$y)
+total <- sum(values_df$Density)
+values_df_unsorted <- values_df %>%
+arrange(x) %>%
+mutate(running_per_unsort = 100 * cumsum(Density)/total) %>%
+mutate(flag_unsort = ifelse(running_per_unsort < 5.0, "Drop",
+(ifelse(running_per_unsort < 95.00, "Accept", "Drop"))))
+
+
+ggplot(data=values_df_unsorted, aes(x=x, y=Density)) +
+geom_line() +
+geom_point(aes(x=x,y=0,color=flag_unsort)) +
+ggtitle("Posterior distribution for Age using tail method")
+
+```
+
+Analysis: As the fish ages the increases in length of the fish about 2.5 X the age(in days).
+
+### c)
+
+Analysis: The Omega can be changed, the variable can be dropped from the model.
+
+### d)
+
+```{r}
+intercept = c(1,1)
+age= c(30,100)
+temp=c(30,30)
+new_X <- data.frame(intercept, age,temp) %>% as.matrix()
  
+
+
+final <- NULL
+for(i in 1:1000){
+final[i] <- new_X[ceil(runif(n=1,min=1,max=2)),] %*% t(betas[i,]) + rnorm(n=1,mean = 0, sd=sqrt(sigmas[i]))
+}
+
+histogram(final)
+
+```
+
+## 3) Binomial model comparison
+
+All paper except c)
+
+### c)
+
+Dont clear
+
+
+## 4)
+
+### a)
+
+```{r}
+# Reading the data from file
+load(file = 'sulfur.RData')
+sulfar_data <- sulfur[sulfur > 200]
+
+
+complex_function <- function(x,mu,sigma,L){
+  answer <- dnorm((x-mu)/sigma, log = TRUE)-log(sigma)-log(1-pnorm((L-mu)/sigma))
+return(answer)
+}
+
+mu <- seq(100,400,1)
+temp <- NULL
+final <- NULL
+j <- 0
+for(i in 1:length(mu)){
+  j <- j + 1
+  temp[j] <- sum(complex_function(x=sulfar_data, mu=mu[i], sigma = 100, L=200))
+}
+
+plot(exp(temp))
+
+final <- final %>% as.data.frame()
+colnames(final) <- c("mu", "posterior")
+
+
+ggplot(data = final, aes(x=mu, y=posterior)) +
+  geom_point()
+
+```
+
+
+
+```{r}
+library(rstan)
+T = length(sulfur)
+T_cens = sum(sulfur <= 200)
+censData <- list(T=T, T_cens = T_cens, x=sulfur, L=200)
+
+# Model
+censModel <- '
+data {
+  int<lower=0> T;       // Total number of time points
+  int<lower=0> T_cens;  // Number of censored time points
+  real x[T];            // Partly censored data
+  real<upper=max(x)> L; // Lower truncation point
+}
+
+parameters {
+  real mu;
+  real<lower=0> sigma;
+  real<upper=L> x_cens[T_cens]; // Censored values
+}
+
+model {
+  int t_cens = 0;
+  for (t in 1:T){
+    if (x[t] > L) 
+      x[t] ~ normal(mu,sigma);
+    else {
+      t_cens += 1;
+      x_cens[t_cens] ~ normal(mu,sigma);
+    }
+  }
+}
+'
+
+set.seed(12345)
+burnin = 1000
+niter = 2000
+
+# perform MCMC
+x_t_fit = stan(model_code=censModel, data=censData,
+control = list(adapt_delta = 0.99), warmup=burnin,iter=niter,chains=3)
+
+
+traceplot(x_t_fit) 
+
+x_t_params <- extract(x_t_fit, pars = c("mu", "sigma")) %>% as.data.frame()
+histogram(x_t_params$mu)
+histogram(x_t_params$sigma)
+
+```
+
+# 2018-08-22
+
+## The log-normal model
+
+### a)
+
+```{r}
+# Reading the data from file
+load(file = 'lions.RData')
+
+posterior <- NULL
+for(i in 1:100){
+mu = rnorm(n=1, 5, 1)
+posterior[i] <- prod(dlnorm(x=lions, meanlog = mu , sdlog = 0.2),mu) 
+}
+
+histogram(posterior)
+post_dens <- density(posterior)
+plot(post_dens$x, post_dens$y)
+
+
+
+
+
+# Read the data
+x = lions
+
+logPostLogNormal <- function(x,mu,sigma2){
+  sum(dlnorm(x,meanlog=mu,sdlog=sqrt(sigma2), log=TRUE)) + dnorm(mu,5,1,log=TRUE)
+} 
+
+sigma2 = 0.04
+logPostLogNormal(x,5.25,sigma2)
+
+muGrid <- seq(5.15, 5.35, length = 1000)
+logPostEvals <- rep(0, 1000)
+i = 0
+for (mu in muGrid){
+  i = i + 1
+  logPostEvals[i] <- logPostLogNormal(x,mu,sigma2)
+}
  
+
+plot(post_dens$x, post_dens$y/sum(post_dens$y))
+plot(muGrid, exp(logPostEvals)/(sum(exp(logPostEvals))*binWidth), type = "l", ylab = 'Posterior density', xlab = expression(mu))
+
+
+```
+
+### b)
+
+```{r}
+
+set.seed(12345)
+warmup=1000
+burnin = 1000
+iter = 2000
+niter = 4*(iter-warmup)
+
+ARStanModel = 'data {
+int<lower=1> N;
+real x[N];
+}
+parameters {
+real mu;
+real<lower=0> sigma;
+}
+model {
+    mu ~ normal(5,1);
+    sigma ~ scaled_inv_chi_square(5,0.2);
+for (i in 1:N)
+    x[i] ~ lognormal(mu,sqrt(sigma));
+}'
+
+# perform MCMC
+x_t_fit = stan(model_code=ARStanModel, data=list(x=lions, N=92), control = list(adapt_delta = 0.99), warmup=warmup,iter=niter,chains=3)
+
+x_t_param = extract(x_t_fit)
+
+x_t_mu <- density(x_t_param$mu)
+
+plot(x_t_mu$x,x_t_mu$y)
+
+```
+
+
+### c)
+
+
+## 2 Logistic regression
+
+### a)
+
+```{r}
+# Reading the data from file
+load(file = 'titanic.RData')
+
+set.seed(12345)
+# creating matrix for calculation
+X <- titanic[,c("intercept", "adult", "man", "class1", "class2")] %>% as.matrix()
+Y <- titanic[,c("survived")] %>% as.matrix()
+
+# Prior.
+tau = 50
+mu_0 = rep(0, ncol(X))
+sigma_0 = tau^2*diag(ncol(X))
+beta_init = rep(0, ncol(X))
+
+log_posterior <- function(betaVect,Y,X,mu,sigma){
+nPara <- length(betaVect);
+linPred <- X %*% betaVect;
+# evaluating the log-likelihood
+logLik <- sum( linPred*Y -log(1 + exp(linPred)));
+if (abs(logLik) == Inf) logLik = -20000;
+# evaluating the prior
+logPrior <- dmvnorm(betaVect, matrix(0,nPara,1), sigma, log=TRUE);
+# add the log prior and log-likelihood together to get log posterior
+return(logLik + logPrior)
+}
+
+
+results_optim = optim(par = beta_init,
+fn = log_posterior,
+Y = Y,
+X = X,
+mu = mu_0,
+sigma = sigma_0,
+method=c("BFGS"),
+# Multiplying objective function by -1 to find maximum instead of minimum.
+control=list(fnscale=-1),
+hessian=TRUE)
+
+set.seed(12345)
+
+# Simulating 1000 times from approximated posterior.
+posterior_sim_beta_all = rmvnorm(n = 1000, mean = results_optim$par, sigma = -solve(results_optim$hessian)) %>% as.data.frame()
+colnames(posterior_sim_beta_all) = c("intercept", "adult", "man", "class1", "class2")
+
+
+adult_den <- density(posterior_sim_beta_all$adult)
+plot(adult_den$x, adult_den$y)
+
+
+histogram(posterior_sim_beta_all$adult)
+histogram(posterior_sim_beta_all$man)
+histogram(posterior_sim_beta_all$class1)
+histogram(posterior_sim_beta_all$class2)
+
+
+```
+
+### b)
+
+```{r}
+#prob less than zero
+
+NROW(posterior_sim_beta_all[posterior_sim_beta_all$adult < 0,])/NROW(posterior_sim_beta_all)
+
+```
+
+## 3. Geometric model comparison
+
+All paper
+
+
+## 4. Election
+
+### a)
+On Paper
+
+### b)
+```{r}
+
+rDirichlet = function(alpha_j) {
+n_alpha = length(alpha_j)
+pi_draws = matrix(NA, n_alpha, 1)
+for (j in 1:n_alpha){
+pi_draws[j] = rgamma(1, alpha_j[j], 1)
+}#Dividing every column of pi_draws by the sum of the elements in that column.
+pi_draws = pi_draws/sum(pi_draws)
+return(pi_draws)
+}
+
+y <- c(184,67,149)
+z <- y+1
+
+final <- NULL
+for(i in 1:1000){
+  temp <- t(rDirichlet(z)) %>% as.data.frame()
+  final <- rbind(temp,final)
+}
+colnames(final) <- c("A", "B", "C")
+
+NROW(final[final$A > 0.50,])/1000
+
+```
+
+### c)
+```{r}
+final$part_a_biggest <- ifelse((final$A > final$B) & (final$A > final$B), 1, 0)
+
+NROW(final[final$part_a_biggest == 1,])
+
+```
+
+
+# 2018-11-01
+
+## 1)
+
+### a)
+```{r}
+y <- c(1690,1790,1760,1750)
+sigma <- 50
+N <- 1000
+
+posterior <- NULL
+posterior <- rnorm(n=1000, mean = mean(y), sd=sqrt(sigma^2 + sigma^2/4))
+histogram(posterior)
+
+```
+
+### b)
+
+```{r}
+posterior_week <- NULL
+for(i in 1:1000){
+posterior_week[i] <- max(rnorm(n=52, mean = mean(y), sd=sqrt(sigma^2 + sigma^2/4)))
+}
+
+histogram(posterior_week)
+
+weight_exceed_1850 <- length(posterior_week[posterior_week > 1850])/1000
+weight_exceed_1850
+
+```
+
+### c)
+```{r}
+loss_function <- function(a,n){}
+```
+
+## 2) Regression
+
+### a)
+
+```{r}
+
+# Reading the data from file
+load(file = 'fish.RData')
+
+library(mvtnorm)
+
+# Defining a function that simulates from the scaled inverse Chi-square distribution
+rScaledInvChi2 <- function(n, df, scale){
+  return((df*scale)/rchisq(n,df=df))
+}
+
+BayesLinReg <- function(y, X, mu_0, Omega_0, v_0, sigma2_0, nIter){
+  # Direct sampling from a Gaussian linear regression with conjugate prior:
+  #
+  # beta | sigma2 ~ N(mu_0, sigma2*inv(Omega_0))
+  # sigma2 ~ Inv-Chi2(v_0,sigma2_0)
+  # 
+  # Author: Mattias Villani, IDA, Linkoping University. http://mattiasvillani.com
+  #
+  # INPUTS:
+  #   y - n-by-1 vector with response data observations
+  #   X - n-by-nCovs matrix with covariates, first column should be ones if you want an intercept.
+  #   mu_0 - prior mean for beta
+  #   Omega_0  - prior precision matrix for beta
+  #   v_0      - degrees of freedom in the prior for sigma2
+  #   sigma2_0 - location ("best guess") in the prior for sigma2
+  #   nIter - Number of samples from the posterior (iterations)
+  #
+  # OUTPUTS:
+  #   results$betaSample     - Posterior sample of beta.     nIter-by-nCovs matrix
+  #   results$sigma2Sample   - Posterior sample of sigma2.   nIter-by-1 vector
+  
+  # Compute posterior hyperparameters
+  n = length(y) # Number of observations
+  nCovs = dim(X)[2] # Number of covariates
+  XX = t(X)%*%X
+  betaHat <- solve(XX,t(X)%*%y)
+  Omega_n = XX + Omega_0
+  mu_n = solve(Omega_n,XX%*%betaHat+Omega_0%*%mu_0)
+  v_n = v_0 + n
+  sigma2_n = as.numeric((v_0*sigma2_0 + ( t(y)%*%y + t(mu_0)%*%Omega_0%*%mu_0 - t(mu_n)%*%Omega_n%*%mu_n))/v_n)
+  invOmega_n = solve(Omega_n)
+  
+  # The actual sampling
+  sigma2Sample = rep(NA, nIter)
+  betaSample = matrix(NA, nIter, nCovs)
+  for (i in 1:nIter){
+    
+    # Simulate from p(sigma2 | y, X)
+    sigma2 = rScaledInvChi2(n=1, df = v_n, scale = sigma2_n)
+    sigma2Sample[i] = sigma2
+    
+    # Simulate from p(beta | sigma2, y, X)
+    beta_ = rmvnorm(n=1, mean = mu_n, sigma = sigma2*invOmega_n)
+    betaSample[i,] = beta_
+    
+  }
+  return(results = list(sigma2Sample = sigma2Sample, betaSample=betaSample))
+}
+
+
+fish$age_2 <- fish$age^2
+fish$temp_2 <- fish$temp^2
+fish$age_temp <- fish$age * fish$temp
+
+y = fish$length %>% as.matrix()
+X = fish[,c("intercept", "age", "temp", "age_2", "temp_2", "age_temp")] %>% as.matrix()
+mu_0 = c(0,0,0,0,0,0)
+Omega_0 = diag(x=0.01,nrow=6,ncol=6)
+v_0 = 1
+sigma2_0 = 10000
+nIter = 5000
+
+beta_list <- BayesLinReg(y, X, mu_0, Omega_0, v_0, sigma2_0, nIter)
+
+betas <- beta_list$betaSample %>% as.data.frame()
+colnames(betas) <- c("intercept", "age", "temp", "age_2", "temp_2", "age_temp")
+
+sigmas <- beta_list$sigma2Sample %>% as.data.frame()
+colnames(sigmas) <- c("sigma")
+
+
+
+betas %>% summarise(mean_intercept = mean(intercept),
+                    mean_age = mean(age),
+                    mean_temp = mean(temp),
+                    mean_age_2 = mean(age_2),
+                    mean_temp_2 = mean(temp_2),
+                    mean_age_temp = mean(age_temp))
+
+betas %>% summarise(intercept_l_limit = quantile(x = intercept, probs = 0.025), intercept_u_limit = quantile(x = intercept, probs = 0.975),
+                    age_l_limit = quantile(x = age, probs = 0.025), age_u_limit = quantile(x = age, probs = 0.975),
+                    temp_l_limit = quantile(x = temp, probs = 0.025), temp_u_limit = quantile(x = temp, probs = 0.975))
+  
+```
+
+### b)
+```{r}
+sigmas %>% summarise(mean_sigma = mean(sigma), median_sigma=median(sigma))
+
+```
+
+### c)
+```{r}
+new_x <- X[1:11,]
+new_y <- y[1:11,]
+
+final <- NULL
+for(i in 1:1000){
+temp <- new_x %*% t(betas[i,]) + rnorm(n=1,mean = 0, sd=sqrt(sigmas[i,]))
+temp2 <- cbind(new_x,temp,new_y)
+final <- rbind(final,temp2)
+}
+
+final <- final %>% as.data.frame()
+final <- final[,c("age", "new_y", "1")]
+colnames(final) <- c("age", "length", "predicted_age")
+
+# calculation of the 95% confidence interval
+predicted_data = final %>%
+group_by(age, length) %>%
+summarise(temp_hat_median = median(predicted_age),
+predicted_age_l_limit = quantile(x = predicted_age, probs = 0.025),
+predicted_age_u_limit = quantile(x = predicted_age, probs = 0.975))
+
+ggplot(data=predicted_data, aes(x=age, y=length)) + 
+  geom_line(aes(y=temp_hat_median, color="age")) +
+  geom_line(aes(y=predicted_age_l_limit, color="lower age")) +
+  geom_line(aes(y=predicted_age_u_limit, color="upper age")) +
+  ggtitle("plot of line")
+  
+
+```
+
+## 3)
+On paper
+
+## 4) Metropolis for Weibull
+
+### a)
+
+```{r}
+# Reading the data from file
+load(file = 'weibull.RData')
+x <- weibull
+
+weibull_function <- function(x,param){
+alpha = param[1]
+beta = param[2]
+posterior <- sum(dweibull(x, shape = alpha, scale = beta, log=TRUE)) +
+    - 2*log(alpha*beta) 
+return(posterior)
+}
+
+initVal = c(1,1)
+results_optim = optim(par = initVal,fn = weibull_function, x = x, 
+                      method=c("L-BFGS-B"), gr=NULL, control=list(fnscale=-1), 
+                      hessian=TRUE, lower = c(0.0001,0.0001), upper = c(Inf,Inf))
+
+mean_value <- results_optim$par
+covar_value <- -solve(results_optim$hessian)
+
+mean_value
+covar_value
+
+
+# 4a
+x = weibull
+
+logPostWeibull <- function(param, x){
+  theta1 = param[1]
+  theta2 = param[2]
+  logPost =   sum(dweibull(x, shape = theta1, scale = theta2, log=TRUE)) +
+    - 2*log(theta1*theta2)
+  return(logPost)
+}
+
+initVal = c(1,1)
+optRes <- optim(par = initVal, fn  = logPostWeibull, gr = NULL, x, method = c("L-BFGS-B"),
+                lower = c(0.0001,0.0001), upper = c(Inf,Inf), control = list(fnscale = -1), hessian = TRUE)
+postMean <- optRes$par # This is the mean vector
+postCov <- -solve(optRes$hessian) # This is posterior covariance matrix
+
+print(postMean)
+print(postCov)
+
+```
+
+### b)
+```{r}
+
+#metropolis_sampler = function(nBurnIn, n, theta, c, logPostFunc, ...) {
+metropolis_sampler = function(logPostFunc, theta, n, c, beta_inv_hessian,x) {
+# Setup.
+theta_prev = theta
+n_accepted = 0
+p = length(theta)
+theta_samples = matrix(NA, n, p)
+# Run.
+#for(i in -nBurnIn : n) {
+for (i in 1:n) {
+# Sample from proposal distribution
+theta_cand = as.vector(rmvnorm(n = 1,mean = theta_prev,sigma = c * beta_inv_hessian))
+# Calculate log posteriors
+log_post_cand = logPostFunc(theta_cand,x=x)
+log_post_prev = logPostFunc(theta_prev,x=x)
+alpha = min(1, exp(log_post_cand - log_post_prev))
+# Select sample with probability alpha
+u = runif(1)
+if (u <= alpha){
+theta_samples[i,] = theta_cand
+theta_prev = theta_cand
+n_accepted = n_accepted + 1
+} else {
+theta_samples[i,] = theta_prev
+theta[theta<=0]=1e-6
+}#Save sample if not burnin
+#if (i>0) theta.samples[i,] = theta.c
+}
+cat("Sampled", n, "samples with an acceptance rate of", n_accepted/n)
+return(theta_samples)
+}
+
+# Sampling from posterior using metropolis function.
+res = metropolis_sampler(logPostFunc = logPostWeibull, n = 1000, c = 0.6, theta = postMean, beta_inv_hessian = postCov, x = x)
+
+
+# Plotting convergence of beta.
+# Const.
+conv_Const = ggplot() +
+geom_line(aes(x = seq(1:nrow(res)),
+y = res[,1])) +
+geom_hline(yintercept = mean(res[,1]),
+color = "red") +
+labs(x = "sample",
+y = colnames(data)[1]) +
+theme_bw()
+# PowerSeller
+conv_PowerSeller = ggplot() +
+geom_line(aes(x = seq(1:nrow(res)),
+y = res[,2])) +
+geom_hline(yintercept = mean(res[,2]),
+color = "red") +
+labs(x = "sample",
+y = colnames(data)[2]) +
+theme_bw()
+
+grid.arrange(conv_Const, conv_PowerSeller, ncol = 2)
+```
+
+
+# 2017-05-30
+
+## 1. Bayesian inference for the rice distribution
+
+### a)
+
+```{r}
+
+riceData <- c(1.556, 1.861, 3.135, 1.311, 1.877, 0.622, 3.219, 0.768, 2.358, 2.056)
+
+posterior_function <- function(x,param){
+theta <- param[1]  
+I <- besselI(x*theta,0)
+answer <- sum(log(x)-(0.5 * (x^2+theta^2)) + log(I)) 
+return(answer)
+}
+
+theta <- seq(0.01,3,0.01)
+
+temp <- NULL
+for(i in 1:length(theta)){
+temp[i] <-  posterior_function(x=riceData,theta[i]) 
+}
+
+plot(theta,1/length(theta) * exp(temp)/sum(exp(temp)))
+
+```
+
+### b)
+
+```{r}
+
+param <- c(1)
+results_optim = optim(par = param, fn = posterior_function, x=riceData, method=c("L-BFGS-B"),control=list(fnscale=-1), lower=c(0.000001,0.000001),hessian=TRUE)
+
+result_mean <- results_optim$par
+result_cov <- -solve(results_optim$hessian)
+
+result_mean
+result_cov
+
+```
+
+### c)
+
+```{r}
+
+# Random number generator for the Rice distribution
+rRice <-function(n = 1, theta = 1, psi = 1){
+  x <- rnorm(n = n, mean = 0, sd = sqrt(psi))
+  y <- rnorm(n = n, mean = theta, sd = sqrt(psi))
+  return(sqrt(x^2+y^2))
+}
+
+# The posterior is approximately c(theta1,theta2) ~ N(results_optim$par, -solve(results_optim$hessian))
+
+theta_samples = rnorm(n=1000, mean=result_mean, sd=sqrt(result_cov))
+histogram(theta_samples)
+
+
+new_rice <- rRice(n=1000, theta = mean(theta_samples), psi = 1)
+histogram(riceData)
+histogram(new_rice)
+
+```
+
+## 2)
+
+### a)
+```{r}
+
+# eBay bids data
+load(file = 'bids.RData')    # Loading the vector 'bids' into workspace
+
+
+```
+
 
 
 

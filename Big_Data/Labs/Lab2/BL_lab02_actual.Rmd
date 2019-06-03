@@ -1,0 +1,307 @@
+---
+title: "Bayesian Learning Lab02"
+author: "Saewon Jun"
+output: pdf_document
+---
+
+##1. Linear and polynomial regression
+The dataset *TempLinkoping.txt* contains daily tempeartures (in Celcius degrees) at Malmslatt, Linkoping over the course of the year 2016(366 days since 2016 was a leap year). The response variable is *temp* and the covariate is 
+$$time=\frac{the~number~of~days~since~beginning~of~year}{366}$$
+The task is to perform a Bayesian analysis of a quadratic regression.
+$$temp=\beta_0+\beta_1\cdot time+\beta_2\cdot time^2 + \epsilon~,~\epsilon\sim^{iid}N(0,\sigma^2)$$
+####(a)Determining the prior distribution of the model parameters.
+Use the **conjugate prior** for the linear regression model. Your task is to set the prior hyperparameters $\mu_0 ,\Omega_0, \nu_0$ and $\sigma^2_0$ to sensible values. 
+
+*The conjugate prior for linear regression~model:*
+$$\beta|\sigma^2\sim N(\mu_0,\sigma^2 \Omega_0^{-1})$$
+$$\sigma^2\sim Inv-\chi^2(\nu_0,\sigma_0^2)$$
+$$\mu_0=prior~mean ,~\Omega_0=prior~precision,~\nu_0=degrees~of~freedom,~\sigma_0^2=prior~variance$$
+  
+####Start with $\mu_0=(-10,100,-100)^T,~\Omega_0=0.01 \cdot I_3,~\nu_0=4~and~\sigma^2_0=1$. Check if the prior agrees with your prior opinion by simulating draws from the **joint prior** of all parameters and for every draw compute the regression curve. 
+  
+This gives a collection of regression curves, one for each draw from the prior. 
+
+```{r, warning=F}
+library(mvtnorm)
+###read the data and fit the model
+data <- read.table("TempLinkoping.txt", header=TRUE)
+head(data)
+
+
+###given prior values
+mu_0 <- c(-10,100,-100)
+Omega_0 <- diag(0.01,3,3)
+v_0 <- 4
+sig2_0 <- 1 
+
+###Simulating 100 draws from the prior
+set.seed(12345)
+
+draws <- function(ndraws,mu_0,Omega_0,v_0,sig2_0){
+        draws <- matrix(0,100,4) 
+        
+        #draw sigma^2 using inverse chi-square
+        draws[,4] <- (v_0*sig2_0)/rchisq(100,v_0)
+        
+        #draw betas given sigma^2
+        for (i in 1:100){
+                draws[i,1:3] <- rmvnorm(1,mu_0,draws[i,4]*solve(Omega_0))
+                }
+        
+        ###Now calculate the y to plot the regression curve
+        x <- seq(0.001,1,0.01) #this is for ndraw=100
+        y <- matrix(0,100,100)
+       
+        for (i in 1:100){
+                y[i,] <- draws[i,1]+draws[i,2]*x+draws[i,3]*x^2
+        }
+        
+        return(list(x,y))
+        
+}
+
+draws1 <- draws(100,mu_0,Omega_0,v_0,sig2_0)
+x <- draws1[[1]]
+y <- draws1[[2]]
+
+plot(x, y[1,], type="l", col="grey", main="Collection of regression curves",
+     xlab="time", ylab="temp", ylim=c(-100,100))
+for (i in 2:100){
+        points(x, y[i,], type="l", col="grey")
+}
+points(data[,1],data[,2], type="b", col="black", cex=0.5)
+legend("topleft", legend=c("data","regression curves"), col=c("black","grey"),
+       lty=c(1,1), cex=0.7)
+
+```
+  
+####Do the collection of curves look reasonable? If not, change the prior hyperparameters until the collection of prior regression curves do agree with your prior beliefs about the regressoin curve.
+
+The result above seems to be reasonable enough since the curves captures the given data. However, still we can choose the better prior hyperparameters for more reasonable result. Here, we fit the data to ordinary linear model, and selected the hyperparameters based on the fitted model. 
+```{r}
+#change the prior value
+mu_0 <- c(-10,90,-90)
+Omega_0 <- diag(0.01,3,3)
+v_0 <- 2
+sig2_0 <- 0.1
+
+draws2 <- draws(100,mu_0,Omega_0,v_0,sig2_0)
+x <- draws2[[1]]
+y <- draws2[[2]]
+
+plot(x, y[1,], type="l", col="grey", main="Collection of regression curves",
+     xlab="time", ylab="temp", ylim=c(-100,100))
+for (i in 2:100){
+        points(x, y[i,], type="l", col="grey")
+}
+points(data[,1],data[,2], type="b", col="black", cex=0.5)
+legend("topleft", legend=c("data","regression curves"), col=c("black","grey"),
+       lty=c(1,1), cex=0.7)
+```
+  
+  From the plot abolve, we were able to figure out that choosing hyperparameters by fitting the data to linear model seems to be more reasonable. For the following steps, we will keep the same hyperparameter. 
+  
+####(b)Write a program that simulates from the **joint posterior distribtuion** of $\beta_0, \beta_1, \beta_2, and \sigma^2$. Plot the marginal posteriors for each parameter as a histogram.
+```{r}
+set.seed(12345)
+
+mu_0 <- c(-10,90,-90)
+Omega_0 <- diag(0.01,3,3)
+v_0 <- 2
+sig2_0 <- 0.1
+
+Y <- as.matrix(data[,2]) #temp
+X <- as.matrix(cbind(1,data[,1],data[,1]^2))
+Beta <- solve(t(X)%*%X)%*%t(X)%*%Y
+mu_n <- solve(t(X)%*%X+Omega_0)%*%(t(X)%*%X%*%Beta+Omega_0%*%mu_0)
+Omega_n <- t(X)%*%X+Omega_0
+v_n <- v_0+nrow(data)
+sig2_n <- (1/v_n)*(v_0*sig2_0+(t(Y)%*%Y+t(mu_0)%*%Omega_0%*%mu_0)-(t(mu_n)%*%Omega_n%*%mu_n))
+
+###10000 draws
+draws3 <- matrix(0,10000,4)
+#drawing sigma^2
+draws3[,4] <- as.numeric(((v_n)*sig2_n))/rchisq(10000,v_n)
+#drawing Beta
+for (i in 1:10000){
+        draws3[i,1:3] <- rmvnorm(1, mu_n, draws3[i,4]*solve(Omega_n))
+}
+
+###Plot each parameters(Beta,simga^2) as a histogram
+par(mfrow=c(2,2))
+hist(draws3[,1], col="grey", freq=FALSE, breaks=50, xlab=expression(beta[0]),
+     main=expression(paste("Histogram of ",beta[0])))
+lines(density(draws3[,1]), col="orange")
+hist(draws3[,2], col="grey", freq=FALSE, breaks=50, xlab=expression(beta[1]),
+     main=expression(paste("Histogram of ",beta[1])))
+lines(density(draws3[,2]), col="orange")
+hist(draws3[,3], col="grey", freq=FALSE, breaks=50, xlab=expression(beta[2]),
+     main=expression(paste("Histogram of ",beta[2])))
+lines(density(draws3[,3]), col="orange")
+hist(draws3[,4], col="grey", freq=FALSE, breaks=50, xlab=expression(sigma^2),
+     main=expression(paste("Histogram of ",sigma^2)))
+lines(density(draws3[,4]), col="orange")
+
+
+```
+  
+Increasing the number of draws shows the distribution which is close to normal distribution.
+  
+####Also produce another figure with a scatter plot of the temperatue data and overlay a curve for the **posterior median** of the regression function $f(time)=\beta_0 +\beta_1\cdot time+\beta_2\cdot time^2$, computed for every value of *time*. Also overlay curves for the lower 2.5% and upper 97.5% posterior credible intervals for $f(time)$.
+  
+That is, compute the 95% equal tail posterior probability intervals for every value of *time* and then connect the lower and upper limits of the interval by curves. Does the interval bands contain most of the data points? Should they?
+```{r}
+###Now calculate the y to plot the regression curve
+x <- data$time 
+y <- matrix(0,10000,length(data$time))
+
+for (i in 1:10000){
+                y[i,] <- draws3[i,1]+draws3[i,2]*x+draws3[i,3]*x^2
+}
+
+y_median <- apply(y,2,median)
+sorted_y <- apply(y,2,sort)
+upper <- sorted_y[10000*0.975,]
+lower <- sorted_y[10000*0.025,]
+
+plot(data[,1],data[,2], cex=0.7, col="grey",
+     main="scatter plot of temperature data", xlab="time", ylab="temp")
+lines(x, y_median, col="orange", lwd=2.5)
+lines(x, upper, col="brown", lty="dashed")
+lines(x, lower, col="brown", lty="dashed")
+legend("topleft", legend=c("data","posterior median","95% equal tail interval"), 
+       col=c("grey","orange","brown"),lty=c(1,1,4), cex=0.7)
+```
+The interval does not contain most of the data points. This is due to size of the sample. If size of the sample is not big enough, the interval from posterior distibution could be different from the given sample. 
+  
+####(c)It is of interest to locate the *time* with the highest expected temperature(that is, the *time* where $f(time)$ is maximal). 
+Let's call this value $\overline{x}$. Use the simulation in (b) to simulate from the $posterior ~distribution~of~~\overline{x}$
+
+Given that :
+$$f(time)=\beta_0+\beta_1\cdot time+\beta_2\cdot time^2$$
+We can find by maximal of $f(time)$ by taking derivative :
+$$f'(time)=\beta_1+2\cdot \beta_2\cdot time:=0$$
+$$time=-\frac{\beta_1}{2\beta_2}=\overline{x}$$
+```{r}
+x <- data$time
+x_bar <- -draws3[,2]/(2*draws3[,3])
+
+hist(x_bar,freq = F, breaks=20, main="time with the highest expected temperature",
+     xlab="time where f(time) is maximal")
+lines(density(x_bar),col="orange",lwd=2)
+
+```
+  
+  
+####(d)Say now that you want to estimate a polynomial model of order7, but you suspect that higher order terms may not be needed, and you worry about over-fitting. Suggest a suitable prior that mitigates this potential problem. 
+
+We can apply bayesian shrinkage prior, and following hierarchical setup can be applied :
+$$\beta|\sigma^2,\lambda \sim N(0,\sigma^2\lambda^{-1}I_m)$$
+$$\sigma^2\sim Inv-\chi^2(\nu_0,\sigma_0^2)$$
+$$\lambda\sim Gamma\bigg(\frac{\eta_0}{2},\frac{\eta_0}{2\lambda_0}\bigg)$$
+
+##2. Posterior approximation for classification with logistic regression
+The data set *WomenWork.dat* contains n=200 observations with following nine variables:
+-response:*Work(binary)*,
+-features:*Constant(intercept),HusbandInc,EduYears,ExpYears,ExpYears2,Age,NSmallChild,NBigChild*
+where $y(work)$ is the binary variable with $y=1$ if the woman works and $y=0$ if she does not.
+$\textbf{x}$ is a 8-dimensional vector containing 8 features. 
+
+####(a)Consider the logistic regression
+$$Pr(y=1|\textbf{x})=\frac{exp(\textbf{x}^T\beta)}{1+exp(\textbf{x}^T\beta)}$$
+Fit the logistic regression using mzximum likelihood estimation.
+```{r}
+####read the data
+WomenWork <- read.table("WomenWork.dat", header=TRUE)
+glmModel <- glm(Work ~ 0 +., data=WomenWork, family=binomial)
+#adding a zero in the model formula so that R doesn't add an extra intercept
+#family=binomial means we want to fit a logistic regression.
+summary(glmModel)
+```
+####(b)Out goal is to approximate the posterior distribution of the 8-dim parameter vector $\beta$ with a multivaraite normal distribution:
+$$\beta|\textbf{y},\textbf{X}\sim N\bigg(\tilde{\beta},\textbf{J}_\textbf{y}^{-1}(\tilde{\beta})\bigg)$$
+where $\tilde{\beta}$ is ppsterioir mode and $\textbf{J}(\tilde{\beta})$ is the observed Hessian evaluated at the poesterior mode. (Both can be computed by the **optim** function in R).
+  
+Use the prior:
+$$\beta\sim N(0,\tau^2\textbf{I}),~~with~\tau=10$$
+  
+Also, compute an 95% credible interval for the variable NSmallChild.
+```{r}
+
+
+X <- as.matrix(WomenWork[,-1])
+y <- as.vector(WomenWork[,1])
+tau <-10
+nPara <- dim(X)[2]
+covNames <- names(WomenWork)[2:length(names(WomenWork))]
+
+####Setting up the prior
+mu <- as.vector(rep(0,nPara))
+sigma <- tau^2*diag(nPara)
+
+####Log-posterior function
+LogPost <- function(Beta,y,X,mu,sigma){
+  
+  nPara <- length(Beta)
+  linPred <- X%*%Beta
+  
+  # evaluating the log-likelihood                                    
+  logLik <- sum( linPred*y -log(1 + exp(linPred)))
+  
+  # evaluating the prior
+  logPrior <- dmvnorm(Beta, matrix(0,nPara,1), sigma, log=TRUE)
+  
+  # add the log prior and log-likelihood together to get log posterior
+  return(logLik + logPrior)
+}
+
+#### Different starting values.(random starting vector)
+initVal <- as.vector(rnorm(dim(X)[2]))
+
+OptimResults <- optim(initVal, LogPost, gr=NULL, y , X , mu, sigma, 
+                      method=c("BFGS"), control=list(fnscale=-1), hessian=TRUE)
+
+#### Printing the results to the screen
+postMode <- OptimResults$par
+postCov <- -solve(OptimResults$hessian) # Posterior covariance matrix is -inv(Hessian)
+names(postMode) <- covNames # Naming the coefficient by covariates
+approxPostStd <- sqrt(diag(postCov)) # Computing approximate standard deviations.
+names(approxPostStd) <- covNames # Naming the coefficient by covariates
+
+print('The posterior mode is:')
+print(postMode)
+print('The approximate posterior standard deviation is:')
+print(approxPostStd)
+
+####95% credible interval for NSmallChild
+child <- rnorm(5000, mean=postMode[7], sd=approxPostStd[7])
+child <- sort(child)
+lower <- child[5000*0.025]
+upper <- child[5000*0.975]
+print('95% Credible interval for NSmallChild is:')
+print(c(lower,upper))
+```
+  
+Would you say that this feature is an important determinant of the probability that a women works?
+
+####(c)Write a function that simulates from the predictive distribution of response variable in a logistic regression.
+Use your normal approximation from 2(b) - Use that function to simulate and plot the predictive distribution for the Work variable for a 40 year old woman, with two children (3 and 9 years old), 8 years of education, 10 years of experience. and a husband with an income of 10.
+
+```{r}
+simulations <- function(n_simu,mean, sigma){
+        Betas <- as.matrix(rmvnorm(n_simu,mean=mean,sigma=sigma))
+        givenX <- c(1,10,8,10,(10/10)^2,40,1,1) #Keep the order
+        
+        logistic_reg <- exp(givenX%*%t(Betas))/(1+exp(givenX%*%t(Betas)))
+        #Put the value into the logistic regression model
+        
+        return(logistic_reg)
+}
+
+res <- simulations(10000, postMode, postCov)
+
+hist(res, freq=FALSE, breaks=50,
+     main="predictive distribution of Work variable (logistic regression)",
+     xlab="response variable(y)")
+lines(density(res), col="orange", lwd=2)
+```

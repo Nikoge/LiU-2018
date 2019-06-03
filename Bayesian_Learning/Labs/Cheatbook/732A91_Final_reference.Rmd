@@ -1571,6 +1571,10 @@ results_optim = optim(par = beta_init,
 # Storing results.
 beta_mode = results_optim$par
 beta_inv_hessian= -solve(results_optim$hessian)
+
+# The posterior is approximately c(theta1,theta2) ~ N(results_optim$par, -solve(results_optim$hessian))
+
+
 # Printing results.
   # Beta_mode.
   knitr::kable(data.frame(beta_ = seq(from = 0,to = length(results_optim$par)-1),
@@ -1800,9 +1804,10 @@ ii. For each of the two data sets, evaluate the convergence of the samplers and 
 
 set.seed(12345)
 T = 201
+warmup=1000
 burnin = 1000
-niter = 2000
-
+iter = 2000
+niter = 4*(iter-warmup)
 
 x_t <- time_series_function(mu=10, phi=0.3, sigma_sq=2, T=200)
 x_t <- as.vector(x_t[,1])
@@ -1829,9 +1834,13 @@ model {
 
 # perform MCMC
 x_t_fit = stan(model_code=ARStanModel, data=list(x=x_t, N=T), 
-               control = list(adapt_delta = 0.99), warmup=burnin,iter=niter,chains=5)
+               control = list(adapt_delta = 0.99), warmup=warmup,iter=niter,chains=3)
+
+# traceplot of convergence
+traceplot(x_t_fit) 
+
 y_t_fit = stan(model_code=ARStanModel, data=list(x=y_t, N=T), 
-               control = list(adapt_delta = 0.99), warmup=burnin,iter=niter,chains=5)
+               control = list(adapt_delta = 0.99), warmup=warmup,iter=niter,chains=3)
 
 posterior_mean_x_t <- get_posterior_mean(x_t_fit)
 posterior_mean_y_t <- get_posterior_mean(y_t_fit)
@@ -1900,6 +1909,9 @@ model {
 
 c.fit <- stan(model_code = Stanpoisson, data = list (c = x_campy, N = N))
 
+# traceplot of convergence
+traceplot(c.fit) 
+
 params <- extract(c.fit, pars = c("mu", "sigma"))
 x <- extract(c.fit, pars = "x")
 
@@ -1954,6 +1966,9 @@ model {
 }'
 
 c.fit <- stan(model_code = Stanpoisson, data = list (c = x_campy, N = N))
+
+# traceplot of convergence
+traceplot(c.fit) 
 
 params <- extract(c.fit, pars = c("mu", "sigma"))
 x <- extract(c.fit, pars = "x")
