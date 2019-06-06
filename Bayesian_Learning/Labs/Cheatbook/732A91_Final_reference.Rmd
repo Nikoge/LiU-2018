@@ -2016,6 +2016,9 @@ knitr::include_graphics('./conjugate_priori_3.png')
 
 
 
+![Common_Distributions](DistributionsBDA.pdf)
+
+
 
 
 
