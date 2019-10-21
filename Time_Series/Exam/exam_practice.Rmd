@@ -1,0 +1,284 @@
+---
+title: "Time Series Analysis Helpfile"
+author: "Anubhav Dikshit (anudi287)"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    toc: true
+---
+
+\newpage
+
+# Library
+```{r setup, include=TRUE, message=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+library("tidyverse") #ggplot and dplyr 
+library("gridExtra") # combine plots
+library("knitr") # for pdf
+library("fpp2") #timeseries with autoplot and stuff
+library("reshape2") #reshape the data
+library("MASS") #StepAIC
+library("astsa") #dataset oil and gas is present here
+library("zoo") #dataset oil and gas is present here
+library("forecast") # for forecasting time series
+library("kernlab") #gausspr function
+library("TSA") #Q3
+library("tseries")
+library("matlib") # for inv and I
+
+# The palette with black:
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", 
+                "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+set.seed(12345)
+options(scipen=999)
+
+```
+
+\newpage
+
+# Lab1
+
+## Assignment 1
+
+### Q1
+```{r}
+filter_1 <- function(x){
+v_t <- rep(0,length(x))  
+for(i in 5:length(x))  
+v_t[i] <- 0.2*(x[i]+x[i-1]+x[i-2]+x[i-3]+x[i-4])  
+return(v_t)}
+
+x_t <- rep(0,100)
+for(i in 3:100){
+  x_t[i] <- -0.8*x_t[i-2] + rnorm(1,0,1)
+}
+
+x_t_2 <- rep(0,100) 
+  
+for(i in 1:100){
+x_t_2[i] <- cos(0.4*pi*i)
+}
+
+filtered_x_t <- filter_1(x_t)
+filtered_x_t_2 <- filter_1(x_t_2)
+df <- data.frame(x_t=x_t, filtered_x_t =filtered_x_t,
+                 x_t_2=x_t_2, filtered_x_t_2=filtered_x_t_2,
+                 index=1:length(x_t))
+
+ggplot(data=df, aes(x=index)) + 
+  geom_line(aes(y=x_t)) + geom_point(aes(y=filtered_x_t))
+
+ggplot(data=df, aes(x=index)) + 
+  geom_line(aes(y=x_t_2)) + geom_point(aes(y=filtered_x_t_2))
+
+
+##b
+
+Mod(polyroot(c(1,-4,2,0,0,1))) # casuality
+Mod(polyroot(c(1,0,3,0,1,0,-4))) # invertibility
+
+##c
+set.seed(54321)
+
+series <- arima.sim(n = 100, list(ar = c(1, -0.75), ma = c(0, -1/9)))
+Acf(series)
+
+# theortical values
+acf(ARMAacf(ar=c(1, -0.75),ma=c(0, -1/9), lag.max = 20))
+
+```
+
+### Q2
+```{r}
+rhine_data <- read_csv2(file="Rhine.csv")
+rhine_ts <- ts(data = rhine_data$TotN_conc, frequency =12 , start=c(1989))
+
+plot.ts(rhine_ts, main="Plot of Concentration of Nitrogen from Rhine River")
+lag.plot(rhine_ts,lags = 12, main = "Scatter plot of nitrogen concentration vs. lag")
+
+##b
+model <- lm(TotN_conc~Time, data=rhine_data)
+plot(model$residuals, main="Plot of residual of Concentration of Nitrogen", type='l')
+acf(model$residuals)
+
+##c
+model_smooth <- ksmooth(x=rhine_data$Time, y=rhine_data$TotN_conc, bandwidth = 2.5)
+residual_model_1 <- rhine_data$TotN_conc - model_smooth$y
+plot(residual_model_1, type='l')
+acf(residual_model_1)
+
+##d
+
+
+```
+
+## Assignment 3
+
+###a
+```{r}
+ts_oil <- ts(astsa::oil, start=c(2000,1), frequency = 52)
+ts_gas <- ts(astsa::gas, start=c(2000,1), frequency = 52)
+
+autoplot(cbind(ts_oil, ts_gas))
+
+```
+
+### b
+```{r}
+ts_oil <- log(ts(astsa::oil, start=c(2000,1), frequency = 52))
+ts_gas <- log(ts(astsa::gas, start=c(2000,1), frequency = 52))
+
+autoplot(cbind(ts_oil, ts_gas))
+
+
+```
+
+
+# Lab2
+
+## Assignment 1
+
+### Q1
+
+```{r}
+x_t <- arima.sim(n = 1000, list(ar = c(0.8, -0.2, 0.1)))
+
+pacf(x_t, plot=FALSE)[3]
+
+df <- data.frame(x_t=as.vector(x_t))
+
+df$x_t_1 <- lag(df$x_t,lag=1) 
+df$x_t_2 <- lag(df$x_t_1,lag=1) 
+df$x_t_3 <- lag(df$x_t_2,lag=1) 
+df <- na.omit(df)
+
+model <- lm(x_t_3 ~ x_t_1+x_t_2, data=df)
+model2 <- lm(x_t ~ x_t_1+x_t_2, data=df)
+
+cor(model$residuals,model2$residuals)
+
+###b
+set.seed(12345)
+x_t <- arima.sim(n = 100, list(ar = c(0.8, 0.1)))
+ar_fit_walker <- ar(x_t, method = c("yule-walker"), aic = FALSE, order = 2)$ar
+ar_fit_mle <- ar(x_t, method = c("mle"), aic = FALSE, order = 2)$ar
+ar_fit_ols <- ar(x_t, method = c("ols"), aic = FALSE, order = 2)$ar
+df <- data.frame(rbind(ar_fit_walker, ar_fit_ols,ar_fit_mle))
+kable(df, caption = "Comparison of parameters using different methods")
+
+###c)
+
+x_t <- arima.sim(n = 200, list(ma=c(0.3,rep(0,10),0.6,0.18)))
+
+#sample
+x_t %>%  ggPacf()
+x_t %>% ggAcf()
+
+#theortical
+ARMAacf(ma=c(0.3,rep(0,10),0.6,0.18), pacf = FALSE)
+ARMAacf(ma=c(0.3,rep(0,10),0.6,0.18), pacf = TRUE)
+
+
+###d
+
+fit_x_t <- arima(x_t, order = c(0,0,1), seasonal = list(order = c(0,0,1),
+period = 12))
+
+predicted_x_t <- predict(fit_x_t, n.ahead=30)
+predicted_x_t_upper_band <- predicted_x_t$pred + 1.96 * predicted_x_t$se
+predicted_x_t_lower_band <- predicted_x_t$pred - 1.96 * predicted_x_t$se
+
+#kernlab
+df <- data.frame(y = x_t)
+df$x <- as.numeric(rownames(df))
+gausspr_model <- gausspr(x=df$x, y=df$y)
+
+predicted_x_t_kernlab <- predict(gausspr_model, newdata=data.frame(x=201:230))
+df3 <- data.frame(y = predicted_x_t_kernlab, x=201:230)
+df2 <- data.frame(predicted_x_t = predicted_x_t$pred,
+predicted_x_t_upper = predicted_x_t_upper_band,
+predicted_x_t_lower = predicted_x_t_lower_band,
+x = 201:230)
+
+
+ggplot() +
+geom_line(data=df, aes(x=x, y=y, color="Actual y")) +
+geom_line(data=df2, aes(x=x, y=predicted_x_t, color="Predicted y")) +
+geom_line(data=df2, aes(x=x, y=predicted_x_t_upper, color="Upper band")) +
+geom_line(data=df2, aes(x=x, y=predicted_x_t_lower, color="Lower band")) +
+scale_colour_manual("", breaks = c("Actual y", "Predicted y", "Upper band", "Lower band"),
+values = c("#000000", "#009E73", "#56B4E9", "#E69F00")) +
+ggtitle("Original vs. Predicted y with confidence bands")
+```
+
+## Assignment 2
+
+### a)
+
+```{r}
+
+#monthly
+x_t <- log(ts(astsa::chicken, start=1924, frequency = 12))
+
+plot(x_t)
+acf(x_t, lag.max = 12)
+pacf(x_t, lag.max = 12)
+
+# one diff
+autoplot(diff(x_t,lag=1))
+diff(x_t, lag=1) %>% ggAcf(lag.max = 12)
+diff(x_t, lag=1)  %>% ggPacf(lag.max = 12)
+
+# construction eacf
+TSA::eacf(diff(x_t,1))
+#ARIMA(2,1,0) or ARIMA(2,1,1)
+
+model1 <- sarima(x_t, p=2,d=1,q=1,P=0,D=0,Q=0, S=12)
+model2 <- sarima(x_t, p=2,d=1,q=2,P=0,D=0,Q=0, S=12)
+# there is a osciallting pattern, could be seasonal. lets try ma 1 with 12 seasonal
+model3 <- sarima(x_t, p=2,d=1,q=2,P=0,D=0,Q=2, S=12)
+
+# less varience
+model4 <- sarima(x_t, p=2,d=1,q=2,P=1,D=0,Q=2, S=12)
+model5 <- sarima(x_t, p=2,d=1,q=2,P=2,D=0,Q=2, S=12)
+
+# pass the test
+adf.test(model3$fit$residuals)
+adf.test(model4$fit$residuals)
+adf.test(model5$fit$residuals)
+
+
+# AIC
+AIC(model1$fit)
+AIC(model2$fit)
+AIC(model3$fit)
+AIC(model4$fit)
+AIC(model5$fit)
+
+summary(model2$fit)
+polyroot(c(0.8509,-0.3425))
+polyroot(c(0.0935,0.2236))
+sarima.for(x_t,p=2,d=1,q=2,P=0,D=0,Q=0, S=12, n.ahead = 20)
+
+#ARIMA(2,1,2)(2,0,2)[12]
+
+x_t %>% auto.arima(trace = TRUE, seasonal = TRUE, ic="aicc")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+

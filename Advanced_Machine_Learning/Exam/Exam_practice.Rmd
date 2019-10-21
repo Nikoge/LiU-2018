@@ -1,0 +1,438 @@
+---
+title: "Advanced Machine Learning (732A96) Exam practice"
+author: "Anubhav Dikshit(anudi287)"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+    pdf_document:
+      toc: true
+---
+
+\newpage
+
+# Libraries
+```{r setup, include=TRUE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen=999)
+
+library("tidyverse") #ggplot and dplyr 
+library("gridExtra") # combine plots
+library("knitr") # for pdf
+library("bnlearn") # ADM
+library("gRain") # ADM
+library("entropy")
+library("HMM") #Hidden Markov Models
+library("kableExtra") # For table formating
+library("kernlab") # Gaussian Regression
+library("mvtnorm") # multi dimensional normal distribution
+library("caret") # confusion matrix
+library("e1071") # confusion matrix and accuracy
+
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+#BiocManager::install("gRain")
+
+
+# The palette with black:
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", 
+                "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+```
+
+
+# 2018
+
+## Q1 Graphical Models
+
+```{r}
+
+set.seed(567)
+data("asia")
+ind <- sample(1:5000, 4000)
+tr <- asia[ind,]
+te <- asia[-ind,]
+
+naive_bayes_structure <-model2network("[S][A|S][T|S][L|S][B|S][E|S][X|S][D|S]")# Fit parameters of network to train dataBN.
+
+final <- NULL
+seq <- c(10, 20, 50, 100, 1000, 2000)
+for(i in 1:length(seq)){
+df <- tr[1:seq[i],]  
+fit_naive_bayes <- bn.fit(x = naive_bayes_structure, data = df, method="bayes")
+plot(naive_bayes_structure, main="Naives Bayes Network Structure")
+fit_naive_grain <- compile(as.grain(fit_naive_bayes))
+my_evid <-setEvidence(fit_naive_grain, nodes=c("A","B", "T", "L", "E", "X", "D"))
+querygrain(my_evid, nodes=c("S"))
+
+
+predicted_class <- predict(fit_naive_grain, newdata=te, type="class", response="S")$pred$S
+temp <- cbind(predicted_class,seq[i],te$S)
+final <- rbind(final,temp)
+}
+
+final <- final %>% as.data.frame()
+final$test_class <- ifelse(final$V3 == "2", "yes", "no")
+final$accuracy = ifelse(final$test_class == final$predicted_class,1,0)
+
+final %>% group_by(V2) %>% summarise(accuracy = sum(accuracy)/n())
+
+
+
+```
+
+
+## HMM Q2
+
+```{r}
+
+
+my_forward <- function(hmm, observation){
+    hmm$transProbs[is.na(hmm$transProbs)] = 0
+    hmm$emissionProbs[is.na(hmm$emissionProbs)] = 0
+    nObservations = length(observation)
+    nStates = length(hmm$States)
+    f = array(NA, c(nStates, nObservations))
+    dimnames(f) = list(states = hmm$States, index = 1:nObservations)
+    for (state in hmm$States) {
+        f[state, 1] = log(hmm$startProbs[state] * hmm$emissionProbs[state, 
+            observation[1]])
+    }
+    for (k in 2:nObservations) {
+        for (state in hmm$States) {
+            logsum = -Inf
+            for (previousState in hmm$States) {
+                temp = f[previousState, k - 1] + log(hmm$transProbs[previousState, 
+                  state])
+                if (temp > -Inf) {
+                  logsum = temp + log(1 + exp(logsum - temp))
+                }
+            }
+            f[state, k] = log(hmm$emissionProbs[state, observation[k]]) + 
+                logsum
+        }
+    }
+    return(f)
+}
+
+
+
+
+
+
+```
+
+
+```{r}
+
+set.seed(12345)
+transition_mat <- matrix(data = c(0.5, 0.5, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0.5, 0.5, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0.5, 0.5, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0.5, 0.5, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0.5, 0.5, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0.5, 0.5, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0.5, 0.5, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0.5, 0.5, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0.5, 0.5,
+0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0.5),nrow = 10,
+ncol = 10)
+
+sensor_mat <- matrix(data = c(0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0.2, 0.2,
+0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0.2,
+0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0,
+0, 0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0,
+0, 0, 0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0,
+0, 0, 0, 0.2, 0.2, 0.2, 0.2, 0.2, 0, 0,
+0, 0, 0, 0, 0.2, 0.2, 0.2, 0.2, 0.2, 0,
+0, 0, 0, 0, 0, 0.2, 0.2, 0.2, 0.2, 0.2,
+0.2, 0, 0, 0, 0, 0, 0.2, 0.2, 0.2, 0.2,
+0.2, 0.2, 0, 0, 0, 0, 0, 0.2, 0.2, 0.2),
+nrow = 10,
+ncol = 10)
+
+
+sector_10_model <- initHMM(States = c("1","2","3","4","5","6","7","8","9","10"),
+Symbols = c("1","2","3","4","5","6","7","8","9","10"),
+startProbs = rep(0.1, 10),
+transProbs = transition_mat,
+emissionProbs = sensor_mat)
+
+set.seed(12345)
+hmm_100 <- simHMM(sector_10_model, length=100)
+
+# Filtering which is defined as alpha column, divided by its col sum
+alpha = exp(my_forward(hmm = sector_10_model, observation = hmm_100$observation))
+filtered = sweep(alpha, 2, colSums(alpha), FUN="/")
+
+
+set.seed(12345)
+# finding the max of each column for 100 entries for filtered values
+filtered_path <- t(filtered)
+filtered_path <- max.col(filtered_path, "first")
+
+# actual path
+actual_state <- as.numeric(hmm_100$states)
+
+# Accuracy of filtered path
+acc_filered <- sum(actual_state == filtered_path)/length(filtered_path) * 100
+acc_filered
+
+```
+
+## Q3 State Space Models
+
+
+
+```{r}
+
+#### transition matrix
+#p(x_t|x_t-1) = N(x_t|x_t-1+1,1)
+
+#### emission matrix
+#p(z_t|x_t) = N(z_t|x_t,5)
+
+### inital model
+#p(x_0) = N(x_0|50,10)
+
+
+T<-10000
+n_par<-100
+tra_sd<-1 #R
+emi_sd<-5 #Q
+mu_0<-50
+Sigma_0<-10
+
+
+ini_dis<-function(n){
+return (rnorm(n,mu_0,Sigma_0))
+}
+
+tra_dis<-function(zt){
+return (rnorm(1,mean=zt+1,sd=tra_sd))
+}
+
+emi_dis<-function(zt){
+return (rnorm(1,mean=zt,sd=emi_sd))
+}
+
+den_emi_dis<-function(xt,zt){
+return (dnorm(xt,mean=zt,sd=emi_sd))
+}
+
+z<-vector(length=T)
+x<-vector(length=T)
+for(t in 1:T){
+z[t]<-ifelse(t==1,ini_dis(1),tra_dis(z[t-1]))
+x[t]<-emi_dis(z[t])
+}
+err<-vector(length=T)
+bel<-ini_dis(n_par)
+w<-rep(1/n_par,n_par)
+for(t in 2:T){
+com<-sample(1:n_par,n_par,replace=TRUE,prob=w)
+bel<-sapply(bel[com],tra_dis)
+for(i in 1:n_par){
+w[i]<-den_emi_dis(x[t],bel[i])
+}
+w<-w/sum(w)
+Ezt<-sum(w * bel)
+err[t]<-abs(z[t]-Ezt)
+}
+mean(err[2:T])
+sd(err[2:T])
+
+
+
+R<-1 #R
+Q<-5 #Q
+
+#didnt work
+x<-vector(length=T)
+z<-vector(length=T)
+err<-vector(length=T)
+
+for(t in 1:T){
+x[t]<-ifelse(t==1,rnorm(1,mu_0,Sigma_0),x[t-1]+1+rnorm(1,0,R))
+z[t]<-x[t]+rnorm(1,0,Q)
+}
+
+mu<-mu_0
+Sigma<-Sigma_0*Sigma_0
+for(t in 2:T){
+pre_mu<-mu+1
+pre_Sigma<-Sigma+R*R
+K<-pre_Sigma/(pre_Sigma+Q*Q)
+mu<-pre_mu+K*(z[t]-pre_mu)
+Sigma<-(1-K)*pre_Sigma
+
+err[t]<-abs(x[t]-mu)
+}
+
+mean(err[2:T])
+sd(err[2:T])
+
+
+
+
+```
+
+
+## Q4 Gaussian
+
+```{r}
+
+posterior_GP <- function(x, y, x_star, kernel, sigma_n, sigma_f, l) {
+# Number of observations
+n <- length(x)
+# Calculate the covariance matricies:
+# k(X, X), k(X, X*), k(X*, X*)
+K_x_x <- kernel(x = x, x_star = x,sigma_f = sigma_f, l = l)
+K_x_xstar <- kernel(x = x, x_star = x_star, sigma_f = sigma_f, l = l)
+K_xstar_xstar <- kernel(x = x_star, x_star = x_star, sigma_f = sigma_f, l = l)
+# Compute the Choleski factorization of
+# k(X, X) + sigma_n^2
+# (covariance matrix of y)
+##As chol returns the upper triangular part and
+# we need the lower, we transpose it
+L_upper <- chol(K_x_x + (sigma_n^2)*diag(n))
+L_lower <- t(L_upper)
+# Compute alpha, used to compute the
+# posterior mean of f
+alpha_b <- solve(a = L_lower,
+b = y)
+alpha <- solve(a = t(L_lower),
+b = alpha_b)
+# Compute posterior mean of f
+posterior_mean_f <- t(K_x_xstar) %*% alpha
+# Compute posterior covariance matrix of f
+v <- solve(a = L_lower,
+b = K_x_xstar)
+posterior_covariance_matrix_f <- K_xstar_xstar - t(v) %*% v
+# As we only want the variance of f, we extract the
+# diagonal in the covariance matrix of f
+posterior_variance_f <- diag(posterior_covariance_matrix_f)
+return (list(mean = posterior_mean_f, variance = posterior_variance_f))
+}
+
+plot_gaussian <- function(x,y,Xstar,res){
+mu <- res$mean
+sd <- sqrt(res$variance)
+df <- data.frame(XStar=XStar,
+mu = mu,
+upper_band = mu + 1.96 * sd,
+lower_band = mu - 1.96 * sd)
+df2 <- data.frame(x=x,y=y)
+plot1 <- ggplot(data=df, aes(x=XStar)) +
+geom_line(aes(y=mu, color="mean")) +
+geom_line(aes(y=upper_band, color="upper_band")) +
+geom_line(aes(y=lower_band, color="lower_band")) +
+geom_point(data=df2, aes(x=x, y=y, color="Observation")) +
+ggtitle("Posterior mean with bands and observations") +
+ylab("Posterior/Observation") + xlab("Xstar") +
+scale_colour_manual(values = c("#E69F00", "#56B4E9", "#000000",
+"#E69F00"))
+print(plot1)
+}
+
+
+# Squared exponential kernel
+k1 <- function(sigmaf = 1, ell = 1)  
+{   
+	rval <- function(x, y = NULL) 
+    {       
+		r = sqrt(crossprod(x-y))       
+		return(sigmaf^2*exp(-r^2/(2*ell^2)))     
+	}   
+    class(rval) <- "kernel"   
+    return(rval) 
+}
+
+
+k2 <- function(sigmaf = 1, ell = 1, alpha = 1)  
+{   
+	rval <- function(x, y = NULL) 
+	{     r = sqrt(crossprod(x-y))     
+		  return(sigmaf^2*(1+r^2/(2*alpha*ell^2))^-alpha)   
+	}   
+	class(rval) <- "kernel"   
+	return(rval) 
+} 
+
+
+k3 <- function(sigmaf, ell)  
+{   
+	rval <- function(x, y = NULL) 
+	{	r = sqrt(crossprod(x-y))
+		 return(sigmaf^2*(1+sqrt(3)*r/ell)*exp(-sqrt(3)*r/ell))   
+	}   
+	class(rval) <- "kernel"   
+	return(rval) 
+} 
+
+
+
+matis_kernel <- function(x, y, sigma_f, l){	
+	  r = sqrt(crossprod(x-y))
+		 return(sigma_f^2*(1+sqrt(3)*r/l)*exp(-sqrt(3)*r/l))   
+	}   
+
+
+
+```
+
+
+
+```{r}
+set.seed(111)
+zGrid = seq(0.01,1,by=0.01)
+
+sigma_f <- 1
+l <- 0.5
+
+
+final <- NULL
+for(i in seq(0.01,1,by=0.01)){
+temp <- matis_kernel(x=0, y=i, sigma_f, l)  
+final <- rbind(temp,final)
+}
+
+plot(final)
+
+final2 <- NULL
+for(i in seq(0.01,1,by=0.01)){
+temp <- matis_kernel(x=0, y=i, 0.5, l)  
+final2 <- rbind(temp,final2)
+}
+
+plot(final2)
+
+
+load("lidar.RData")
+
+
+set.seed(111)
+
+
+lm_model = lm(temp ~ time + time2, data = tulling_sample_data)
+sigma_n = sd(lm_model$residuals)
+# Estimate Gaussian Process
+GP_time = gausspr(temp ~ time, data = tulling_sample_data,
+kernel = nested_squared_exponential(sigma_f = 20, l = 0.2),
+var = sigma_n^2)
+posterior_mean = predict(GP_time, tulling_sample_data)
+df <- data.frame(posterior_mean=posterior_mean, tulling_sample_data)
+ggplot(data=df, aes(x=time)) +
+geom_point(aes(y=temp, color="temperature")) +
+geom_line(aes(y=posterior_mean, color="posterior mean")) +
+ggtitle("Plot of data and posterior mean using lm(temp~time)") +
+ylab("Posterior/Observation") + xlab("Time") +
+scale_colour_manual(values = c("#E69F00", "#56B4E9",
+"#000000", "#E69F00"))
+                                              
+                                              
+```
+
+
+
+
+
+
+

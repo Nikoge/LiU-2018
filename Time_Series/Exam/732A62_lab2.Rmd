@@ -1,0 +1,439 @@
+---
+title: "Time Series Analysis - Lab 02 (Group 7)"
+author: "Anubhav Dikshit (anudi287) and Maximilian Pfundstein (maxpf364)"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(12345)
+options(scipen = 999)
+options(tinytex.verbose = TRUE)
+
+library("tidyverse") #ggplot and dplyr 
+library("gridExtra") # combine plots
+library("knitr") # for pdf
+library("fpp2") #timeseries with autoplot and stuff
+library("reshape2") #reshape the data
+library("forecast") # for forecasting time series
+library("kernlab") #gausspr function
+library("astsa") #oil and gas dataset
+library("TSA") #Q3
+library("tseries")
+
+# The palette with black:
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", 
+                "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+```
+
+# Assignment 1: Computations with simulated data
+
+## Linear Regressions on Necessarily Lagged Variables and Appropriate Correlation
+
+**Task:** Generate $1000$ observations from AR(3) process with $\phi_1 = 0.8, \phi_2 = -0.2, \phi_3 = 0.1$. Use these data and the definition of PACF to compute $\phi_{33}$ from the sample, i.e. write your own code that performs linear regressions on necessarily lagged variables and then computes an appropriate correlation. Compare the result with the output of function `pacf()` and with the theoretical value of $\phi_{33}$.
+
+
+$\phi_{33} = corr(X_{t-3}-f_p,X_t-f_p)$ where $f_p=\sum_{j=1}^p \phi_j X_{\tau-j}$
+
+
+```{r}
+
+set.seed(12345)
+x_t <- arima.sim(model = list(ar = c(0.8,-0.2,0.1)), n=1000)
+actual_pacf_value <- pacf(x_t, plot = FALSE)$acf[3]
+df <- data.frame(x_t = as.vector(x_t))
+df$x_t_lag_1 <- lag(df$x_t,1)
+df$x_t_lag_2 <- lag(df$x_t,2)
+df$x_t_lag_3 <- lag(df$x_t,3)
+df <- na.omit(df)
+
+# building models and getting their residuals
+model_1_res <- lm(x_t ~ x_t_lag_1 + x_t_lag_2, data = df)$residuals
+model_2_res <- lm(x_t_lag_3 ~ x_t_lag_1 + x_t_lag_2, data = df)$residuals
+
+# theortical pacf values
+theotical_pacf_value <- cor(x = model_1_res, y = model_2_res, use = "na.or.complete")
+
+cat("The theoretical and actual value of PACF are: ", theotical_pacf_value, actual_pacf_value)
+
+```
+
+Analysis: The theoretical and the actual values of PACF are very similar.
+
+## Methods of Moments, Conditional Least Squares and Maximum Likelihood
+
+**Task:** Simulate an AR(2) series with $\phi_1 = 0.8, \phi_2 = 0.1$ and $n=100$. Compute the estimated parameters and their standard errors by using three methods: method of moments (Yule-Walker equations), conditional least squares and maximum likelihood (ML) and compare their results to the true values. Which method does seem to give the best result? Does theoretical value for $\phi_2$ fall within confidence interval for ML estimate?
+
+
+```{r, warning=FALSE}
+set.seed(12345)
+x_t <- arima.sim(model = list(ar = c(0.8,0.1)), n=100)
+
+method_yule_walker <- ar(x_t, order = 2, method = "yule-walker", aic = FALSE)$ar
+method_cls <- ar(x_t, order = 2, method = "ols", aic = FALSE)$ar
+method_mle <- ar(x_t, order = 2, method = "mle", aic = FALSE)$ar
+
+df <- data.frame(rbind(method_yule_walker, method_cls,method_mle))
+
+kable(df, caption = "Comparison of parameters using different methods")
+
+# Since varience is not given by ar we use arima function
+ML_Model_CI = arima(x_t, order = c(2,0,0), method = "ML")
+sigma = ML_Model_CI$var.coef[2, 2]
+phi_2 = ML_Model_CI$coef[2]
+CI = c(phi_2 - 1.96 * sigma, phi_2 + 1.96 * sigma)
+CI
+```
+
+Analysis: The parameter values from yule walker method is the closet to the actual value of 0.8,0.1. Yes the theoretical value of $\phi_2$ did fall within confidence interval using MLE method.
+
+
+## Sample and Theoretical ACF and PACF
+
+**Task:** Generate $200$ observations of a seasonal $\text{ARIMA}(0,0,1) \times (0,0,1)_{12}$ model with coefficients $\Theta = 0.6$ and $\theta = 0.3$ by using `arima.sim()`. Plot sample ACF and PACF and also theoretical ACF and PACF. Which patterns can you see at the theoretical ACF and PACF? Are they repeated at the sample ACF and PACF?
+
+
+Now $ARIMA(1,1,1)(1,1,1)_4$ can be written as $(1-\phi_1B)(1-B)(1-B^4)(1-\Phi_1 B^4)x_t = w_t (1+\theta B)(1+\Theta B^4)$ Similarly $ARIMA(0,0,1)(0,0,1)_{12}$ can be written as $x_t=w_t(1+\Theta B^{12})(1+\theta B)$ which can be simplified as $x_t = w_t(1+\Theta B^{12}+ \theta B + \Theta \theta B^{13})$ given that $\theta=0.3$ and $\Theta =0.6$ we get $x_t =w_t(1+0.3B+0.6B^{12}+0.18B^{13})$
+
+```{r}
+set.seed(12345)
+x_t <- arima.sim(model = list(ma = c(0.3,rep(0,10),0.6,0.18)), n=200)
+
+df <- data.frame(sample_acf = acf(x_t, plot = FALSE, lag.max = 14)$acf,
+                 sample_pacf = pacf(x_t, plot = FALSE, lag.max = 14)$acf,
+                 theortical_acf = ARMAacf(ma = c(0.3,rep(0,10),0.6,0.18), pacf = FALSE, lag.max = 13),
+                 theortical_pacf = ARMAacf(ma = c(0.3,rep(0,10),0.6,0.18), pacf = TRUE, lag.max = 14))
+
+df$index <- rownames(df)
+
+plot1 <- ggplot(data=df, aes(x=index)) + 
+  geom_col(aes(y=sample_acf)) + 
+  ggtitle("Sample ACF")
+
+plot2 <- ggplot(data=df, aes(x=index)) + 
+  geom_col(aes(y=theortical_acf)) + 
+  ggtitle("Theoretical ACF")
+
+grid.arrange(plot1, plot2, ncol = 1)
+
+plot3 <- ggplot(data=df, aes(x=index)) + 
+  geom_col(aes(y=sample_pacf)) + 
+  ggtitle("Sample PACF")
+
+plot4 <- ggplot(data=df, aes(x=index)) + 
+  geom_col(aes(y=theortical_pacf)) + 
+  ggtitle("Theoretical PACF")
+
+grid.arrange(plot3, plot4, ncol = 1)
+
+```
+
+## Forecast and Prediction
+
+**Task:** Generate $200$ observations of a seasonal $\text{ARIMA}(0,0,1) \times (0,0,1)_{12}$ model with coefficients $\Theta = 0.6$ and $\theta = 0.3$ by using `arima.sim()`. Fit $\text{ARIMA}(0,0,1) \times (0,0,1)_{12}$ model to the data, compute forecasts and a prediction band $30$ points ahead and plot the original data and the forecast with the prediction band. Fit the same data with function `gausspr()` from package `kernlab` (use default settings). Plot the original data and predicted data from $t = 1$ to $t = 230$. Compare the two plots and make conclusions.
+
+
+```{r, message=FALSE}
+set.seed(12345)
+x_t <- arima.sim(model = list(ma = c(0.3,rep(0,10),0.6,0.18)), n=200)
+fit_x_t <- arima(x_t, order = c(0,0,1), seasonal = list(order = c(0,0,1),period = 12))
+predicted_x_t <- predict(fit_x_t, n.ahead=30) 
+predicted_x_t_upper_band <- predicted_x_t$pred + 1.96 * predicted_x_t$se
+predicted_x_t_lower_band <- predicted_x_t$pred - 1.96 * predicted_x_t$se
+
+#kernlab
+
+df <- data.frame(y = x_t)
+df$x <- as.numeric(rownames(df))
+gausspr_model <- gausspr(x=df$x, y=df$y)
+predicted_x_t_kernlab <- predict(gausspr_model, newdata=data.frame(x=201:230))
+
+df3 <- data.frame(y = predicted_x_t_kernlab, x=201:230) 
+
+
+df2 <- data.frame(predicted_x_t = predicted_x_t$pred, 
+                  predicted_x_t_upper = predicted_x_t_upper_band, 
+                  predicted_x_t_lower = predicted_x_t_lower_band,
+                  x = 201:230)
+
+ggplot() + 
+  geom_line(data=df, aes(x=x, y=y, color="Actual y")) + 
+    geom_line(data=df2, aes(x=x, y=predicted_x_t, color="Predicted y")) + 
+      geom_line(data=df2, aes(x=x, y=predicted_x_t_upper, color="Upper band")) + 
+        geom_line(data=df2, aes(x=x, y=predicted_x_t_lower, color="Lower band")) + 
+      scale_colour_manual("", breaks = c("Actual y", "Predicted y", "Upper band", "Lower band"),
+                        values = c("#000000", "#009E73", "#56B4E9", "#E69F00")) +
+  ggtitle("Original vs. Predicted y with confidence bands")
+
+
+ggplot() + 
+  geom_line(data=df, aes(x=x, y=y, color="Actual y")) + 
+    geom_line(data=df3, aes(x=x, y=y, color="Predicted y")) + 
+        scale_colour_manual("", breaks = c("Actual y", "Predicted y"),
+                        values = c("#000000","#56B4E9")) +
+  ggtitle("Original vs. Predicted y using gausspr")
+
+
+```
+
+## Prediction Band
+
+**Task:** Generate $50$ observations from ARMA(1, 1) process with $\phi = 0.7$, $\theta = 0.50$. Use first $40$ values to fit an ARMA(1,1) model with $\mu = 0$. Plot the data, the $95\%$ prediction band and plot also the true $10$ values that you initially dropped. How many of them are outside the prediction band? How can this be interpreted?
+
+
+```{r}
+x_t <- arima.sim(model = list(ar = c(0.7), ma=c(0.5)), n=50)
+fit_x_t <- arima(x_t[1:40], order = c(1,0,1), include.mean = 0)
+
+predicted_x_t <- predict(fit_x_t, n.ahead=10)
+predicted_x_t_upper_band <- predicted_x_t$pred + 1.96 * predicted_x_t$se
+predicted_x_t_lower_band <- predicted_x_t$pred - 1.96 * predicted_x_t$se
+
+df <- data.frame(y = x_t[1:40], x=1:40) 
+df2 <- data.frame(y = predicted_x_t$pred, 
+                  upper_band=predicted_x_t_upper_band, 
+                  lower_band=predicted_x_t_lower_band,
+                  x = 41:50)
+
+ggplot() + 
+  geom_line(data=df, aes(x=x, y=y, color="Actual y")) + 
+    geom_line(data=df2, aes(x=x, y=y, color="Predicted y")) + 
+      geom_line(data=df2, aes(x=x, y=upper_band, color="Upper band")) + 
+        geom_line(data=df2, aes(x=x, y=lower_band, color="Lower band")) + 
+      scale_colour_manual("", breaks = c("Actual y", "Predicted y", "Upper band", "Lower band"),
+                        values = c("#000000", "#009E73", "#56B4E9", "#E69F00")) +
+  ggtitle("Original vs. Predicted y with confidence bands")  
+```
+
+Analysis: All are inside the bands
+
+# Assignment 2: ACF and PACF diagnostics
+
+## ARIMA Model Suggestion
+
+**Task:** For data series `chicken` in package `astsa` (denote it by `x_t`) plot $4$ following graphs up to $40$ lags: ACF($x_t$), PACF($x_t$), ACF($\nabla x_t$), PACF($\nabla x_t$) (group them in one graph). Which ARIMA(p, d, q) or $\text{ARIMA}(p,d,q) \times (P,D,Q)_{s}$ models can be suggested based on this information only? Motivate your choice.
+
+
+```{r}
+set.seed(12345)
+
+plot_acf_pacf <- function(df){
+acf_df <- acf(df, plot = FALSE, lag.max = 40)$acf
+pacf_df <- pacf(df, plot = FALSE, lag.max = 40)$acf
+acf_diff_df <- acf(diff(df), plot = FALSE, lag.max = 40)$acf
+pacf_diff_df <- pacf(diff(df), plot = FALSE, lag.max = 40)$acf
+
+df <- data.frame(acf_df=acf_df, 
+                 pacf_df=pacf_df, 
+                 acf_diff_df=acf_diff_df, 
+                 pacf_diff_df=pacf_diff_df,
+                 x=1:length(pacf_diff_df))
+
+
+plot1 <- ggplot(data=df, aes(x=x)) + 
+  geom_col(aes(y=acf_df)) + 
+  ggtitle("ACF")
+
+plot2 <- ggplot(data=df, aes(x=x)) + 
+  geom_col(aes(y=pacf_df)) + 
+  ggtitle("PACF")
+
+plot3 <- ggplot(data=df, aes(x=x)) + 
+  geom_col(aes(y=acf_diff_df)) + 
+  ggtitle("ACF with 1 diff")
+
+plot4 <- ggplot(data=df, aes(x=x)) + 
+  geom_col(aes(y=pacf_diff_df)) + 
+  ggtitle("PACF with 1 diff")
+
+
+return(grid.arrange(plot1, plot2, plot3, plot4,  nrow = 2,ncol = 2))
+}
+
+plot_acf_pacf(df=chicken)
+
+```
+
+## More Data sets
+
+**Task:** Repeat step 1 for the following data sets: `so2`, `EQcount`, `HCT` in package `astsa`.
+
+
+```{r}
+set.seed(12345)
+plot_acf_pacf(df=so2)
+plot_acf_pacf(df=EQcount)
+plot_acf_pacf(df=HCT)
+```
+
+
+# Assignment 3: ARIMA modeling cycle
+
+In this assignment, you are assumed to apply a complete ARIMA modeling cycle starting from visualization and detrending and ending up with a forecasting.
+
+## Finding a Suitable ARIMA Model (oil)
+
+**Task:** Find a suitable ARIMA(p, d, q) model for the data set `oil` present in the library `astsa`. Your modeling should include the following steps in an appropriate order: visualization, unit root test, detrending by differencing (if necessary), transformations (if necessary), ACF and PACF plots when needed, EACF analysis, Q-Q plots, Box-Ljung test, ARIMA fit analysis, control of the parameter redundancy in the fitted model. When performing these steps, always have 2 tentative models at hand and select one of them in the end. Validate your choice by AIC and BIC and write down the equation of the selected model. Finally, perform forecasting of the model $20$ observations ahead and provide a suitable plot showing the forecast and its uncertainty.
+
+
+```{r}
+set.seed(12345)
+
+# visualization
+autoplot(ts(oil, start = 2000, frequency = 52)) + 
+           ylab("Price of Oil") +xlab("Year") + 
+           ggtitle("Price of Oil vs. Years")
+
+ggAcf(oil) + ggtitle("ACF for Oil")
+ggAcf(diff(oil)) + ggtitle("ACF for Oil with one diff")
+ggPacf(oil) + ggtitle("PACF for Oil")
+ggPacf(diff(oil)) + ggtitle("PACF for Oil with one diff")
+
+# with log
+autoplot(ts(log(oil), start = 2000, frequency = 52)) + 
+           ylab("Price of Oil in Log") +xlab("Year") + 
+           ggtitle("Price of Log Oil vs. Years")
+
+
+autoplot(ts(diff(log(oil), lag=1), start = 1948, frequency = 12)) + 
+           ylab("# Log Oil") +xlab("Year") + 
+           ggtitle("Price of log oil with one lags vs. Years")
+
+ggAcf(log(oil)) + ggtitle("ACF for log Oil")
+ggAcf(diff(log(oil))) + ggtitle("ACF for log Oil with one diff")
+ggPacf(log(oil)) + ggtitle("PACF for log Oil")
+ggPacf(diff(log(oil))) + ggtitle("PACF for log Oil with one diff")
+
+
+# EACF
+eacf(diff(log(oil)))
+
+```
+Analysis: ARIMA(0,1,1) or ARIMA(1,1,1) or ARIMA(0,1,3) according to EACF
+
+
+```{r, message=FALSE}
+
+#Suggested Models
+modelA <- sarima(log(oil), 0,1,1)
+modelB <- sarima(log(oil), 1,1,1)
+modelC <- sarima(log(oil), 0,1,3)
+
+#ADF test
+adf.test(modelA$fit$residuals)
+adf.test(modelB$fit$residuals)
+adf.test(modelC$fit$residuals)
+
+#Redundancy check
+summary(modelA$fit)
+summary(modelB$fit)
+summary(modelC$fit)
+
+#BIC
+BIC(modelA$fit)
+BIC(modelB$fit)
+BIC(modelC$fit)
+
+#AIC
+AIC(modelA$fit)
+AIC(modelB$fit)
+AIC(modelC$fit)
+
+#Model C is the best
+```
+According to AIC and BIC the ModelC (ARIMA 0,1,3) is the best
+
+Model equation is $\Delta x_t=w_t+0.1688w_{t-1}-0.0900w_{t-2}+0.1447w_{t-3}$
+
+```{r}
+
+#Forecasting
+sarima.for(log(oil), 0,1,3, n.ahead = 20)
+
+```
+
+## Finding a Suitable ARIMA Model (unemp)
+
+**Task:** Find a suitable $\text{ARIMA}(p,d,q) \times (P,D,Q)_{s}$ model for the data set unemp present in the library `astsa`. Your modeling should include the following steps in an appropriate order: visualization, detrending by differencing (if necessary), transformations (if necessary), ACF and PACF plots when needed, EACF analysis, Q-Q plots, Box-Ljung test, ARIMA fit analysis, control of the parameter redundancy in the fitted model. When performing these steps, always have 2 tentative models at hand and select one of them in the end. Validate your choice by AIC and BIC and write down the equation of the selected model (write in the back-shift operator notation without expanding the brackets). Finally, perform forecasting of the model $20$ observations ahead and provide a suitable plot showing the forecast and its uncertainty.
+
+
+```{r}
+
+set.seed(12345)
+
+# visualization with log
+autoplot(ts(log(unemp), start = 1948, frequency = 12)) + 
+           ylab("# Log Unempoyment") +xlab("Year") + 
+           ggtitle("# Unempoyment in log vs. Years")
+
+ggAcf(log(unemp)) + ggtitle("ACF for Log Unempoyment")
+ggPacf(log(unemp)) + ggtitle("PACF for Log Unempoyment")
+
+
+ggAcf(diff(log(unemp))) + ggtitle("ACF for Log Unempoyment with one diff")
+ggPacf(diff(log(unemp))) + ggtitle("PACF for Log Unempoyment with one diff")
+```
+Analysis: ACF with one lag shows that there are seasonal components at 12,24...
+
+```{r}
+
+# visualization with log
+autoplot(ts(diff(diff(log(unemp)), lag=12), start = 1948, frequency = 12)) + 
+           ylab("# Log Unempoyment") +xlab("Year") + 
+           ggtitle("# Unempoyment in log with tweleve lags vs. Years")
+
+ggAcf(diff(diff(log(unemp)), lag=12)) + ggtitle("ACF for Log Unempoyment with tweleve diff")
+ggPacf(diff(diff(log(unemp)), lag=12)) + ggtitle("PACF for Log Unempoyment with tweleve diff")
+
+```
+
+Analysis: From the plot of time series we can say that its much more stationary than single lag. Thus clearly two lags are needed.
+
+# EACF
+
+```{r}
+eacf(diff(diff(log(unemp)), lag=12))
+
+```
+Analysis: The best ARIMA model is $ARIMA(1,1,2) (0,1,1)_{12}$ and $ARIMA(1,1,3)(0,1,1)_{12}$
+
+```{r, message=FALSE}
+#Suggested Models
+modelA <- sarima(diff(diff(log(unemp)), lag=12), 1,1,2,0,1,1,12)
+modelB <- sarima(diff(diff(log(unemp)), lag=12), 1,1,3,0,1,1,12)
+
+
+#ADF test
+adf.test(modelA$fit$residuals)
+adf.test(modelB$fit$residuals)
+
+#Redundancy check
+summary(modelA$fit)
+summary(modelB$fit)
+
+#BIC & AIC
+BIC(modelA$fit)
+BIC(modelB$fit)
+AIC(modelA$fit)
+AIC(modelB$fit)
+
+```
+Analysis: Model B is better, that is  $ARIMA(1,1,3)(0,1,1)_{12}$ thus model equation is $x_t(1-0.7351B) = w_t(1-1.6578B)(1+0.8376B^2)(1-0.1798B^3)(1-B^{12})$
+
+```{r}
+#Forecasting
+sarima.for(log(unemp), 1,1,2,0,1,1,12, n.ahead = 20)
+
+```
+
+
+# Source Code
+
+```{r, ref.label=knitr::all_labels(), echo = TRUE, eval = FALSE, results = 'show'}
+
+```

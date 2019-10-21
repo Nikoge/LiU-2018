@@ -1,0 +1,313 @@
+---
+title: "Time Series Analysis - Lab 03 (Group 7)"
+author: "Anubhav Dikshit (anudi287) and Maximilian Pfundstein (maxpf364)"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+  html_document:
+    df_print: paged
+    toc: true
+    toc_float: false
+    number_sections: false
+---
+
+```{r setup, include=FALSE}
+library(astsa)
+library(forecast)
+library(kableExtra)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Assignment 1
+
+In table 1 a script for generation of data from simulation of the following state space model and implementation of the Kalman filter on the data is given.
+
+$$\mathbf{z}_t = A_{t-1} \mathbf{z}_{t-1} + e_t$$
+$$\mathbf{x}_t = C_t \mathbf{z}_t + \nu_t$$
+$$ \nu_t \sim \mathcal{N}(0, R_t)$$
+$$e_t \sim \mathcal{N}(0, Q_t)$$
+
+## a) State Space Expression
+
+**Task:** Write down the expression for the state space model that is being simulated.
+
+**Answer:** The state space model is given as the following, as $A=1$ and $\Phi=1$, which are scalar.
+
+$$\mathbf{z}_t = \mathbf{z}_{t-1} + \mathcal{N}(0, Q_t)$$
+$$\mathbf{x}_t = \mathbf{z}_t + \mathcal{N}(0, R_t)$$
+
+## b) Comparison of Filtering vs Moving Average
+
+**Task:** Run this script and compare the filtering results with a moving average smoother of order $5$.
+
+**Answer:** We includes an additional line in the Filter plot, which shows the moving average smoother of order $5$. The dots represent the real states, the **`r text_spec("green", color = "green")`** line the observed values, the **black** line the smoothed values will their prediction interval in **`r text_spec("blue", color = "blue")`** and the **`r text_spec("purple", color = "purple")`** line represents the moving average.
+
+We see that the moving average is less bumpy and tends to represent the mean value. The filtering is edgier and follows the the real oberstaions more closely; at least it also covers the spikes quite well while the movering average fails doing so (which does not necessarily make it less accurate). As we know that the changes are basically just random noise which we cannot model, we think that the moving average would provide the better model here.
+
+
+```{r}
+
+# generate dataset
+set.seed(1)
+num = 50
+w = rnorm(num+1, 0, 1)
+v = rnorm(num, 0, 1)
+mu = cumsum(w) # state: mu[0], mu[1],..., mu[50]
+y = mu[-1] + v # obs: y[1],..., y[50]
+
+# filter  and  smooth (Ksmooth0 does both)
+ks = Ksmooth0(num, y, A=1, mu0=0, Sigma0=1, Phi=1, cQ=1, cR=1)
+# start figurepar(mfrow=c(3,1))
+Time = 1:num
+
+plot(Time, mu[-1], main="Predict", ylim=c(-5, 10))
+lines(Time, y, col="green")
+lines(ks$xp)
+lines(ks$xp+2*sqrt(ks$Pp), lty=2, col=4)
+lines(ks$xp-2*sqrt(ks$Pp), lty=2, col=4)
+
+plot(Time,mu[-1], main="Filter", ylim=c(-5, 10))
+lines(Time, y, col="green")
+lines(ks$xf)
+lines(ks$xf+2*sqrt(ks$Pf), lty=2, col=4)
+lines(ks$xf-2*sqrt(ks$Pf), lty=2, col=4)
+lines(forecast::ma(y, order=5), col=6)
+
+plot(Time,mu[-1], main="Smooth", ylim=c(-5, 10))
+lines(Time, y, col="green")
+lines(ks$xs)
+lines(ks$xs+2*sqrt(ks$Ps), lty=2, col=4)
+lines(ks$xs-2*sqrt(ks$Ps), lty=2, col=4)
+mu[1]
+
+```
+
+## c) Small R
+
+**Task:** Also, compare the filtering outcome when $R$ in the filter is 10 times smaller than its actual value while $Q$ in the filter is $10$ times larger than its actual value. How does the filtering outcome varies?
+
+**Answer:** Changig the values of $Q$ and $R$ as described gives way more confidence in the observed values compared to the model. That is exactly what we observe in the plots, we basically take the observations as our prediction.
+
+```{r}
+
+# generate dataset
+set.seed(1)
+num = 50
+w = rnorm(num+1, 0, 1)
+v = rnorm(num, 0, 1)
+mu = cumsum(w) # state: mu[0], mu[1],..., mu[50]
+y = mu[-1] + v # obs: y[1],..., y[50]
+
+# filter  and  smooth (Ksmooth0 does both)
+ks = Ksmooth0(num, y, A=1, mu0=0, Sigma0=1, Phi=1, cQ=1*10, cR=1/10)
+# start figurepar(mfrow=c(3,1))
+Time = 1:num
+
+plot(Time, mu[-1], main="Predict", ylim=c(-5, 10))
+lines(Time, y, col="green")
+lines(ks$xp)
+lines(ks$xp+2*sqrt(ks$Pp), lty=2, col=4)
+lines(ks$xp-2*sqrt(ks$Pp), lty=2, col=4)
+
+plot(Time,mu[-1], main="Filter", ylim=c(-5, 10))
+lines(Time, y, col="green")
+lines(ks$xf)
+lines(ks$xf+2*sqrt(ks$Pf), lty=2, col=4)
+lines(ks$xf-2*sqrt(ks$Pf), lty=2, col=4)
+lines(forecast::ma(y, order=5), col=6)
+
+plot(Time,mu[-1], main="Smooth", ylim=c(-5, 10))
+lines(Time, y, col="green")
+lines(ks$xs)
+lines(ks$xs+2*sqrt(ks$Ps), lty=2, col=4)
+lines(ks$xs-2*sqrt(ks$Ps), lty=2, col=4)
+mu[1]
+
+```
+
+## d) Large R
+
+**Task:** Now compare the filtering outcome when $R$ in the filter is $10$ times larger than its actual value while $Q$ in the filter is $10$ times smaller than its actual value. How does the filtering outcome varies?
+
+**Answer:** Changig the values of $Q$ and $R$ opposite to the previous exercise gives way more confidence in the model compared to the observations. That is exactly what we observe in the plots, we basically take the model as our prediction, which is just slightly adjustet over time by our observations, but not enough to actually level out the large error our *assumption* of $R$ and $Q$ caused. The model, as described in exercise **a)** basically assumes a non-changig state, if the error is removed.
+
+```{r}
+
+# generate dataset
+set.seed(1)
+num = 50
+w = rnorm(num+1, 0, 1)
+v = rnorm(num, 0, 1)
+mu = cumsum(w) # state: mu[0], mu[1],..., mu[50]
+y = mu[-1] + v # obs: y[1],..., y[50]
+
+# filter  and  smooth (Ksmooth0 does both)
+ks = Ksmooth0(num, y, A=1, mu0=0, Sigma0=1, Phi=1, cQ=1/10, cR=1*10)
+# start figurepar(mfrow=c(3,1))
+Time = 1:num
+
+plot(Time, mu[-1], main="Predict", ylim=c(-5, 10))
+lines(Time, y, col="green")
+lines(ks$xp)
+lines(ks$xp+2*sqrt(ks$Pp), lty=2, col=4)
+lines(ks$xp-2*sqrt(ks$Pp), lty=2, col=4)
+
+plot(Time,mu[-1], main="Filter", ylim=c(-5, 10))
+lines(Time, y, col="green")
+lines(ks$xf)
+lines(ks$xf+2*sqrt(ks$Pf), lty=2, col=4)
+lines(ks$xf-2*sqrt(ks$Pf), lty=2, col=4)
+lines(forecast::ma(y, order=5), col=6)
+
+plot(Time,mu[-1], main="Smooth", ylim=c(-5, 10))
+lines(Time, y, col="green")
+lines(ks$xs)
+lines(ks$xs+2*sqrt(ks$Ps), lty=2, col=4)
+lines(ks$xs-2*sqrt(ks$Ps), lty=2, col=4)
+mu[1]
+
+```
+
+## e) Kalman Filter Implementation
+
+**Task:** Implement your own Kalman filter and replace `Ksmooth0()` function with your script.
+
+**Answer:** See the implementation below. With utilizing lists, this should work for any number of dimensions of the state space model. If the supplied matrices for the transformation and so one are not a list of matrices, they're automatically replicated for convenience.
+
+**Note:** The algorithm on the slides does **not** work as stated, you have to start either with the prediction step *or* save in different variables.
+
+```{r, echo=FALSE, eval=FALSE}
+
+### FROM SLIDES, DOESN'T WORK
+
+kalman_filter = function(num, data, A, C, Q, R, m0, P0) {
+  
+  if (length(A) == 1)
+    A = as.list(rep(A, num+1))
+
+  if (length(C) == 1)
+    C = as.list(rep(C, num+1))
+  
+  if (length(Q) == 1)
+    Q = as.list(rep(Q, num+1))
+  
+  if (length(R) == 1)
+    R = as.list(rep(R, num+1))
+  
+  # Init
+  m = list()
+  P = list()
+  K = list()
+  
+  # Setup
+  # Note that the formula with the inverse has been changed, as otherwise the
+  # dimensions have to be determined first.
+  m[[1]] = m0
+  P[[1]] = P0
+  
+  for (t in 2:(num)) {
+    # Observation Update Step
+    K[[t]] = P[[t-1]] %*% t(C[[t]]) %*% solve(C[[t]] %*% P[[t-1]] %*% t(C[[t]]) + R[[t]])
+    m[[t]] = m[[t-1]] + K[[t]] %*% (data[[t]] - C[[t]] %*% m[[t-1]])
+    P[[t]] = P[[t-1]] - K[[t]] %*% C[[t]] %*% P[[t-1]]
+    #P[[t]] = (diag(ncol(K[[t]])) - K[[t]] %*% C[[t]]) %*% P[[t-1]]
+    
+    # Prediction Step
+    m[[t+1]] = A[[t]] %*% m[[t]]
+    P[[t+1]] = A[[t]] %*% P[[t]] %*% t(A[[t]]) + Q[[t+1]]
+  }
+  
+  return(list(m = unlist(m), P=unlist(P), K=unlist(K)))
+}
+
+```
+
+
+```{r}
+
+### MODIFIED, DOES WORK
+
+kalman_filter = function(num, data, A, C, Q, R, m0, P0) {
+  
+  if (length(A) == 1)
+    A = as.list(rep(A, num+1))
+
+  if (length(C) == 1)
+    C = as.list(rep(C, num+1))
+  
+  if (length(Q) == 1)
+    Q = as.list(rep(Q, num+1))
+  
+  if (length(R) == 1)
+    R = as.list(rep(R, num+1))
+  
+  # Init
+  m = list()
+  P = list()
+  K = list()
+  
+  # Setup
+  # Note that the formula with the inverse has been changed, as otherwise the
+  # dimensions have to be determined first.
+  m[[1]] = m0
+  P[[1]] = P0
+  
+  for (t in 2:(num)) {
+    
+    # Prediction Step
+    m[[t-1]] = A[[t-1]] %*% m[[t-1]]
+    P[[t-1]] = A[[t-1]] %*% P[[t-1]] %*% t(A[[t-1]]) + Q[[t]]
+    
+    # Observation Update Step
+    K[[t]] = P[[t-1]] %*% t(C[[t]]) %*% solve(C[[t]] %*% P[[t-1]] %*% t(C[[t]]) + R[[t]])
+    m[[t]] = m[[t-1]] + K[[t]] %*% (data[[t]] - C[[t]] %*% m[[t-1]])
+    P[[t]] = P[[t-1]] - K[[t]] %*% C[[t]] %*% P[[t-1]]
+    #P[[t]] = (diag(ncol(K[[t]])) - K[[t]] %*% C[[t]]) %*% P[[t-1]]
+    
+  }
+  
+  return(list(m = unlist(m), P=unlist(P), K=unlist(K)))
+}
+
+# generate dataset
+set.seed(1)
+num = 50
+w = rnorm(num+1, 0, 1)
+v = rnorm(num, 0, 1)
+mu = cumsum(w) # state: mu[0], mu[1],..., mu[50]
+y = mu[-1] + v # obs: y[1],..., y[50]
+
+# filter  and  smooth (Ksmooth0 does both)
+ks = kalman_filter(num, y, A=1, m0=0, P0=1, C=1, Q=1, R=1)
+# start figurepar(mfrow=c(3,1))
+Time = 1:num
+
+plot(Time, mu[-1], main="Predict (custom Kalman Filter)", ylim=c(-5, 10))
+lines(Time, y, col="green")
+lines(ks$m)
+lines(ks$m+2*sqrt(ks$P), lty=2, col=4)
+lines(ks$m-2*sqrt(ks$P), lty=2, col=4)
+
+```
+
+
+## f) Kalman Gain Interpretation
+
+**Task:** How do you interpret the Kalman gain?
+
+**TLDR:** The *Kalman gain* states wether to trust the prediction or the observation more. It depends on $R$ and $Q$ and as seen in the previous exercises, a smaller $R$ will make us believe the measurements more, whereas a smaller $Q$ will make us believe into our model more.
+
+**Answer:** *Kalman gain* is given by $K=\frac{P_{k} H^T_{k}}{P_{k} H^T_{k} + R_k}$ where you will realize that the relative magnitudes of matrices $R_k$ and $P_k$ control a relation between the filter's use of predicted state estimate $z_t$ and measurement $x_t$.
+
+When $R_k$ tends to zero then $x_t = x_{t-1} + K (y_t - H_k)$ suggests that when the magnitude of $R$ is small, meaning that the measurements are accurate, the state estimate depends mostly on the measurements.
+
+When the state is known accurately, then numerator is small compared to $R$, and the filter mostly ignores the measurements relying instead on the prediction derived from the previous state.
+
+# Source Code
+
+```{r, ref.label=knitr::all_labels(), echo = TRUE, eval = FALSE, results = 'show'}
+
+```

@@ -1,0 +1,534 @@
+---
+title: "Time Series Analysis - Lab 02 (Group 7)"
+author: "Anubhav Dikshit (anudi287) and Maximilian Pfundstein (maxpf364)"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+  html_document:
+    df_print: paged
+    toc: true
+    toc_float: false
+    number_sections: false
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(ggplot2)
+library(kernlab)
+library(astsa)
+library(TSA)
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(12345)
+```
+
+# Assignment 1: Computations with simulated data
+
+## Linear Regressions on Necessarily Lagged Variables and Appropriate Correlation
+
+**Task:** Generate $1000$ observations from AR(3) process with $\phi_1 = 0.8, \phi_2 = -0.2, \phi_3 = 0.1$. Use these data and the definition of PACF to compute $\phi_{33}$ from the sample, i.e. write your own code that performs linear regressions on necessarily lagged variables and then computes an appropriate correlation. Compare the result with the output of function `pacf()` and with the theoretical value of $\phi_{33}$.
+
+**Answer:** First the sampling and looking at the built-in PACF.
+
+```{r}
+
+model = list(ar = c(0.8, -0.2, 0.1), ma = c())
+set.seed(12345)
+series = arima.sim(model = model, n = 1000)
+pacf(series)
+print(pacf(series))
+
+```
+
+Now we do it on our own. The following function does not only compute the value for a specific lag, but all lags up to given `lag.max`.
+
+```{r}
+
+pacf_ar = function(series., lag.max = 30) {
+  
+  covariances = vector(length=lag.max)
+  series = as.vector(series)
+  
+  for (lag in 1:lag.max) {
+    
+    # Create a dataframe with the lagged variables
+    df = data.frame(y = series)
+    df_colnames = c("y")
+    
+    if (lag == 1) {
+      df = na.omit(cbind(df, lag(series, lag)))
+      covariances[1] = cor(df[,1], df[,2])
+      next
+    }
+    
+    for (t in 1:(lag-1)) {
+      df_colnames = c(df_colnames, paste("t_", t, sep=""))
+      df = cbind(df, lag(series, t))
+    }
+    
+    # Start at the right index (also omits NAs)
+    df = df[(1+lag):nrow(df),]
+    colnames(df) = df_colnames
+    
+    # Second df
+    df2 = data.frame(y = series)
+    df2_colnames = c("y")
+    
+    for (t in 1:(lag-1)) {
+      df2_colnames = c(df2_colnames, paste("t+", t, sep=""))
+      df2 = cbind(df2, lead(series, t))
+    }
+    
+    # Start at the right index (also omits NAs)
+    df2 = df2[1:(nrow(df2)-lag),]
+    colnames(df2) = df2_colnames
+    
+    # Performing LinReg
+    # We can take tehe residuals with intercept, as it does not affect correlation
+    x_t_dash  = lm(y ~ ., df)$residual
+    x_t_dash_dash  = lm(y ~ ., df2)$residual
+    
+    covariances[lag] = cor(x_t_dash, x_t_dash_dash)
+  }
+  return(covariances)
+}
+
+# Calculated
+pacf_ar(series, 3)
+
+# Function pacf
+print(pacf(series, lag.max = 3))
+
+# Theoretical
+ARMAacf(model$ar, lag.max = 3, pacf = TRUE)
+
+```
+
+We see that all of the calculated values are slightly different, our own calculation differs a little bit more. We assume this is due to how exactly the metric is calculated. However, it's still close and shows almost the same values for higher lags, so we assume its correct. 
+
+## Methods of Moments, Conditional Least Squares and Maximum Likelihood
+
+**Task:** Simulate an AR(2) series with $\phi_1 = 0.8, \phi_2 = 0.1$ and $n=100$. Compute the estimated parameters and their standand errors by using three methods: method of moments (Yule-Walker equations), conditional least squares and maximum likelihood (ML) and compare their results to the true values. Which method does seem to give the best result? Does theoretical value for $\phi_2$ fall within confidence interval for ML estimate?
+
+**Answer:** Lets first simulate the time series and then fit the different models.
+
+```{r, warning=FALSE}
+
+model = list(ar = c(0.8, 0.1), ma = c())
+set.seed(12345)
+series = arima.sim(model = model, n = 100)
+
+MOM_Model = ar(series, order = 2, method = "yule-walker", aic = FALSE)
+CLS_Model = ar(series, order = 2, method = "ols", aic = FALSE)
+ML_Model = ar(series, order = 2, method = "mle", aic = FALSE)
+
+
+df = data.frame(MOM_Model$ar, CLS_Model$ar, ML_Model$ar)
+
+df
+
+```
+
+It seems like the Methods of Moments works best in this case. Now lets look at the confidence interval.
+
+As the function `ar()` does not seem to return the variance for the coefficients, we have to use the `arima()` function for that.
+
+```{r, warning=FALSE}
+
+ML_Model_CI = arima(series, order = c(2,0,0), method = "ML")
+
+sigma = ML_Model_CI$var.coef[2, 2]
+phi_2 = ML_Model_CI$coef[2]
+CI = c(phi_2 - 1.96 * sigma, phi_2 + 1.96 * sigma)
+
+CI
+
+```
+
+```{r, echo = FALSE}
+
+is_within_ci = function() {
+    if (df$ML_Model.ar[2] > CI[1] && df$ML_Model.ar[2] < CI[2]) {
+    return("The phi_2 estimate lies within the confidence interval.")
+  }
+  return("The phi_2 estimate does not lie within the confidence interval.")
+}
+
+```
+
+The $\phi_2$ estimate is `r df$ML_Model.ar[2]`, the CI is given by `r CI[1]` for the lower boundary and `r CI[2]` for the upper boundary. `r is_within_ci()`
+
+## Sample and Theoretical ACF and PACF
+
+**Task:** Generate $200$ observations of a seasonal $\text{ARIMA}(0,0,1) \times (0,0,1)_{12}$ model with coefficients $\Theta = 0.6$ and $\theta = 0.3$ by using `arima.sim()`. Plot sample ACF and PACF and also theoretical ACF and PACF. Which patterns can you see at the theoretical ACF and PACF? Are they repeated at the sample ACF and PACF?
+
+**Answer:** For creating the model we have to rewrite the given seasonal ARIMA model into a *normal* one. As we only have the MA part, $x_t$ is given by:
+
+$$x_t = \Theta_Q(B^S)\theta(B)w_t$$
+We know that $q = 1$, $Q = 1$ and $S=12$ and we know, given from the slides, that:
+
+$$\Theta_q(B^S) = q + \Theta_1 (B^{1S}) + \: ... \: + \Theta_Q (B^{QS})$$
+
+Therefore:
+
+$$x_t = (1+\Theta_1B^{12})(1+\theta_1 B)w_t$$
+
+$$x_t = (1 + \theta_1B + \Theta_1B^{12}+\theta_1 \Theta_1 B^{13})w_t$$
+
+$$x_t = w_t + \theta_1w_{t-1}+\Theta_1 w_{t-12}+\theta_1 \Theta_1w_{t-13}$$
+
+According to this the model is $\text{MA}(\theta_1, \text{rep}(0, 0), \Theta_1, \theta_1 \Theta_1)$.
+
+Looking at the plots we see that the theoretical plot clearly shows the seasonality while the plot generated from the sample just indicates it. This is expected to some extend as we will have some white noise added to our samples. So we say that yes, they are repeated, but not as clearly visible as the the theoretical one.
+
+```{r}
+
+theta = 0.3
+Theta = 0.6
+
+model = list(ma = c(theta, rep(0, 10), Theta, theta*Theta))
+set.seed(12345)
+series = arima.sim(model, n=200)
+
+par(mfrow = c(1,2))
+acf(series)
+pacf(series)
+theoretical_acf = ARMAacf(model$ma, lag.max = 25, pacf = FALSE)
+theoretical_pacf = ARMAacf(model$ma, lag.max = 25, pacf = TRUE)
+
+par(mfrow = c(1,2))
+plot(theoretical_acf, type = "h", main = "Theoretical ACF", ylab = "ACF")
+abline(h = 0, col = "red") 
+plot(theoretical_pacf, type = "h", main = "Theoretical PACF", ylab = "PACF") 
+abline(h = 0, col = "red") 
+
+```
+
+## Forecast and Predition
+
+**Task:** Generate $200$ observations of a seasonal $\text{ARIMA}(0,0,1) \times (0,0,1)_{12}$ model with coefficients $\Theta = 0.6$ and $\theta = 0.3$ by using `arima.sim()`. Fit $\text{ARIMA}(0,0,1) \times (0,0,1)_{12}$ model to the data, compute forecasts and a prediction band $30$ points ahead and plot the original data and the forecast with the prediction band. Fit the same data with function `gausspr()` from package `kernlab` (use default settings). Plot the original data and predicted data from $t = 1$ to $t = 230$. Compare the two plots and make conclusions.
+
+**Answer:** First we fit the model to the series (it is the same as before) and create the predictions.
+
+```{r}
+
+fitted_model = arima(series,
+                     order = c(0, 0, 1),
+                     seasonal = list(order= c(0, 0, 1), period = 12))
+
+prediction = predict(fitted_model, n.ahead = 30)
+
+```
+
+Now we fir using the `gausspr()` function and predict again.
+
+```{r}
+
+fitted_model_gausspr = gausspr(c(1:200), series)
+prediction_gausspr = predict(fitted_model_gausspr, c(1:230))
+
+```
+
+As expected the Guassian yields in a smoother graph, but this completely misses out all the important spikes. Our forcasted series seems to do a way better job in prediction the future data. We obersve that the forecasted line becomes flat during the end.
+
+```{r, echo=FALSE}
+
+df = data.frame(time = c(1:length(series)),
+                data = series)
+
+df2 = data.frame(time = c((length(series)+1):
+                            (length(prediction$pred)+length(series))),
+                 forecast = prediction$pred,
+                 upper_boundary = prediction$pred + 1.96*prediction$se,
+                 lower_boundary = prediction$pred - 1.96*prediction$se)
+
+df3 = data.frame(time = c(1:230),
+                 gaussian = prediction_gausspr)
+
+ggplot() +
+  geom_ribbon(aes(x = df2$time,
+                  ymin=df2$lower_boundary,
+                  ymax=df2$upper_boundary),
+                  fill = "#0000ff", alpha = 0.15) + 
+  geom_line(aes(x = df$time, y = df$data, colour = "Original Series")) +
+  geom_line(aes(x = df2$time, y = df2$forecast, colour = "Forecasted Series")) +
+  geom_line(aes(x = df3$time, y = df3$gaussian, colour = "Forecasted Gaussian Series")) +
+  labs(title = "Random Time Series", y = "Values", x = "Time", color = "Legend") +
+  scale_color_manual(values = c("#FF5733", "#900C3F", "#444444")) +
+  theme_minimal()
+
+
+```
+
+## Prediction Band
+
+**Task:** Generate $50$ observations from ARMA(1, 1) process with $\phi = 0.7$, $\theta = 0.50$. Use first $40$ values to fit an ARMA(1,1) model with $\mu = 0$. Plot the data, the $95\%$ prediction band and plot also the true $10$ values that you initially dropped. How many of them are outside the prediction band? How can this be interpreted?
+
+**Answer:** All of the forecasted data lies within the prediction band. This is (mostly) expected, as we assume that just 5 percent of the data does not lie within the bands. For a prediction of 10 future values, the probability for having all values within the 95 percent prediction band is around $0.95^{10} = 0.5987369$. So with a probability around 40 percent we expect at least one data point outside the prediction band.
+
+```{r}
+
+model = list(ma = c(0.7), ar = c(0.5))
+set.seed(12345)
+series = arima.sim(model, n=50)
+fitted_model = arima(series[1:40], order = c(1, 0, 1), include.mean = FALSE)
+prediction = predict(fitted_model, n.ahead = 10)
+
+```
+
+```{r, echo=FALSE}
+
+df = data.frame(time = c(1:length(series)),
+                data = series)
+
+df2 = data.frame(time = c(41:50),
+                 forecast = prediction$pred,
+                 upper_boundary = prediction$pred + 1.96*prediction$se,
+                 lower_boundary = prediction$pred - 1.96*prediction$se)
+
+ggplot() +
+  geom_ribbon(aes(x = df2$time,
+                  ymin=df2$lower_boundary,
+                  ymax=df2$upper_boundary),
+                  fill = "#0000ff", alpha = 0.15) + 
+  geom_line(aes(x = df$time, y = df$data, colour = "Original Series")) +
+  geom_line(aes(x = df2$time, y = df2$forecast, colour = "Forecasted Series")) +
+  labs(title = "LRandom Time Series", y = "Values", x = "Time", color = "Legend") +
+  scale_color_manual(values = c("#FF5733", "#900C3F")) +
+  theme_minimal()
+
+```
+
+
+# Assignment 2: ACF and PACF diagnostics
+
+## ARIMA Model Suggestion
+
+**Task:** For data series `chicken` in package `astsa` (denote it by `x_t`) plot $4$ following graphs up to $40$ lags: ACF($x_t$), PACF($x_t$), ACF($\nabla x_t$), PACF($\nabla x_t$) (group them in one graph). Which ARIMA(p, d, q) or $\text{ARIMA}(p,d,q) \times (P,D,Q)_{s}$ models can be suggested based on this information only? Motivate your choice.
+
+**Answer:** We will use this small helper function to create plots of teh time series, inclduing ACF and PACF, also for the first difference of the data.
+
+```{r}
+
+plot_diagnostics = function(series, max.lag = 40) {
+  par(mfrow = c(3, 2))
+  plot(series)
+  plot(diff(series))
+  acf(series, lag.max = max.lag)
+  acf(diff(series), lag.max = max.lag)
+  pacf(series, lag.max = max.lag)
+  pacf(diff(series), lag.max = max.lag)
+}
+
+```
+
+**Answer:** Looking at the ACF plot we see a decreasing correlation over time. As the correlation is continuingly following a downwards trend, while all of the lags keep being statistically significant, we should have a closer look at the first difference (this is because the original series in not stationary). Here we see a spike at lag 1 and 2, as well as an indicator for the seasionality with a lag of 12. Looking at the PACF plots we can observe the seasionality again, also we still see a significant spike at lag 1 and 2. Therefore we choose the following model: $\text{ARIMA}(2, 1, 0)\times(1, 0, 0)_{12}$.
+
+```{r}
+
+plot_diagnostics(astsa::chicken)
+
+```
+
+## More Datasets
+
+**Task:** Repeat step 1 for the following datasets: `so2`, `EQcount`, `HCT` in package `astsa`.
+
+**so2:** We see again that is makes sense to take the first difference to make the process stationary, as the ACF plot only shows a realyl slow decay. For the differenced ACF plot, we see three up two four significant spikes, but only the first one seems to be strongly significant. The differentiated PACF plot also shows several spikes in the beginning. It does not seem that there is a seasionality, so the chosen model is $\text{ARIMA}(0, 1, 1)$.
+
+```{r}
+
+plot_diagnostics(astsa::so2)
+
+```
+
+**EQcount:** We can see the typical behaviour of an AR process in the ACF plot, which is quickly decaying and we have no further increase in spikes. So we assume an underlying AR process. As we observe no seasionality, nor a major change in the differentiated plots, we chose the model $\text{AR}(1)$.
+
+```{r}
+
+plot_diagnostics(astsa::EQcount)
+
+```
+
+**HCT:** The ACF plot of the first difference shows a slowly decaying difference, while having recurring spikes. As the spikes are separated by 7 lags, we assume a weekly seasionality. The PACF shows significance at lag 3, as well as a significane for lag 7. Therefore we suggest the model $\text{ARIMA}(7, 1, 1)\times(0,0,1)_7$.
+
+```{r}
+
+plot_diagnostics(astsa::HCT)
+
+```
+
+
+# Assignment 3: ARIMA modeling cycle
+
+In this assignment, you are assumed to apply a complete ARIMA modeling cycle starting from visualization and detrending and ending up with a forecasting.
+
+## Finding a Suitable ARIMA Model (oil)
+
+**Task:** Find a suitable ARIMA(p, d, q) model for the data set `oil` present in the library `astsa`. Your modeling should include the following steps in an appropriate order: visualization, unit root test, detrending by differencing (if necessary), transformations (if necessary), ACF and PACF plots when needed, EACF analysis, Q-Q plots, Box-Ljung test, ARIMA fit analysis, control of the parameter redundancy in the fitted model. When performing these steps, always have 2 tentative models at hand and select one of them in the end. Validate your choice by AIC and BIC and write down the equation of the selected model. Finally, perform forecasting of the model $20$ observations ahead and provide a suitable plot showing the forecast and its uncertainty.
+
+**Answer:** As a first step we plot the data and take a first look at it. We can see that the time series is not stationary, so we will have to take a look at the first difference to gain more insights. Also it looks like that the data and variance is growing exponentially, so we will log the data first (transformation), then taking the difference.
+
+```{r}
+
+plot(astsa::oil)
+
+```
+
+Looking at the first difference, we can now see that the time series seems to be stationary. We will take a look at the ACF and PACF plots to obtain more information about the correlcation.
+
+```{r}
+
+par(mfrow = c(1, 2))
+plot(log(astsa::oil))
+plot(diff(log(astsa::oil)))
+
+```
+
+```{r}
+
+par(mfrow = c(1, 2))
+acf(diff(log(astsa::oil)))
+pacf(diff(log(astsa::oil)))
+
+```
+
+Now it is time to decide for two models which we will use. Therefore we will also consider information gained from the `eacf()` function.
+
+```{r}
+
+eacf(diff(log(astsa::oil)))
+
+```
+
+We see a formed triangle at $\text{ARIMA}(0,1,3)$. As we have two equivalent models with a higher order, namely $\text{ARIMA}(0,1,4)$ and $\text{AIRMA}(1,1,3)$, we will consider the following two models for the following analysis.
+
+```{r, message=FALSE}
+
+# We will use sarima as it will directly create the necessary plots
+modelA = sarima(log(astsa::oil), p=0, d=1, q=3)
+modelB = sarima(log(astsa::oil), p=1, d=1, q=3)
+
+```
+
+The AIC and BIC for the models are the following:
+
+```{r}
+
+# Lower AIC/BIC is better
+AIC(modelA$fit)
+BIC(modelA$fit)
+
+AIC(modelB$fit)
+BIC(modelB$fit)
+
+```
+
+According to the AIC and BIC score, both models seem to be nearly equally good. Also looking at the Q-Q plots we see that they almost have the exact same behaviour, having a mostly straight line for the quantiles while falling of towards the tails. `modelA` seems slightly better, so we choose this one.
+
+Therefore the model is given by: $\Delta x_t=w_t+0.1688w_{t-1}-0.0900w_{t-2}+0.1447w_{t-3}$
+
+Finally, lets check for redundancy: As we only have a AR terms, there can be no parameter redundancy.
+
+The forecast looks like this.
+
+```{r}
+
+# Do we have to take the log here?!
+sarima.for(log(astsa::oil), 0, 1, 3, n.ahead = 20)
+
+```
+
+## Finding a Suitable ARIMA Model (unemp)
+
+**Task:** Find a suitable $\text{ARIMA}(p,d,q) \times (P,D,Q)_{s}$ model for the data set `unemp` present in the library `astsa`. Your modeling should include the following steps in an appropriate order: visualization, detrending by differencing (if necessary), transformations (if necessary), ACF and PACF plots when needed, EACF analysis, Q-Q plots, Box-Ljung test, ARIMA fit analysis, control of the parameter redundancy in the fitted model. When performing these steps, always have 2 tentative models at hand and select one of them in the end. Validate your choice by AIC and BIC and write down the equation of the selected model (write in the backshift operator notation without expanding the brackets). Finally, perform forecasting of the model $20$ observations ahead and provide a suitable plot showing the forecast and its uncertainty.
+
+**Answer:** Again we take the data and take a first look at it. We see that is has some interesting climbs and that the series in not stationary. Therefore the next logical step is to take the difference. As we know from the description that we are dealing with monthly data, we will take the first difference with a lag of 12.
+
+```{r}
+
+par(mfrow = c(1, 2))
+plot(astsa::unemp)
+plot(diff(astsa::unemp, lag=12))
+
+```
+
+That looks better now, but stell the variance seems to be a problem, therefor we will also log the data. We see that the result is way better, seems stationary and the variance does not escalate.
+
+```{r}
+
+plot(diff(log(astsa::unemp), lag=12))
+
+```
+
+As a next step, after applying the differences and transformations, we will look at the ACF and PACF plot. We see, that even after taking the difference with lag 12, we still have seasionality.
+
+```{r}
+
+acf(diff(log(astsa::unemp), lag=12), lag.max = 12 * 6)
+pacf(diff(log(astsa::unemp), lag=12), lag.max = 12 * 6)
+
+```
+
+It's time to look at the `eacf()` output. We consider the following two models: $\text{ARIMA}(2,1,2)\times(0,0,1)_{12}$ and $\text{ARIMA}(2,1,3)\times(0,0,1)_{12}$
+
+```{r}
+
+eacf(diff(log(astsa::unemp), lag=12))
+
+```
+
+Let's fit the models.
+
+```{r,message=FALSE}
+
+modelA = sarima(log(astsa::unemp), p=2, d=1, q=3, P=0, D=0, Q=1, S=12)
+modelB = sarima(log(astsa::unemp), p=2, d=1, q=2, P=0, D=0, Q=1, S=12)
+
+```
+
+The AIC and BIC for the models are the following:
+
+```{r}
+
+# Lower AIC/BIC is better
+AIC(modelA$fit)
+BIC(modelA$fit)
+
+AIC(modelB$fit)
+BIC(modelB$fit)
+
+```
+
+According to the AIC and BIC score, both models seem to be nearly equally good. Also looking at the Q-Q plots we see that `modelB` has a mostly straight line for the quantiles while falling of towards the tails. It looks better compared to `modelA`. It seems that `modelB` is slightly better, so we choose this one.
+
+Therefore the model is given by: $\Delta x_t-0.0198x_{t-1}-0.9829x_{t-2}=w_t+0.0757w_{t-1}+1w_{t-2}+0.4898w_{t-12}$
+
+Finally, lets check for redundancy:
+
+```{r}
+
+ar_terms = c(-0.0198, -0.9829)
+ma_terms = c(0.0757, 1, rep(0, 9), 0.4898)
+
+polyroot(ar_terms)
+polyroot(ma_terms)
+
+```
+
+So it looks like we don't have any redundancy, as we only have one term for the AR part which seems far away enough to not influence the other terms.
+
+```{r}
+
+# Do we have to take the log here?!
+sarima.for(astsa::unemp, p=2, d=1, q=2, P=0, D=0, Q=1, S=12, n.ahead = 20)
+
+```
+
+# Source Code
+
+```{r, ref.label=knitr::all_labels(), echo = TRUE, eval = FALSE, results = 'show'}
+
+```

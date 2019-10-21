@@ -1,0 +1,260 @@
+---
+title: "Advanced Machine Learning (732A96) Lab2"
+author: "Anubhav Dikshit(anudi287)"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+    pdf_document:
+      toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen=999)
+
+library("tidyverse") #ggplot and dplyr 
+library("gridExtra") # combine plots
+library("knitr") # for pdf
+library("bnlearn") # ADM
+library("gRain") # ADM
+library("entropy")
+library("HMM") #Hidden Markov Models
+
+
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+#BiocManager::install("gRain")
+
+
+# The palette with black:
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", 
+                "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+set.seed(12345)
+```
+
+\newpage
+
+# Questions
+
+The purpose of the lab is to put in practice some of the concepts covered in the lectures. To do so, you are asked to model the behavior of a robot that walks around a ring. The ring is divided into 10 sectors. At any given time point, the robot is in one of the sectors and decides with equal probability to stay in that sector or move to the next sector. You do not have direct observation of the robot.However, the robot is equipped with a tracking device that you can access. The device is not very accurate though, If the robot is in the sector 'i', then the device will report that the robot is in the sectors i-2 to i+2 with equal probability.
+
+
+## Questions 1
+\fbox{\begin{minipage}{46.7em}
+1) Build a hidden Markov model (HMM) for the scenario described above.
+\end{minipage}}
+
+```{r}
+set.seed(12345)
+
+transition_mat <- matrix(data = c(0.5, 0.5, 0, 0, 0, 0, 0, 0, 0, 0,
+                                  0, 0.5, 0.5, 0, 0, 0, 0, 0, 0, 0,
+                                  0, 0, 0.5, 0.5, 0, 0, 0, 0, 0, 0,
+                                  0, 0, 0, 0.5, 0.5, 0, 0, 0, 0, 0,
+                                  0, 0, 0, 0, 0.5, 0.5, 0, 0, 0, 0,
+                                  0, 0, 0, 0, 0, 0.5, 0.5, 0, 0, 0,
+                                  0, 0, 0, 0, 0, 0, 0.5, 0.5, 0, 0,
+                                  0, 0, 0, 0, 0, 0, 0, 0.5, 0.5, 0,
+                                  0, 0, 0, 0, 0, 0, 0, 0, 0.5, 0.5,
+                                  0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0.5),
+                              nrow = 10,
+                              ncol = 10)
+
+sensor_mat <- matrix(data = c(0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0.2, 0.2,
+                              0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0, 0.2,
+                              0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0, 0,
+                              0, 0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0, 0,
+                              0, 0, 0.2, 0.2, 0.2, 0.2, 0.2, 0, 0, 0,
+                              0, 0, 0, 0.2, 0.2, 0.2, 0.2, 0.2, 0, 0,
+                              0, 0, 0, 0, 0.2, 0.2, 0.2, 0.2, 0.2, 0,
+                              0, 0, 0, 0, 0, 0.2, 0.2, 0.2, 0.2, 0.2,
+                              0.2, 0, 0, 0, 0, 0, 0.2, 0.2, 0.2, 0.2,
+                              0.2, 0.2, 0, 0, 0, 0, 0, 0.2, 0.2, 0.2),
+                              nrow = 10,
+                              ncol = 10)
+
+sector_10_model <- initHMM(States = c("1","2","3","4","5","6","7","8","9","10"), 
+                           Symbols = c("1","2","3","4","5","6","7","8","9","10"), 
+                           startProbs = rep(0.1, 10),
+                           transProbs = transition_mat,
+                           emissionProbs = sensor_mat)
+
+```
+
+
+## Questions 2
+
+\fbox{\begin{minipage}{46.7em}
+2) Simulate the HMM for 100 time steps.
+\end{minipage}}
+
+```{r}
+set.seed(12345)
+
+hmm_100 <- simHMM(sector_10_model, length=100)
+hmm_100
+```
+
+## Questions 3
+
+\fbox{\begin{minipage}{46.7em}
+3) Discard the hidden states from the sample obtained above. Use the remaining observations to compute the filtered and smoothed probability distributions for each of the 100 time points. Compute also the most probable path.
+\end{minipage}}
+
+```{r}
+set.seed(12345)
+
+# The library retruns the probabilities logged, we we have to de-log
+alpha = exp(forward(sector_10_model, hmm_100$observation))
+beta = exp(backward(sector_10_model, hmm_100$observation))
+
+# Filtering which is defined as alpha column, divided by its col sum
+filtered =  sweep(alpha, 2, colSums(alpha), FUN="/")
+
+# Smoothing
+smoothing = alpha * beta
+smoothing =  sweep(smoothing, 2, colSums(smoothing), FUN="/")
+
+# Path
+hmm_viterbi = viterbi(sector_10_model, hmm_100$observation)
+as.numeric(hmm_viterbi)
+```
+
+## Questions 4
+
+\fbox{\begin{minipage}{46.7em}
+4) Compute the accuracy of the filtered and smoothed probability distributions, and of the most probable path. That is, compute the percentage of the true hidden states that are guessed by each method.
+\end{minipage}}
+
+```{r}
+
+set.seed(12345)
+
+# finding the max of each column for 100 entries for filtered values
+filtered_path <- t(filtered)
+filtered_path <- max.col(filtered_path, "first")
+
+# finding the max of each column for 100 entries for smoothened values
+smoothing_path <- t(smoothing)
+smoothing_path <- max.col(smoothing_path, "first")
+
+# viterbi path
+viterbi_path <- as.numeric(hmm_viterbi)
+
+# actual path 
+actual_state <- as.numeric(hmm_100$states)
+
+# Accuracy of filtered path
+acc_filered <- sum(actual_state == filtered_path)/length(filtered_path) * 100
+
+# Accuracy of smoothened path
+acc_smooth <- sum(actual_state == smoothing_path)/length(smoothing_path) * 100
+
+# Accuracy of viterbi path
+viterbi_smooth <- sum(actual_state == viterbi_path)/length(viterbi_path) * 100
+
+cat("Accuracy of filtered, smoothing and viterbi are as follows:", acc_filered, "%,", acc_smooth, "% and ", viterbi_smooth, "%")
+
+```
+
+## Questions 5
+
+\fbox{\begin{minipage}{46.7em}
+5) Repeat the previous exercise with different simulated samples. In general, the smoothed distributions should be more accurate than the filtered distributions. Why? In general, the smoothed distributions should be more accurate than the most probable paths, too. Why?
+\end{minipage}}
+
+```{r}
+set.seed(12345) 
+
+get_hmm_accuracy <- function(N, model)
+{
+hmm_N <- simHMM(model, length=N)
+alpha = exp(forward(model, hmm_N$observation))
+beta = exp(backward(model, hmm_N$observation))
+
+filtered =  sweep(alpha, 2, colSums(alpha), FUN="/")
+
+smoothing = alpha * beta
+smoothing =  sweep(smoothing, 2, colSums(smoothing), FUN="/")
+
+hmm_viterbi = viterbi(model, hmm_N$observation)
+
+filtered_path <- t(filtered)
+filtered_path <- max.col(filtered_path, "first")
+
+
+smoothing_path <- t(smoothing)
+smoothing_path <- max.col(smoothing_path, "first")
+
+viterbi_path <- as.numeric(hmm_viterbi)
+actual_state <- as.numeric(hmm_N$states)
+
+
+acc_filered <- sum(actual_state == filtered_path)/length(filtered_path) * 100
+acc_smooth <- sum(actual_state == smoothing_path)/length(smoothing_path) * 100
+viterbi_smooth <- sum(actual_state == viterbi_path)/length(viterbi_path) * 100
+
+df <- data.frame(N=N, accuracy_of_filtered = acc_filered, accuracy_of_smoothing = acc_smooth, accuracy_of_viterbi = viterbi_smooth)
+return(df)
+}
+
+final <- NULL
+for (i in seq(10, 300, 10)) {
+temp <- get_hmm_accuracy(i, sector_10_model)
+final <- rbind(temp, final)
+}
+
+ggplot(final, aes(x = N)) + 
+    geom_line(aes(y=accuracy_of_smoothing, color="accuracy_of_smoothing")) + 
+    geom_line(aes(y=accuracy_of_filtered, color="accuracy_of_filtered")) + 
+  geom_line(aes(y=accuracy_of_viterbi, color="accuracy_of_viterbi")) + 
+  ggtitle("Accuracy of Filtering, Smoothing and Viterbi vs. Simulation") +
+  ylab("Accuracy in %") +
+    scale_colour_manual("", breaks = c("accuracy_of_smoothing", "accuracy_of_filtered", "accuracy_of_viterbi"),
+                        values = c("#CC79A7", "#000000", "#D55E00"))
+
+
+
+```
+
+Analysis: The smoothed distribution gives better accuracy because it takes into account the whole series from 0 till N, on the filtred is a lot of more constraint in terms of sampling.
+
+## Questions 6
+
+\fbox{\begin{minipage}{46.7em}
+6) Is it true that the more observations you have the better you know where the robot is?
+\end{minipage}}
+
+```{r}
+
+set.seed(12345)
+empirical_entropy = apply(filtered, 2, entropy.empirical)
+plot(empirical_entropy, type= 'l', main = "Entropy of filtered path")
+
+```
+
+Analysis: We know that entropy is a measure of the chaos in any system, from the plot we can see that its varying throughout of the position.
+Thus no its not clear that the more observation we have the more we know of the robots position, this is in agreement with Markov's property that current state depends only on the previous state.
+
+
+## Questions 7
+
+\fbox{\begin{minipage}{46.7em}
+7) Consider any of the samples above of length 100. Compute the probabilities of the hidden states for the time step 101.
+\end{minipage}}
+
+```{r}
+
+set.seed(12345)
+position = transition_mat %*% filtered[,100]
+rownames(position) = names(filtered[,100])
+position
+
+
+```
+Analysis: The probabilities of each of the state is given above.
+
+# Appendix
+
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+```
+
