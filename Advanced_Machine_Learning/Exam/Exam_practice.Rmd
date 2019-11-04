@@ -79,7 +79,7 @@ final %>% group_by(V2) %>% summarise(accuracy = sum(accuracy)/n())
 ```
 
 
-## HMM Q2
+## Q2 Hidden Markov
 
 ```{r}
 
@@ -277,6 +277,7 @@ sd(err[2:T])
 
 ## Q4 Gaussian
 
+### 1)
 ```{r}
 
 posterior_GP <- function(x, y, x_star, kernel, sigma_n, sigma_f, l) {
@@ -296,10 +297,8 @@ L_upper <- chol(K_x_x + (sigma_n^2)*diag(n))
 L_lower <- t(L_upper)
 # Compute alpha, used to compute the
 # posterior mean of f
-alpha_b <- solve(a = L_lower,
-b = y)
-alpha <- solve(a = t(L_lower),
-b = alpha_b)
+alpha_b <- solve(a = L_lower,b = y)
+alpha <- solve(a = t(L_lower),b = alpha_b)
 # Compute posterior mean of f
 posterior_mean_f <- t(K_x_xstar) %*% alpha
 # Compute posterior covariance matrix of f
@@ -369,9 +368,9 @@ k3 <- function(sigmaf, ell)
 
 
 
-matis_kernel <- function(x, y, sigma_f, l){	
+matis_kernel <- function(x, y, sigmaf, ell){	
 	  r = sqrt(crossprod(x-y))
-		 return(sigma_f^2*(1+sqrt(3)*r/l)*exp(-sqrt(3)*r/l))   
+		 return(sigmaf^2*(1+sqrt(3)*r/ell)*exp(-sqrt(3)*r/ell))   
 	}   
 
 
@@ -384,51 +383,370 @@ matis_kernel <- function(x, y, sigma_f, l){
 set.seed(111)
 zGrid = seq(0.01,1,by=0.01)
 
-sigma_f <- 1
-l <- 0.5
-
-
+plot_prior <- function(x,y,sigmaf,ell){
+# Instantiate kernel
+kernel <- k3(sigmaf = sigmaf, ell = ell)
 final <- NULL
-for(i in seq(0.01,1,by=0.01)){
-temp <- matis_kernel(x=0, y=i, sigma_f, l)  
+for(i in 1:length(x)){
+temp <- kernel(x=x,y=y[i])
 final <- rbind(temp,final)
 }
 
-plot(final)
-
-final2 <- NULL
-for(i in seq(0.01,1,by=0.01)){
-temp <- matis_kernel(x=0, y=i, 0.5, l)  
-final2 <- rbind(temp,final2)
+df <- data.frame(z=zGrid, kernel_value=final)
+p1 <- ggplot(data=df, aes(x=z, y=kernel_value)) + 
+  geom_point() + 
+  ggtitle(paste0("Plot of z vs. zGrid for sigmaf and ell",sigmaf, ell))
+print(p1)
+return()
 }
+plot_prior(x=rep(0,length(zGrid)), y=zGrid, sigmaf = 1, ell = 0.5)
+plot_prior(x=rep(0,length(zGrid)), y=zGrid, sigmaf = 0.5, ell = 0.5)
 
-plot(final2)
+                                            
+```
 
+### 2)
 
+```{r}
 load("lidar.RData")
+
+set.seed(111)
+df <- data.frame(logratio=logratio, distance=distance)
+
+lm_model = lm(logratio ~ distance + I(distance^2) + I(distance^3), data=df)
+sigma_n = sd(lm_model$residuals)
+
+
+# Estimate Gaussian Process
+GP_time = gausspr(logratio ~ distance, 
+                  kernel = k3(sigmaf = 20, ell = 0.2), 
+                  var = sigma_n^2, data=df)
+
+
+predicted_logratio = predict(GP_time, newdata=df)
+df <- data.frame(predicted_logratio=predicted_logratio, df)
+
+ggplot(data=df, aes(x=distance)) +
+geom_point(aes(y=logratio, color="Actual value")) +
+geom_line(aes(y=predicted_logratio, color="Predicted value")) +
+ggtitle("Plot of data and posterior mean using lm(logratio~distance)") +
+ylab("Posterior/Observation") + xlab("distance") +
+scale_colour_manual(values = c("#E69F00", "#56B4E9",
+"#000000", "#E69F00"))
+
 
 
 set.seed(111)
+X = scale(df$distance)
+XStar = seq(min(X), max(X), length.out = length(X))
+
+KStarStar = kernelMatrix(kernel = k3(sigmaf = 20,
+ell = 0.2), x = XStar,
+y = XStar)
+
+KStar = kernelMatrix(kernel = k3(sigmaf = 20, ell = 0.2),
+x = X, y = XStar)
+
+K = kernelMatrix(kernel = k3(sigmaf = 20, ell = 0.2),
+x = X, y = X)
+
+V = diag(KStarStar - t(KStar) %*% solve(K + sigma_n^2 * diag(length(X)), KStar))
+df$upper_band <- df$predicted_logratio + 1.96 * sqrt(V)
+df$lower_band <- df$predicted_logratio - 1.96 * sqrt(V)
+df$logratio_upper <- df$predicted_logratio + 1.96 * sqrt(V+sigma_n^2)
+df$logratio_lower <- df$predicted_logratio - 1.96 * sqrt(V+sigma_n^2)
 
 
-lm_model = lm(temp ~ time + time2, data = tulling_sample_data)
-sigma_n = sd(lm_model$residuals)
-# Estimate Gaussian Process
-GP_time = gausspr(temp ~ time, data = tulling_sample_data,
-kernel = nested_squared_exponential(sigma_f = 20, l = 0.2),
-var = sigma_n^2)
-posterior_mean = predict(GP_time, tulling_sample_data)
-df <- data.frame(posterior_mean=posterior_mean, tulling_sample_data)
-ggplot(data=df, aes(x=time)) +
-geom_point(aes(y=temp, color="temperature")) +
-geom_line(aes(y=posterior_mean, color="posterior mean")) +
-ggtitle("Plot of data and posterior mean using lm(temp~time)") +
+ggplot(data=df, aes(x=distance)) +
+geom_line(aes(y=logratio, color="temperature")) +
+geom_line(aes(y=predicted_logratio, color="posterior mean")) +
+geom_line(aes(y=upper_band, color="upper band")) +
+geom_line(aes(y=lower_band, color="lower band")) +
+  geom_line(aes(y=logratio_upper, color="upper y")) +
+geom_line(aes(y=logratio_lower, color="lower y")) +
+ggtitle("Plot of data and posterior mean") +
 ylab("Posterior/Observation") + xlab("Time") +
-scale_colour_manual(values = c("#E69F00", "#56B4E9",
-"#000000", "#E69F00"))
-                                              
-                                              
+scale_colour_manual(values = c("#E69F00", "#56B4E9", "#009E73", 
+                "#F0E442", "#0072B2", "#D55E00", "#CC79A7"))
+
 ```
+
+# 2017
+
+## 1. GRAPHICAL MODELS
+
+```{r}
+data("asia")
+
+hill_climbing_asia_1 <- hc(x=asia, restart = 20,
+score = "bde")
+
+plot(hill_climbing_asia_1, main="Network Structure with 20 restart")
+# parameter learning
+asia_parameter_learn <- bn.fit(hill_climbing_asia_1, data = asia, method = "mle")
+asia_parameter_learn
+
+
+## Exact inference p(A|X = TRUE,B = TRUE)
+junction_tree <- compile(as.grain(asia_parameter_learn))
+my_evid1 <-setEvidence(junction_tree, nodes=c("T","X", "E"), states=c("yes","yes","yes"))
+my_evid2 <-setEvidence(junction_tree, nodes=c("T","X", "E"), states=c("yes","no","yes"))
+my_evid3 <-setEvidence(junction_tree, nodes=c("T","X", "E"), states=c("no","yes","yes"))
+my_evid4 <-setEvidence(junction_tree, nodes=c("T","X", "E"), states=c("no","no","yes"))
+my_evid5 <-setEvidence(junction_tree, nodes=c("T","X", "E"), states=c("yes","yes","no"))
+my_evid6 <-setEvidence(junction_tree, nodes=c("T","X", "E"), states=c("yes","no","no"))
+my_evid7 <-setEvidence(junction_tree, nodes=c("T","X", "E"), states=c("no","yes","no"))
+my_evid8 <-setEvidence(junction_tree, nodes=c("T","X", "E"), states=c("no","no","no"))
+
+querygrain(my_evid1, nodes=c("E"))
+querygrain(my_evid2, nodes=c("E"))
+querygrain(my_evid3, nodes=c("E"))
+querygrain(my_evid4, nodes=c("E"))
+querygrain(my_evid5, nodes=c("E"))
+querygrain(my_evid6, nodes=c("E"))
+querygrain(my_evid7, nodes=c("E"))
+querygrain(my_evid8, nodes=c("E"))
+
+dsep(hill_climbing_asia_1, x="T", y="X", z="E")
+
+```
+
+## 2. HIDDEN MARKOV MODELS
+
+```{r}
+set.seed(12345)
+
+States<-1:100
+Symbols <- 1:2
+startProbs <- rep(0.01, 100)
+
+# previous state as row and future state as column
+transprob <- diag(0.1, nrow = 100, ncol=100)
+#colnames(transprob) <- 1:100
+transprob <- transprob %>% as.data.frame()
+
+# the robot moves to the next segment with probability 0.9 and stays in the current segment with probability 0.1.
+for(i in 1:99){
+    transprob[i,i+1] <- ifelse(transprob[i,i] == 0.1, 0.9,transprob[i,i])
+}
+
+
+
+# previous state as row and observations state as column
+emisprob <- matrix(1/100, nrow = 100, ncol=2)
+#colnames(emisprob) <- 1:100
+emisprob <- emisprob %>% as.data.frame()
+
+for(i in 1:100){
+  if(i %in% c(10,11,12,20,21,22,30,31,32)){
+    emisprob[i,1]<-.9
+  }
+  else{
+    emisprob[i,1]<-.1
+    emisprob[i,2]<-.9
+  }
+}
+
+transprob <- transprob %>% as.matrix()
+emisprob <- emisprob %>% as.matrix()
+
+
+hmm_model <- initHMM(States,Symbols,
+                     startProbs,
+                     transprob,
+                     emisprob)
+
+hmm_sim <- simHMM(hmm_model,100)
+hmm_sim$observation
+
+
+# The library retruns the probabilities logged, we we have to de-log
+alpha = exp(forward(hmm_model, hmm_sim$observation))
+beta = exp(backward(hmm_model, hmm_sim$observation))
+# Filtering which is defined as alpha column, divided by its col sum
+filtered = sweep(alpha, 2, colSums(alpha), FUN="/")
+# Smoothing
+smoothing = alpha * beta
+smoothing = sweep(smoothing, 2, colSums(smoothing), FUN="/")
+# finding the max of each column for 100 entries for smoothened values
+smoothing_path <- t(smoothing)
+smoothing_path <- max.col(smoothing_path, "first")
+
+```
+
+
+## 3. Gaussian Processes
+
+```{r}
+xGrid = seq(-1,1,by=0.1)
+x <- rep(0,length(xGrid))
+
+# Instantiate kernel
+kernel <- k1(sigmaf = 1, ell = 0.2)
+# Evaluate kernel on x = 1, x_star = 2
+  
+
+corr_mat <- kernelMatrix(kernel = kernel, x=xGrid, y=xGrid)
+  
+a <- mvtnorm::rmvnorm(n=100, mean = rep(0, 21), sigma = corr_mat)
+b <- mvtnorm::rmvnorm(n=100, mean = rep(0.1, 21), sigma = corr_mat)
+
+cor(b)
+
+```
+
+### b)
+
+```{r}
+set.seed(111)
+load("GPdata.RData")
+
+sigma_noise <- 0.2
+l <- 0.2
+sigmaf <- 1
+
+df <- data.frame(x,y)
+
+lm_model = lm(y ~ x + I(x^2) + I(x^3), data = df)
+sigma_n = sd(lm_model$residuals)
+
+# Estimate Gaussian Process
+GP_time = gausspr(y ~ x, data = df, kernel = k1(sigmaf = 1, ell = 0.2),
+var = sigma_n^2)
+
+
+posterior_mean = predict(GP_time, df)
+
+df <- data.frame(posterior_mean=posterior_mean, df)
+
+X = scale(df$x)
+XStar = seq(min(x), max(x), length.out = length(x))
+
+
+KStarStar = kernelMatrix(kernel = k1(sigmaf = 1, ell = 0.2), x = XStar,
+y = XStar)
+
+KStar = kernelMatrix(kernel = k1(sigmaf = 1, ell = 0.2),
+x = X, y = XStar)
+
+K = kernelMatrix(kernel = k1(sigmaf = 1, ell = 0.2),
+x = X, y = X)
+
+V = diag(KStarStar - t(KStar) %*% solve(K + sigma_n^2 * diag(length(X)), KStar))
+df$upper_band <- df$posterior_mean + 1.96 * sqrt(V)
+df$lower_band <- df$posterior_mean - 1.96 * sqrt(V)
+df$y_upper_band <- df$posterior_mean + 1.96 * sqrt(V+0.2^2)
+df$y_lower_band <- df$posterior_mean - 1.96 * sqrt(V+0.2^2)
+
+
+ggplot(data=df, aes(x=x)) +
+geom_point(aes(y=y, color="true value")) +
+geom_line(aes(y=posterior_mean, color="posterior mean")) +
+geom_line(aes(y=upper_band, color="upper band")) +
+geom_line(aes(y=lower_band, color="lower band")) +
+geom_line(aes(y=y_upper_band, color="y upper band")) +
+geom_line(aes(y=y_lower_band, color="y lower band")) +
+ggtitle("Plot of data and posterior mean") +
+ylab("Posterior/Observation") + xlab("Time") +
+scale_colour_manual(values = c("#E69F00", "#56B4E9","#000000", "#E69F00", 
+                               "#D55E00", "#D55E00"))
+
+
+
+```
+
+
+## 4. STATE SPACE MODELS
+
+```{r}
+
+#$p(x_t|x_{t-1}) = N(x_t|x_{t-1} + 1,1)$//transition distribution
+#$p(z_t|x_t) = N(z_t|x_t,5)$//emission distribution
+#$p(x_0) = N(x_0|50,100)$//inital distribution
+
+T<-10000
+n_par<-100
+tra_sd<-1 #R
+emi_sd<-5 #Q
+R<-tra_sd #R
+Q<-emi_sd #Q
+mu_0<-50
+Sigma_0<-10
+
+ini_dis<-function(n){
+return (rnorm(n,mu_0,Sigma_0))
+}
+tra_dis<-function(zt){
+return (rnorm(1,mean=zt+1,sd=tra_sd))
+}
+emi_dis<-function(zt){
+return (rnorm(1,mean=zt,sd=emi_sd))
+}
+den_emi_dis<-function(xt,zt){
+return (dnorm(xt,mean=zt,sd=emi_sd))
+}
+
+
+z<-vector(length=T)
+x<-vector(length=T)
+for(t in 1:T){
+z[t]<-ifelse(t==1,ini_dis(1),tra_dis(z[t-1]))
+x[t]<-emi_dis(z[t])
+}
+
+err<-vector(length=T)
+bel<-ini_dis(n_par)
+w<-rep(1/n_par,n_par)
+for(t in 2:T){
+com<-sample(1:n_par,n_par,replace=TRUE,prob=w)
+bel<-sapply(bel[com],tra_dis)
+for(i in 1:n_par){
+w[i]<-den_emi_dis(x[t],bel[i])
+}
+w<-w/sum(w)
+Ezt<-sum(w * bel)
+err[t]<-abs(z[t]-Ezt)
+}
+mean(err[2:T])
+sd(err[2:T])
+
+
+
+# x<-vector(length=T)
+# z<-vector(length=T)
+# err<-vector(length=T)
+
+
+for(t in 1:T){
+x[t]<-ifelse(t==1,rnorm(1,mu_0,Sigma_0),x[t-1]+1+rnorm(1,0,R))
+z[t]<-x[t]+rnorm(1,0,Q)
+}
+
+mu<-mu_0
+Sigma<-Sigma_0*Sigma_0
+for(t in 2:T){
+pre_mu<-mu+1
+pre_Sigma<-Sigma+R*R
+K<-pre_Sigma/(pre_Sigma+Q*Q)
+mu<-pre_mu+K*(z[t]-pre_mu)
+Sigma<-(1-K)*pre_Sigma
+err[t]<-abs(x[t]-mu)
+}
+mean(err[2:T])
+sd(err[2:T])
+
+```
+
+
+
+
+
+
+
+
+
+
+
 
 
 
